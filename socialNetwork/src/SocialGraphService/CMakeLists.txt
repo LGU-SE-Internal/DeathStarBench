@@ -28,7 +28,7 @@ target_link_libraries(
     opentelemetry_exporter_otlp_http
     opentelemetry_exporter_otlp_grpc
     opentelemetry_resources
-    opentelemetry_common.so
+    opentelemetry_common
     /usr/local/lib/libhiredis.a
     /usr/local/lib/libhiredis_ssl.a
     /usr/local/lib/libredis++.a
