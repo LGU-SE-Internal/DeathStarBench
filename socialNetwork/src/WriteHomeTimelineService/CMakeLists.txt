@@ -22,11 +22,11 @@ target_link_libraries(
     Boost::log
     Boost::log_setup
     OpenSSL::SSL
-    /usr/local/lib/libopentelemetry_trace
+    opentelemetry_trace
     opentelemetry_exporter_otlp_http
     opentelemetry_exporter_otlp_grpc
     opentelemetry_resources
-    opentelemetry_common.so
+    opentelemetry_common
     /usr/local/lib/libamqpcpp.so
     ${LIBEVENT_LIBRARIES}
     /usr/local/lib/libcpp_redis.a
