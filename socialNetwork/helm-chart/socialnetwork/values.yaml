@@ -45,14 +45,10 @@ global:
         port: 27017
   nginx:
     resolverName: kube-dns.kube-system.svc.cluster.local
-  jaeger:
-    localAgentHostPort: jaeger:6831
-    queueSize: 1000000
-    bufferFlushInterval: 10
-    samplerType: probabilistic
+  otel:
+    endpoint: http://otel-collector.observability.svc.cluster.local:4318
     samplerParam: 0.1
     disabled: false
-    logSpans: false
 
 mongodb-sharded:
   fullnameOverride: mongodb-sharded

@@ -9,7 +9,7 @@ add_executable(
 target_include_directories(
     UserTimelineService PRIVATE
     ${MONGOC_INCLUDE_DIRS}
-    /usr/local/include/jaegertracing
+    
     /usr/local/include/hiredis
     /usr/local/include/sw
 )
@@ -24,7 +24,11 @@ target_link_libraries(
     Boost::log
     Boost::log_setup
     Boost::program_options
-    jaegertracing
+    opentelemetry_trace
+    opentelemetry_exporter_otlp_http
+    opentelemetry_exporter_otlp_grpc
+    opentelemetry_resources
+    opentelemetry_common
     /usr/local/lib/libhiredis.a
     /usr/local/lib/libhiredis_ssl.a
     /usr/local/lib/libredis++.a
