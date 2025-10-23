@@ -9,7 +9,7 @@ add_executable(
 target_include_directories(
     MovieReviewService PRIVATE
     ${MONGOC_INCLUDE_DIRS}
-    /usr/local/include/jaegertracing
+    
     /usr/local/include/cpp_redis
 )
 
@@ -21,7 +21,11 @@ target_link_libraries(
     ${Boost_LIBRARIES}
     Boost::log
     Boost::log_setup
-    jaegertracing
+    opentelemetry_trace
+    opentelemetry_exporter_otlp_http
+    opentelemetry_exporter_otlp_grpc
+    opentelemetry_resources
+    opentelemetry_common
     /usr/local/lib/libcpp_redis.a
     /usr/local/lib/libtacopie.a
 )

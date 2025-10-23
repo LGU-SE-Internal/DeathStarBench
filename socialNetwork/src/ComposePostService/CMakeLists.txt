@@ -14,7 +14,7 @@ add_executable(
 
 target_include_directories(
     ComposePostService PRIVATE
-    /usr/local/include/jaegertracing
+    
 )
 
 target_link_libraries(
@@ -26,8 +26,12 @@ target_link_libraries(
     Boost::log
     Boost::log_setup
     OpenSSL::SSL
-    /usr/local/lib/libjaegertracing.so
-    /usr/local/lib/libSimpleAmqpClient.so
+    opentelemetry_trace
+    opentelemetry_exporter_otlp_http
+    opentelemetry_exporter_otlp_grpc
+    opentelemetry_resources
+    opentelemetry_common
+    SimpleAmqpClient
 
 )
 

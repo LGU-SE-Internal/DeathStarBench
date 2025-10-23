@@ -25,8 +25,10 @@ spec:
         {{- range $cport := .ports }}
         - containerPort: {{ $cport.containerPort -}}
         {{ end }}
-        {{- if .env }}
         env:
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "{{ $.Values.global.otel.endpoint }}"
+        {{- if .env }}
         {{- range $e := .env}}
         - name: {{ $e.name }}
           value: "{{ (tpl ($e.value | toString) $) }}"

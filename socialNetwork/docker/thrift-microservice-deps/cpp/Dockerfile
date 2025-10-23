@@ -3,9 +3,8 @@ FROM ubuntu:16.04
 ARG LIB_MONGOC_VERSION=1.15.0
 ARG LIB_THRIFT_VERSION=0.12.0
 ARG LIB_JSON_VERSION=3.6.1
-ARG LIB_JAEGER_VERSION=0.4.2
+ARG LIB_OPENTELEMETRY_VERSION=1.8.1
 ARG LIB_YAML_VERSION=0.6.2
-ARG LIB_OPENTRACING_VERSION=1.5.1
 ARG LIB_CPP_JWT_VERSION=1.1.1
 ARG LIB_CPP_REDIS_VERSION=4.3.1
 ARG LIB_AMQP_CPP_VERSION=4.1.4
@@ -58,23 +57,21 @@ RUN apt-get update \
   && make -j$(nproc) \
   && make install \
   && cd /tmp \
-  # Install opentracing-cpp
-  && wget -O opentracing-cpp-${LIB_OPENTRACING_VERSION}.tar.gz https://github.com/opentracing/opentracing-cpp/archive/v${LIB_OPENTRACING_VERSION}.tar.gz \
-  && tar -zxf opentracing-cpp-${LIB_OPENTRACING_VERSION}.tar.gz \
-  && cd opentracing-cpp-${LIB_OPENTRACING_VERSION} \
+  # Install OpenTelemetry C++
+  && wget -O opentelemetry-cpp-${LIB_OPENTELEMETRY_VERSION}.tar.gz https://github.com/open-telemetry/opentelemetry-cpp/archive/v${LIB_OPENTELEMETRY_VERSION}.tar.gz \
+  && tar -zxf opentelemetry-cpp-${LIB_OPENTELEMETRY_VERSION}.tar.gz \
+  && cd opentelemetry-cpp-${LIB_OPENTELEMETRY_VERSION} \
   && mkdir -p cmake-build \
   && cd cmake-build \
-  && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-fPIC" -DBUILD_TESTING=0 .. \
-  && make -j$(nproc) \
-  && make install \
-  && cd /tmp \
-  # Install jaeger-client-cpp
-  && wget -O jaeger-client-cpp-${LIB_JAEGER_VERSION}.tar.gz https://github.com/jaegertracing/jaeger-client-cpp/archive/v${LIB_JAEGER_VERSION}.tar.gz \
-  && tar -zxf jaeger-client-cpp-${LIB_JAEGER_VERSION}.tar.gz \
-  && cd jaeger-client-cpp-${LIB_JAEGER_VERSION} \
-  && mkdir -p cmake-build \
-  && cd cmake-build \
-  && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-fPIC" -DHUNTER_ENABLED=0 -DBUILD_TESTING=0 -DJAEGERTRACING_WITH_YAML_CPP=1 -DJAEGERTRACING_BUILD_EXAMPLES=0 .. \
+  && cmake -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_CXX_FLAGS="-fPIC" \
+    -DBUILD_TESTING=OFF \
+    -DWITH_OTLP=ON \
+    -DWITH_OTLP_GRPC=ON \
+    -DWITH_OTLP_HTTP=ON \
+    -DWITH_EXAMPLES=OFF \
+    -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+    .. \
   && make -j$(nproc) \
   && make install \
   && cd /tmp \
@@ -139,12 +136,10 @@ RUN apt-get update \
     thrift-${LIB_THRIFT_VERSION} \
     json-${LIB_JSON_VERSION}.tar.gz \
     json-${LIB_JSON_VERSION} \
-    jaeger-client-cpp-${LIB_JAEGER_VERSION}.tar.gz \
-    jaeger-client-cpp-${LIB_JAEGER_VERSION} \
+    opentelemetry-cpp-${LIB_OPENTELEMETRY_VERSION}.tar.gz \
+    opentelemetry-cpp-${LIB_OPENTELEMETRY_VERSION} \
     yaml-cpp-${LIB_YAML_VERSION}.tar.gz \
     yaml-cpp-yaml-cpp-${LIB_YAML_VERSION} \
-    opentracing-cpp-${LIB_OPENTRACING_VERSION}.tar.gz \
-    opentracing-cpp-${LIB_OPENTRACING_VERSION} \
     cpp-jwt-${LIB_CPP_JWT_VERSION}.tar.gz \
     cpp-jwt-${LIB_CPP_JWT_VERSION} \
     cpp_redis \

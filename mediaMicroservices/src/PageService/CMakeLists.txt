@@ -12,7 +12,7 @@ add_executable(
 
 target_include_directories(
     PageService PRIVATE
-    /usr/local/include/jaegertracing
+    
 )
 
 target_link_libraries(
@@ -23,7 +23,11 @@ target_link_libraries(
     ${Boost_LIBRARIES}
     Boost::log
     Boost::log_setup
-    jaegertracing
+    opentelemetry_trace
+    opentelemetry_exporter_otlp_http
+    opentelemetry_exporter_otlp_grpc
+    opentelemetry_resources
+    opentelemetry_common
 )
 
 install(TARGETS PageService DESTINATION ./)

@@ -8,8 +8,6 @@ appVersion: "1.16.0"
 dependencies:
   - name: nginx-web-server
     version: 0.1.0
-  - name: jaeger
-    version: 0.1.0
   - name: unique-id-service
     version: 0.1.0
   - name: movie-id-service
