@@ -10,3 +10,12 @@ wrk2/wrk
 wrk2/*.[oa]
 wrk2/obj/
 hotelReservation/search
+hotelReservation/attractions
+hotelReservation/frontend
+hotelReservation/geo
+hotelReservation/profile
+hotelReservation/rate
+hotelReservation/recommendation
+hotelReservation/reservation
+hotelReservation/review
+hotelReservation/user
