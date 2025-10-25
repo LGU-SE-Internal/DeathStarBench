@@ -13,11 +13,12 @@ import (
 	pb "github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/services/profile/proto"
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tls"
 	"github.com/google/uuid"
-	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
-	"github.com/opentracing/opentracing-go"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
 )
@@ -30,7 +31,7 @@ type Server struct {
 
 	uuid string
 
-	Tracer      opentracing.Tracer
+	Tracer      trace.Tracer
 	Port        int
 	IpAddr      string
 	MongoClient *mongo.Client
@@ -40,8 +41,6 @@ type Server struct {
 
 // Run starts the server
 func (s *Server) Run() error {
-	opentracing.SetGlobalTracer(s.Tracer)
-
 	if s.Port == 0 {
 		return fmt.Errorf("server port must be set")
 	}
@@ -58,7 +57,7 @@ func (s *Server) Run() error {
 			PermitWithoutStream: true,
 		}),
 		grpc.UnaryInterceptor(
-			otgrpc.OpenTracingServerInterceptor(s.Tracer),
+			otelgrpc.UnaryServerInterceptor(),
 		),
 	}
 
@@ -104,10 +103,10 @@ func (s *Server) GetProfiles(ctx context.Context, req *pb.Request) (*pb.Result, 
 		profileMap[hotelId] = struct{}{}
 	}
 
-	memSpan, _ := opentracing.StartSpanFromContext(ctx, "memcached_get_profile")
-	memSpan.SetTag("span.kind", "client")
+	ctx, memSpan := s.Tracer.Start(ctx, "memcached_get_profile")
+	memSpan.SetAttributes(attribute.String("span.kind", "client"))
 	resMap, err := s.MemcClient.GetMulti(hotelIds)
-	memSpan.Finish()
+	memSpan.End()
 
 	res := new(pb.Result)
 	hotels := make([]*pb.Hotel, 0)
@@ -132,10 +131,10 @@ func (s *Server) GetProfiles(ctx context.Context, req *pb.Request) (*pb.Result, 
 
 				collection := s.MongoClient.Database("profile-db").Collection("hotels")
 
-				mongoSpan, _ := opentracing.StartSpanFromContext(ctx, "mongo_profile")
-				mongoSpan.SetTag("span.kind", "client")
+				_, mongoSpan := s.Tracer.Start(ctx, "mongo_profile")
+				mongoSpan.SetAttributes(attribute.String("span.kind", "client"))
 				err := collection.FindOne(context.TODO(), bson.D{{"id", hotelId}}).Decode(&hotelProf)
-				mongoSpan.Finish()
+				mongoSpan.End()
 
 				if err != nil {
 					log.Error().Msgf("Failed get hotels data: ", err)
