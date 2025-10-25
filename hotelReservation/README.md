@@ -57,6 +57,8 @@ Read the Readme file in Kubernetes directory.
 #### workload generation
 ```bash
 ../wrk2/wrk -D exp -t <num-threads> -c <num-conns> -d <duration> -L -s ./wrk2/scripts/hotel-reservation/mixed-workload_type_1.lua http://x.x.x.x:5000 -R <reqs-per-sec>
+
+../wrk2/wrk -D exp -t 10 -c 100 -d 30s -L -s ./wrk2/scripts/hotel-reservation/mixed-workload_type_1.lua http://10.10.10.220:32504 -R 30
 ```
 
 ### Questions and contact
