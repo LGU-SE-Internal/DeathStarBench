@@ -20,8 +20,8 @@ import (
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tls"
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tracing"
 	_ "github.com/mbobakov/grpc-consul-resolver"
-	"github.com/opentracing/opentracing-go"
 	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 )
 
@@ -44,7 +44,7 @@ type Server struct {
 	IpAddr     string
 	ConsulAddr string
 	Port       int
-	Tracer     opentracing.Tracer
+	Tracer     trace.Tracer
 	Registry   *registry.Client
 }
 

@@ -17,12 +17,12 @@ package tracing
 import (
 	"net/http"
 
-	"github.com/opentracing-contrib/go-stdlib/nethttp"
-	opentracing "github.com/opentracing/opentracing-go"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // NewServeMux creates a new TracedServeMux.
-func NewServeMux(tracer opentracing.Tracer) *TracedServeMux {
+func NewServeMux(tracer trace.Tracer) *TracedServeMux {
 	return &TracedServeMux{
 		mux:    http.NewServeMux(),
 		tracer: tracer,
@@ -32,17 +32,15 @@ func NewServeMux(tracer opentracing.Tracer) *TracedServeMux {
 // TracedServeMux is a wrapper around http.ServeMux that instruments handlers for tracing.
 type TracedServeMux struct {
 	mux    *http.ServeMux
-	tracer opentracing.Tracer
+	tracer trace.Tracer
 }
 
 // Handle implements http.ServeMux#Handle
 func (tm *TracedServeMux) Handle(pattern string, handler http.Handler) {
-	middleware := nethttp.Middleware(
-		tm.tracer,
+	middleware := otelhttp.NewHandler(
 		handler,
-		nethttp.OperationNameFunc(func(r *http.Request) string {
-			return "HTTP " + r.Method + " " + pattern
-		}))
+		"HTTP "+pattern,
+	)
 	tm.mux.Handle(pattern, middleware)
 }
 

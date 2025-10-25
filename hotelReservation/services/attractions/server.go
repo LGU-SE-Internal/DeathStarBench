@@ -10,12 +10,13 @@ import (
 	pb "github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/services/attractions/proto"
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tls"
 	"github.com/google/uuid"
-	"github.com/grpc-ecosystem/grpc-opentracing/go/otgrpc"
 	"github.com/hailocab/go-geoindex"
-	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
 )
@@ -37,7 +38,7 @@ type Server struct {
 	uuid   string
 
 	Registry    *registry.Client
-	Tracer      opentracing.Tracer
+	Tracer      trace.Tracer
 	Port        int
 	IpAddr      string
 	MongoClient *mongo.Client
@@ -75,7 +76,7 @@ func (s *Server) Run() error {
 			PermitWithoutStream: true,
 		}),
 		grpc.UnaryInterceptor(
-			otgrpc.OpenTracingServerInterceptor(s.Tracer),
+			otelgrpc.UnaryServerInterceptor(),
 		),
 	}
 
@@ -111,8 +112,8 @@ func (s *Server) Shutdown() {
 func (s *Server) NearbyRest(ctx context.Context, req *pb.Request) (*pb.Result, error) {
 	log.Trace().Msgf("In Attractions NearbyRest")
 
-	mongoSpan, _ := opentracing.StartSpanFromContext(ctx, "mongo_restaurant")
-	mongoSpan.SetTag("span.kind", "client")
+	_, mongoSpan := s.Tracer.Start(ctx, "mongo_restaurant")
+	mongoSpan.SetAttributes(attribute.String("span.kind", "client"))
 
 	c := s.MongoClient.Database("attractions-db").Collection("hotels")
 
@@ -148,8 +149,8 @@ func (s *Server) NearbyRest(ctx context.Context, req *pb.Request) (*pb.Result, e
 func (s *Server) NearbyMus(ctx context.Context, req *pb.Request) (*pb.Result, error) {
 	log.Trace().Msgf("In Attractions NearbyMus")
 
-	mongoSpan, _ := opentracing.StartSpanFromContext(ctx, "mongo_museum")
-	mongoSpan.SetTag("span.kind", "client")
+	_, mongoSpan := s.Tracer.Start(ctx, "mongo_museum")
+	mongoSpan.SetAttributes(attribute.String("span.kind", "client"))
 
 	c := s.MongoClient.Database("attractions-db").Collection("hotels")
 
@@ -185,8 +186,8 @@ func (s *Server) NearbyMus(ctx context.Context, req *pb.Request) (*pb.Result, er
 func (s *Server) NearbyCinema(ctx context.Context, req *pb.Request) (*pb.Result, error) {
 	log.Trace().Msgf("In Attractions NearbyCinema")
 
-	mongoSpan, _ := opentracing.StartSpanFromContext(ctx, "mongo_cinema")
-	mongoSpan.SetTag("span.kind", "client")
+	_, mongoSpan := s.Tracer.Start(ctx, "mongo_cinema")
+	mongoSpan.SetAttributes(attribute.String("span.kind", "client"))
 
 	c := s.MongoClient.Database("attractions-db").Collection("hotels")
 
