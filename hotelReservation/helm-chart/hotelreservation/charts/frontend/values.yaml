@@ -3,10 +3,10 @@ name: frontend
 ports:
   - port: 5000
     targetPort: 5000
-
+serviceType: NodePort
 container:
   command: frontend
-  image: deathstarbench/hotel-reservation
+  image: hotelreservation
   name: hotel-reserv-frontend
   ports:
   - containerPort: 5000
