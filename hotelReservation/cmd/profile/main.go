@@ -53,13 +53,11 @@ func main() {
 	logger.Info().Msgf("Initializing OpenTelemetry with logging [service name: %v | host: %v]...", "profile", *jaegerAddr)
 	tracer, logger, err := tracing.InitWithOtelLogging("profile", *jaegerAddr)
 	if err != nil {
-		fmt.Printf("Failed to initialize OpenTelemetry: %v
-", err)
+		fmt.Printf("Failed to initialize OpenTelemetry: %v\n", err)
 		os.Exit(1)
 	}
 	
-	// Set the global logger to the one with OTLP export
-	logger.Info().Msg("OpenTelemetry tracer and logger initialized")
+		logger.Info().Msg("OpenTelemetry tracer and logger initialized")
 
 	logger.Info().Msgf("Initializing consul agent [host: %v]...", *consulAddr)
 	registry, err := registry.NewClient(*consulAddr)

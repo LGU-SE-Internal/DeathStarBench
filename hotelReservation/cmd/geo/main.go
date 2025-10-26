@@ -48,8 +48,7 @@ func main() {
 	logger.Info().Msgf("Initializing OpenTelemetry with logging [service name: %v | host: %v]...", "geo", *jaegerAddr)
 	tracer, logger, err := tracing.InitWithOtelLogging("geo", *jaegerAddr)
 	if err != nil {
-		fmt.Printf("Failed to initialize OpenTelemetry: %v
-", err)
+		fmt.Printf("Failed to initialize OpenTelemetry: %v\n", err)
 		os.Exit(1)
 	}
 	

@@ -33,57 +33,52 @@ func main() {
 	var result map[string]string
 	json.Unmarshal([]byte(byteValue), &result)
 
-	log.Info().Msgf("Read database URL: %v", result["ReviewMongoAddress"])
-	log.Info().Msg("Initializing DB connection...")
-	mongo_session, mongoClose := initializeDatabase(result["ReviewMongoAddress"])
-	defer mongoClose()
-	log.Info().Msg("Successfull")
-
-	log.Info().Msgf("Read review memcashed address: %v", result["ReviewMemcAddress"])
-	log.Info().Msg("Initializing Memcashed client...")
-	// memc_client := memcache.New(result["ReviewMemcAddress"])
-	// memc_client.Timeout = time.Second * 2
-	// memc_client.MaxIdleConns = 512
-	memc_client := tune.NewMemCClient2(result["ReviewMemcAddress"])
-	log.Info().Msg("Successfull")
-
-	serv_port, _ := strconv.Atoi(result["ReviewPort"])
-	serv_ip := result["ReviewIP"]
-	log.Info().Msgf("Read target port: %v", serv_port)
-	log.Info().Msgf("Read consul address: %v", result["consulAddress"])
-	log.Info().Msgf("Read jaeger address: %v", result["jaegerAddress"])
+	servPort, _ := strconv.Atoi(result["ReviewPort"])
+	servIP := result["ReviewIP"]
 
 	var (
-		// port       = flag.Int("port", 8081, "The server port")
-		jaegeraddr = flag.String("jaegeraddr", result["jaegerAddress"], "Jaeger server addr")
-		consuladdr = flag.String("consuladdr", result["consulAddress"], "Consul address")
+		jaegerAddr = flag.String("jaegeraddr", result["jaegerAddress"], "Jaeger server addr")
+		consulAddr = flag.String("consuladdr", result["consulAddress"], "Consul address")
 	)
 	flag.Parse()
 
-	log.Info().Msgf("Initializing jaeger agent [service name: %v | host: %v]...", "review", *jaegeraddr)
-	tracer, err := tracing.Init("review", *jaegeraddr)
+	// Initialize OpenTelemetry with native logging
+	tracer, logger, err := tracing.InitWithOtelLogging("review", *jaegerAddr)
 	if err != nil {
-		log.Panic().Msgf("Got error while initializing jaeger agent: %v", err)
+		fmt.Printf("Failed to initialize OpenTelemetry: %v\n", err)
+		os.Exit(1)
 	}
-	log.Info().Msg("Jaeger agent initialized")
+	
+	logger.Info().Msg("OpenTelemetry tracer and logger initialized")
 
-	log.Info().Msgf("Initializing consul agent [host: %v]...", *consuladdr)
-	registry, err := registry.NewClient(*consuladdr)
+	logger.Info().Msgf("Read database URL: %v", result["ReviewMongoAddress"])
+	logger.Info().Msg("Initializing DB connection...")
+	mongoSession, mongoClose := initializeDatabase(result["ReviewMongoAddress"])
+	defer mongoClose()
+	logger.Info().Msg("Successful")
+
+	logger.Info().Msgf("Read review memcached address: %v", result["ReviewMemcAddress"])
+	logger.Info().Msg("Initializing Memcached client...")
+	memcClient := tune.NewMemCClient2(result["ReviewMemcAddress"])
+	logger.Info().Msg("Successful")
+
+	logger.Info().Msgf("Initializing consul agent [host: %v]...", *consulAddr)
+	registry, err := registry.NewClient(*consulAddr)
 	if err != nil {
-		log.Panic().Msgf("Got error while initializing consul agent: %v", err)
+		logger.Panic().Msgf("Got error while initializing consul agent: %v", err)
 	}
-	log.Info().Msg("Consul agent initialized")
+	logger.Info().Msg("Consul agent initialized")
 
 	srv := review.Server{
 		Tracer: tracer,
 		// Port:     *port,
 		Registry:    registry,
-		Port:        serv_port,
-		IpAddr:      serv_ip,
-		MongoClient: mongo_session,
-		MemcClient:  memc_client,
+		Port:        servPort,
+		IpAddr:      servIP,
+		MongoClient: mongoSession,
+		MemcClient:  memcClient,
 	}
 
-	log.Info().Msg("Starting server...")
-	log.Fatal().Msg(srv.Run().Error())
+	logger.Info().Msg("Starting server...")
+	logger.Fatal().Msg(srv.Run().Error())
 }

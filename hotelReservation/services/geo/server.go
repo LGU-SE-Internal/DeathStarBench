@@ -26,6 +26,11 @@ const (
 	maxSearchResults = 5
 )
 
+var (
+	// log is the logger instance
+	log = tracing.Log
+)
+
 // Server implements the geo service
 type Server struct {
 	pb.UnimplementedGeoServer

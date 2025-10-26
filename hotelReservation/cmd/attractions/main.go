@@ -33,46 +33,36 @@ func main() {
 	var result map[string]string
 	json.Unmarshal([]byte(byteValue), &result)
 
-	log.Info().Msgf("Read database URL: %v", result["AttractionsMongoAddress"])
-	log.Info().Msg("Initializing DB connection...")
-	mongo_session, mongoClose := initializeDatabase(result["AttractionsMongoAddress"])
-	defer mongoClose()
-	log.Info().Msg("Successfull")
-
-	// log.Info().Msgf("Read attractions memcashed address: %v", result["AttractionsMemcAddress"])
-	// log.Info().Msg("Initializing Memcashed client...")
-	// memc_client := memcache.New(result["AttractionsMemcAddress"])
-	// memc_client.Timeout = time.Second * 2
-	// memc_client.MaxIdleConns = 512
-	// memc_client := tune.NewMemCClient2(result["AttractionsMemcAddress"])
-	// log.Info().Msg("Successfull")
-
-	serv_port, _ := strconv.Atoi(result["AttractionsPort"])
-	serv_ip := result["AttractionsIP"]
-	log.Info().Msgf("Read target port: %v", serv_port)
-	log.Info().Msgf("Read consul address: %v", result["consulAddress"])
-	log.Info().Msgf("Read jaeger address: %v", result["jaegerAddress"])
+	servPort, _ := strconv.Atoi(result["AttractionsPort"])
+	servIP := result["AttractionsIP"]
 
 	var (
-		// port       = flag.Int("port", 8081, "The server port")
-		jaegeraddr = flag.String("jaegeraddr", result["jaegerAddress"], "Jaeger server addr")
-		consuladdr = flag.String("consuladdr", result["consulAddress"], "Consul address")
+		jaegerAddr = flag.String("jaegeraddr", result["jaegerAddress"], "Jaeger server addr")
+		consulAddr = flag.String("consuladdr", result["consulAddress"], "Consul address")
 	)
 	flag.Parse()
 
-	log.Info().Msgf("Initializing jaeger agent [service name: %v | host: %v]...", "attractions", *jaegeraddr)
-	tracer, err := tracing.Init("attractions", *jaegeraddr)
+	// Initialize OpenTelemetry with native logging
+	tracer, logger, err := tracing.InitWithOtelLogging("attractions", *jaegerAddr)
 	if err != nil {
-		log.Panic().Msgf("Got error while initializing jaeger agent: %v", err)
+		fmt.Printf("Failed to initialize OpenTelemetry: %v\n", err)
+		os.Exit(1)
 	}
-	log.Info().Msg("Jaeger agent initialized")
+	
+	logger.Info().Msg("OpenTelemetry tracer and logger initialized")
 
-	log.Info().Msgf("Initializing consul agent [host: %v]...", *consuladdr)
-	registry, err := registry.NewClient(*consuladdr)
+	logger.Info().Msgf("Read database URL: %v", result["AttractionsMongoAddress"])
+	logger.Info().Msg("Initializing DB connection...")
+	mongoSession, mongoClose := initializeDatabase(result["AttractionsMongoAddress"])
+	defer mongoClose()
+	logger.Info().Msg("Successful")
+
+	logger.Info().Msgf("Initializing consul agent [host: %v]...", *consulAddr)
+	registry, err := registry.NewClient(*consulAddr)
 	if err != nil {
-		log.Panic().Msgf("Got error while initializing consul agent: %v", err)
+		logger.Panic().Msgf("Got error while initializing consul agent: %v", err)
 	}
-	log.Info().Msg("Consul agent initialized")
+	logger.Info().Msg("Consul agent initialized")
 
 	srv := attractions.Server{
 		Tracer: tracer,
@@ -80,7 +70,7 @@ func main() {
 		Registry:    registry,
 		Port:        serv_port,
 		IpAddr:      serv_ip,
-		MongoClient: mongo_session,
+		MongoClient: mongoSession,
 	}
 
 	log.Info().Msg("Starting server...")
