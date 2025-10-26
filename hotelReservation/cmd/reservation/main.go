@@ -1,33 +1,29 @@
 package main
 
 import (
+	"fmt"
 	"encoding/json"
 	"flag"
 	"io/ioutil"
 	"os"
 	"strconv"
-	"time"
-
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/registry"
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/services/reservation"
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tracing"
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tune"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
-)
+	)
 
 func main() {
 	tune.Init()
-	// Initialize temporary logger for startup
-	tempLogger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}).With().Timestamp().Caller().Logger()
-	log.Logger = tempLogger
 
-	log.Info().Msg("Reading config...")
+	// Read config first to get jaeger address
+	fmt.Println("Initializing OpenTelemetry with logging...")
+	
 	jsonFile, err := os.Open("config.json")
 	if err != nil {
-		log.Error().Msgf("Got error while reading config: %v", err)
+		fmt.Printf("Error reading config: %v\n", err)
+		os.Exit(1)
 	}
-
 	defer jsonFile.Close()
 
 	byteValue, _ := ioutil.ReadAll(jsonFile)
@@ -54,14 +50,15 @@ func main() {
 	flag.Parse()
 
 	// Initialize OpenTelemetry with logging support
-	tempLogger.Info().Msgf("Initializing OpenTelemetry with logging [service name: %v | host: %v]...", "reservation", *jaegerAddr)
-	tracer, logger, err := tracing.InitWithLogging("reservation", *jaegerAddr)
+	logger.Info().Msgf("Initializing OpenTelemetry with logging [service name: %v | host: %v]...", "reservation", *jaegerAddr)
+	tracer, logger, err := tracing.InitWithOtelLogging("reservation", *jaegerAddr)
 	if err != nil {
-		tempLogger.Panic().Msgf("Got error while initializing OpenTelemetry: %v", err)
+		fmt.Printf("Failed to initialize OpenTelemetry: %v
+", err)
+		os.Exit(1)
 	}
 	
 	// Set the global logger to the one with OTLP export
-	log.Logger = logger
 	logger.Info().Msg("OpenTelemetry tracer and logger initialized")
 
 	logger.Info().Msgf("Initializing consul agent [host: %v]...", *consulAddr)
@@ -81,5 +78,7 @@ func main() {
 	}
 
 	logger.Info().Msg("Starting server...")
-	logger.Fatal().Msg(srv.Run().Error())
+	if err := srv.Run(); err != nil {
+		logger.Fatal().Msgf("Server error: %v", err)
+	}
 }

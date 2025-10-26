@@ -13,12 +13,10 @@ import (
 	// "sort"
 	"time"
 	//"sync"
-
-	"github.com/rs/zerolog/log"
-
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/registry"
 	pb "github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/services/review/proto"
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tls"
+	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tracing"
 	"github.com/google/uuid"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel/attribute"
@@ -33,6 +31,11 @@ import (
 )
 
 const name = "srv-review"
+
+var (
+	// log is the logger instance
+	log = tracing.Log
+)
 
 // Server implements the rate service
 type Server struct {

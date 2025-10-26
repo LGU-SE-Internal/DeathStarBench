@@ -9,9 +9,9 @@ import (
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/registry"
 	pb "github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/services/attractions/proto"
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tls"
+	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tracing"
 	"github.com/google/uuid"
 	"github.com/hailocab/go-geoindex"
-	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
@@ -131,6 +131,8 @@ func (s *Server) NearbyRest(ctx context.Context, req *pb.Request) (*pb.Result, e
 	}
 
 	var (
+	// log is the logger instance
+	log = tracing.Log
 		points = s.getNearbyPointsRest(ctx, float64(hotelReq.Plat), float64(hotelReq.Plon))
 		res    = &pb.Result{}
 	)

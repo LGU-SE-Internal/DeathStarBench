@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"encoding/json"
 	"flag"
 	"io/ioutil"
@@ -11,26 +12,20 @@ import (
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/services/attractions"
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tracing"
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tune"
-
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
-
-	"time"
 	// "github.com/bradfitz/gomemcache/memcache"
 )
 
 func main() {
 	tune.Init()
-	// Initialize temporary logger for startup
-	tempLogger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}).With().Timestamp().Caller().Logger()
-	log.Logger = tempLogger
 
-	log.Info().Msg("Reading config...")
+	// Read config first to get jaeger address
+	fmt.Println("Initializing OpenTelemetry with logging...")
+	
 	jsonFile, err := os.Open("config.json")
 	if err != nil {
-		log.Error().Msgf("Got error while reading config: %v", err)
+		fmt.Printf("Error reading config: %v\n", err)
+		os.Exit(1)
 	}
-
 	defer jsonFile.Close()
 
 	byteValue, _ := ioutil.ReadAll(jsonFile)

@@ -11,10 +11,9 @@ import (
 	rate "github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/services/rate/proto"
 	pb "github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/services/search/proto"
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tls"
+	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tracing"
 	"github.com/google/uuid"
 	_ "github.com/mbobakov/grpc-consul-resolver"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel/trace"
 	context "golang.org/x/net/context"
@@ -23,6 +22,11 @@ import (
 )
 
 const name = "srv-search"
+
+var (
+	// log is the logger instance
+	log = tracing.Log
+)
 
 // Server implments the search service
 type Server struct {
@@ -128,27 +132,8 @@ func (s *Server) getGprcConn(name string) (*grpc.ClientConn, error) {
 
 // Nearby returns ids of nearby hotels ordered by ranking algo
 func (s *Server) Nearby(ctx context.Context, req *pb.NearbyRequest) (*pb.SearchResult, error) {
-	// Get logger with trace context
-	logger := zerolog.Ctx(ctx)
-	if logger.GetLevel() == zerolog.Disabled {
-		// If no logger in context, use global logger
-		globalLogger := log.Logger
-		logger = &globalLogger
-	}
-	
-	// Extract trace information and add to logger
-	span := trace.SpanFromContext(ctx)
-	if span.IsRecording() {
-		spanCtx := span.SpanContext()
-		if spanCtx.HasTraceID() {
-			newLogger := logger.With().Str("trace_id", spanCtx.TraceID().String()).Logger()
-			logger = &newLogger
-		}
-		if spanCtx.HasSpanID() {
-			newLogger := logger.With().Str("span_id", spanCtx.SpanID().String()).Logger()
-			logger = &newLogger
-		}
-	}
+	// Get logger with automatic trace context
+	logger := tracing.Log.WithContext(ctx)
 	
 	// find nearby hotels
 	logger.Trace().Msg("in Search Nearby")

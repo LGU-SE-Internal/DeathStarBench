@@ -12,8 +12,8 @@ import (
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/registry"
 	pb "github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/services/profile/proto"
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tls"
+	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tracing"
 	"github.com/google/uuid"
-	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
@@ -24,6 +24,11 @@ import (
 )
 
 const name = "srv-profile"
+
+var (
+	// log is the logger instance
+	log = tracing.Log
+)
 
 // Server implements the profile service
 type Server struct {
