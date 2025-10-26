@@ -62,12 +62,12 @@ func sendLogToOtel(logger log.Logger, logEntry map[string]interface{}) {
 	// These fields are added by CtxWithTraceID or manually in service code
 	var traceID trace.TraceID
 	var spanID trace.SpanID
-	var hasTraceContext bool
+	var hasTraceID bool
 	
 	if traceIDStr, ok := logEntry["trace_id"].(string); ok && traceIDStr != "" {
 		if parsedTraceID, err := trace.TraceIDFromHex(traceIDStr); err == nil {
 			traceID = parsedTraceID
-			hasTraceContext = true
+			hasTraceID = true
 		}
 	}
 	if spanIDStr, ok := logEntry["span_id"].(string); ok && spanIDStr != "" {
@@ -76,12 +76,15 @@ func sendLogToOtel(logger log.Logger, logEntry map[string]interface{}) {
 		}
 	}
 
-	// If we have trace context, create a span context and add it to the context
+	// If we have at least a trace ID, create a span context and add it to the context
 	// This allows the OpenTelemetry logger to properly associate logs with traces
-	if hasTraceContext {
+	// Note: A valid trace context requires at least a trace ID
+	if hasTraceID {
 		spanContext := trace.NewSpanContext(trace.SpanContextConfig{
 			TraceID: traceID,
 			SpanID:  spanID,
+			// Use FlagsSampled as a reasonable default since these logs are being exported
+			// The actual sampling decision was already made when the trace was created
 			TraceFlags: trace.FlagsSampled,
 		})
 		ctx = trace.ContextWithSpanContext(ctx, spanContext)
