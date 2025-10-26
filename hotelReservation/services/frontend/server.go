@@ -20,7 +20,6 @@ import (
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tls"
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tracing"
 	_ "github.com/mbobakov/grpc-consul-resolver"
-	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 )
@@ -28,6 +27,8 @@ import (
 var (
 	//go:embed static/*
 	content embed.FS
+	// log is the logger instance
+	log = tracing.Log
 )
 
 // Server implements frontend service
