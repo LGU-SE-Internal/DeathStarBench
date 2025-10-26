@@ -1,6 +1,7 @@
 package tune
 
 import (
+	"fmt"
 	"os"
 	"runtime/debug"
 	"strconv"
@@ -26,7 +27,8 @@ func setGCPercent() {
 	}
 
 	debug.SetGCPercent(ratio)
-	tracing.Log.Info().Msgf("Tune: setGCPercent to %d", ratio)
+	// Use fmt instead of tracing.Log since this is called before logger initialization
+	fmt.Printf("Tune: setGCPercent to %d\n", ratio)
 }
 
 func setLogLevel() {
@@ -40,7 +42,8 @@ func setLogLevel() {
 	// The log level filtering is typically done at the collector or backend side
 	globalLogLevel = logLevel
 	
-	tracing.Log.Info().Msgf("Set global log level: %s", logLevel)
+	// Use fmt instead of tracing.Log since this is called before logger initialization
+	fmt.Printf("Set global log level: %s\n", logLevel)
 }
 
 func GetMemCTimeout() int {
@@ -48,7 +51,11 @@ func GetMemCTimeout() int {
 	if val, ok := os.LookupEnv("MEMC_TIMEOUT"); ok {
 		timeout, _ = strconv.Atoi(val)
 	}
-	tracing.Log.Info().Msgf("Tune: GetMemCTimeout %d", timeout)
+	// Use tracing.Log if available, otherwise just return
+	// This function may be called during initialization before logger is ready
+	if tracing.Log != nil {
+		tracing.Log.Info().Msgf("Tune: GetMemCTimeout %d", timeout)
+	}
 	return timeout
 }
 
