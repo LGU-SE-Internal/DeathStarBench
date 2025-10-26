@@ -68,11 +68,13 @@ func main() {
 		Tracer: tracer,
 		// Port:     *port,
 		Registry:    registry,
-		Port:        serv_port,
-		IpAddr:      serv_ip,
+		Port:        servPort,
+		IpAddr:      servIP,
 		MongoClient: mongoSession,
 	}
 
-	log.Info().Msg("Starting server...")
-	log.Fatal().Msg(srv.Run().Error())
+	logger.Info().Msg("Starting server...")
+	if err := srv.Run(); err != nil {
+		logger.Fatal().Msgf("Server error: %v", err)
+	}
 }

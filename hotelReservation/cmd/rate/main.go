@@ -32,6 +32,22 @@ func main() {
 	var result map[string]string
 	json.Unmarshal([]byte(byteValue), &result)
 
+	var (
+		jaegerAddr = flag.String("jaegeraddr", result["jaegerAddress"], "Jaeger address")
+		consulAddr = flag.String("consuladdr", result["consulAddress"], "Consul address")
+	)
+	flag.Parse()
+
+	// Initialize OpenTelemetry with logging support
+	fmt.Printf("Initializing OpenTelemetry with logging [service name: rate | host: %v]...\n", *jaegerAddr)
+	tracer, logger, err := tracing.InitWithOtelLogging("rate", *jaegerAddr)
+	if err != nil {
+		fmt.Printf("Failed to initialize OpenTelemetry: %v\n", err)
+		os.Exit(1)
+	}
+	
+	logger.Info().Msg("OpenTelemetry tracer and logger initialized")
+	
 	logger.Info().Msg("Initializing DB connection...")
 	mongoClient, mongoClose := initializeDatabase(result["RateMongoAddress"])
 	defer mongoClose()
@@ -43,22 +59,6 @@ func main() {
 
 	servPort, _ := strconv.Atoi(result["RatePort"])
 	servIP := result["RateIP"]
-
-	var (
-		jaegerAddr = flag.String("jaegeraddr", result["jaegerAddress"], "Jaeger address")
-		consulAddr = flag.String("consuladdr", result["consulAddress"], "Consul address")
-	)
-	flag.Parse()
-
-	// Initialize OpenTelemetry with logging support
-	logger.Info().Msgf("Initializing OpenTelemetry with logging [service name: %v | host: %v]...", "rate", *jaegerAddr)
-	tracer, logger, err := tracing.InitWithOtelLogging("rate", *jaegerAddr)
-	if err != nil {
-		fmt.Printf("Failed to initialize OpenTelemetry: %v\n", err)
-		os.Exit(1)
-	}
-	
-		logger.Info().Msg("OpenTelemetry tracer and logger initialized")
 
 	logger.Info().Msgf("Initializing consul agent [host: %v]...", *consulAddr)
 	registry, err := registry.NewClient(*consulAddr)

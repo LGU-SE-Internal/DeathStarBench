@@ -31,13 +31,6 @@ func main() {
 	var result map[string]string
 	json.Unmarshal([]byte(byteValue), &result)
 
-	logger.Info().Msg("Initializing DB connection...")
-	mongoClient, mongoClose := initializeDatabase(result["GeoMongoAddress"])
-	defer mongoClose()
-
-	servPort, _ := strconv.Atoi(result["GeoPort"])
-	servIP := result["GeoIP"]
-
 	var (
 		jaegerAddr = flag.String("jaegeraddr", result["jaegerAddress"], "Jaeger address")
 		consulAddr = flag.String("consuladdr", result["consulAddress"], "Consul address")
@@ -45,15 +38,21 @@ func main() {
 	flag.Parse()
 
 	// Initialize OpenTelemetry with logging support
-	logger.Info().Msgf("Initializing OpenTelemetry with logging [service name: %v | host: %v]...", "geo", *jaegerAddr)
+	fmt.Printf("Initializing OpenTelemetry with logging [service name: geo | host: %v]...\n", *jaegerAddr)
 	tracer, logger, err := tracing.InitWithOtelLogging("geo", *jaegerAddr)
 	if err != nil {
 		fmt.Printf("Failed to initialize OpenTelemetry: %v\n", err)
 		os.Exit(1)
 	}
 	
-	// Set the global logger to the one with OTLP export
 	logger.Info().Msg("OpenTelemetry tracer and logger initialized")
+
+	logger.Info().Msg("Initializing DB connection...")
+	mongoClient, mongoClose := initializeDatabase(result["GeoMongoAddress"])
+	defer mongoClose()
+
+	servPort, _ := strconv.Atoi(result["GeoPort"])
+	servIP := result["GeoIP"]
 
 	logger.Info().Msgf("Initializing consul agent [host: %v]...", *consulAddr)
 	registry, err := registry.NewClient(*consulAddr)
