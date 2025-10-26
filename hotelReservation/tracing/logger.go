@@ -10,8 +10,9 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
-	"go.opentelemetry.io/otel/log"
+	otellog "go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/log/global"
 	sdklog "go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/resource"
@@ -21,9 +22,43 @@ import (
 
 var (
 	loggerProvider *sdklog.LoggerProvider
-	otelLogger     log.Logger
+	otelLogger     otellog.Logger
 	loggerMutex    sync.RWMutex
 )
+
+// TraceContextHook is a zerolog hook that automatically adds trace context to logs
+type TraceContextHook struct{}
+
+// Run implements zerolog.Hook interface
+func (h TraceContextHook) Run(e *zerolog.Event, level zerolog.Level, msg string) {
+	ctx := e.GetCtx()
+	if ctx == nil {
+		return
+	}
+	
+	span := trace.SpanFromContext(ctx)
+	if !span.IsRecording() {
+		return
+	}
+	
+	spanCtx := span.SpanContext()
+	if spanCtx.HasTraceID() {
+		e.Str("trace_id", spanCtx.TraceID().String())
+	}
+	if spanCtx.HasSpanID() {
+		e.Str("span_id", spanCtx.SpanID().String())
+	}
+}
+
+// LoggerWithTraceContext returns a logger with trace context from the span
+// This should be called at the start of each request handler to get a logger
+// that automatically includes trace_id and span_id in all log entries via the TraceContextHook
+func LoggerWithTraceContext(ctx context.Context, baseLogger zerolog.Logger) *zerolog.Logger {
+	// Store the logger in the context so the hook can access the context
+	ctx = baseLogger.WithContext(ctx)
+	// Return the logger from context
+	return zerolog.Ctx(ctx)
+}
 
 // OtelLogWriter is a writer that sends logs to OpenTelemetry
 type OtelLogWriter struct {
@@ -55,7 +90,7 @@ func (w *OtelLogWriter) Write(p []byte) (n int, err error) {
 }
 
 // sendLogToOtel sends a log entry to OpenTelemetry
-func sendLogToOtel(logger log.Logger, logEntry map[string]interface{}) {
+func sendLogToOtel(logger otellog.Logger, logEntry map[string]interface{}) {
 	ctx := context.Background()
 
 	// Extract trace context from log entry fields and create a context with span context
@@ -98,21 +133,21 @@ func sendLogToOtel(logger log.Logger, logEntry map[string]interface{}) {
 	severity := mapLevelToSeverity(level)
 
 	// Create log record
-	var logRecord log.Record
+	var logRecord otellog.Record
 	logRecord.SetTimestamp(time.Now())
-	logRecord.SetBody(log.StringValue(message))
+	logRecord.SetBody(otellog.StringValue(message))
 	logRecord.SetSeverity(severity)
 	logRecord.SetSeverityText(strings.ToUpper(level))
 
 	// Prepare attributes (excluding trace_id and span_id as they're now set via context)
-	attrs := make([]log.KeyValue, 0)
+	attrs := make([]otellog.KeyValue, 0)
 	
 	// Add other fields as attributes
 	for k, v := range logEntry {
 		if k == "level" || k == "message" || k == "time" || k == "trace_id" || k == "span_id" {
 			continue
 		}
-		attrs = append(attrs, log.String(k, toString(v)))
+		attrs = append(attrs, otellog.String(k, toString(v)))
 	}
 	
 	logRecord.AddAttributes(attrs...)
@@ -122,24 +157,24 @@ func sendLogToOtel(logger log.Logger, logEntry map[string]interface{}) {
 }
 
 // mapLevelToSeverity maps zerolog level to OpenTelemetry severity
-func mapLevelToSeverity(level string) log.Severity {
+func mapLevelToSeverity(level string) otellog.Severity {
 	switch level {
 	case "trace":
-		return log.SeverityTrace
+		return otellog.SeverityTrace
 	case "debug":
-		return log.SeverityDebug
+		return otellog.SeverityDebug
 	case "info":
-		return log.SeverityInfo
+		return otellog.SeverityInfo
 	case "warn":
-		return log.SeverityWarn
+		return otellog.SeverityWarn
 	case "error":
-		return log.SeverityError
+		return otellog.SeverityError
 	case "fatal":
-		return log.SeverityFatal
+		return otellog.SeverityFatal
 	case "panic":
-		return log.SeverityFatal4
+		return otellog.SeverityFatal4
 	default:
-		return log.SeverityInfo
+		return otellog.SeverityInfo
 	}
 }
 
@@ -231,31 +266,32 @@ func InitWithLogging(serviceName, host string) (trace.Tracer, zerolog.Logger, er
 		consoleWriter: consoleWriter,
 	}
 
-	// Create logger with the dual writer
-	logger := zerolog.New(otelWriter).With().Timestamp().Caller().Logger()
+	// Create logger with the dual writer and trace context hook
+	// The hook automatically adds trace_id and span_id to all logs when a span context is available
+	logger := zerolog.New(otelWriter).
+		With().
+		Timestamp().
+		Caller().
+		Logger().
+		Hook(TraceContextHook{})
 	logger.Info().Msg("OpenTelemetry logger initialized successfully")
 
 	return tracer, logger, nil
 }
 
-// CtxWithTraceID returns a logger with trace and span IDs from context
-func CtxWithTraceID(ctx context.Context) zerolog.Logger {
+// CtxWithTraceID returns a logger that will automatically include trace_id and span_id
+// via the TraceContextHook. The logger must have been created with the hook (via InitWithLogging).
+// Usage: logger := tracing.CtxWithTraceID(ctx); logger.Info().Msg("message")
+func CtxWithTraceID(ctx context.Context) *zerolog.Logger {
+	// Get logger from context or use global logger
 	logger := zerolog.Ctx(ctx)
-	
-	span := trace.SpanFromContext(ctx)
-	if span.IsRecording() {
-		spanCtx := span.SpanContext()
-		newLogger := *logger
-		if spanCtx.HasTraceID() {
-			newLogger = newLogger.With().Str("trace_id", spanCtx.TraceID().String()).Logger()
-		}
-		if spanCtx.HasSpanID() {
-			newLogger = newLogger.With().Str("span_id", spanCtx.SpanID().String()).Logger()
-		}
-		return newLogger
+	if logger.GetLevel() == zerolog.Disabled {
+		// No logger in context, use global logger and store it in the context
+		// so the TraceContextHook can access the context
+		ctx = log.Logger.WithContext(ctx)
+		return zerolog.Ctx(ctx)
 	}
-	
-	return *logger
+	return logger
 }
 
 // ShutdownLogger gracefully shuts down the logger provider
