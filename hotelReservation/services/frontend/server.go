@@ -55,13 +55,13 @@ func (s *Server) Run() error {
 		return fmt.Errorf("Server port must be set")
 	}
 
-	log.Info().Msg("Loading static content...")
+	fmt.Println("Loading static content...")
 	staticContent, err := fs.Sub(content, "static")
 	if err != nil {
 		return err
 	}
 
-	log.Info().Msg("Initializing gRPC clients...")
+	fmt.Println("Initializing gRPC clients...")
 	if err := s.initSearchClient("srv-search"); err != nil {
 		return err
 	}
@@ -90,9 +90,9 @@ func (s *Server) Run() error {
 		return err
 	}
 
-	log.Info().Msg("Successful")
+	fmt.Println("Successful")
 
-	log.Trace().Msg("frontend before mux")
+	fmt.Println("frontend before mux")
 	mux := tracing.NewServeMux(s.Tracer)
 	mux.Handle("/", http.FileServer(http.FS(staticContent)))
 	mux.Handle("/hotels", http.HandlerFunc(s.searchHandler))
@@ -104,7 +104,7 @@ func (s *Server) Run() error {
 	mux.Handle("/cinema", http.HandlerFunc(s.cinemaHandler))
 	mux.Handle("/reservation", http.HandlerFunc(s.reservationHandler))
 
-	log.Trace().Msg("frontend starts serving")
+	fmt.Println("frontend starts serving")
 
 	tlsconfig := tls.GetHttpsOpt()
 	srv := &http.Server{
@@ -112,11 +112,11 @@ func (s *Server) Run() error {
 		Handler: mux,
 	}
 	if tlsconfig != nil {
-		log.Info().Msg("Serving https")
+		fmt.Println("Serving https")
 		srv.TLSConfig = tlsconfig
 		return srv.ListenAndServeTLS("x509/server_cert.pem", "x509/server_key.pem")
 	} else {
-		log.Info().Msg("Serving http")
+		fmt.Println("Serving http")
 		return srv.ListenAndServe()
 	}
 }

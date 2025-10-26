@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"net"
 	"sync"
 	"time"
@@ -52,7 +53,7 @@ func (s *Server) Run() error {
 
 	s.uuid = uuid.New().String()
 
-	log.Trace().Msgf("in run s.IpAddr = %s, port = %d", s.IpAddr, s.Port)
+	fmt.Printf("in run s.IpAddr = %s, port = %d\n", s.IpAddr, s.Port)
 
 	opts := []grpc.ServerOption{
 		grpc.KeepaliveParams(keepalive.ServerParameters{
@@ -76,14 +77,14 @@ func (s *Server) Run() error {
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", s.Port))
 	if err != nil {
-		log.Fatal().Msgf("failed to configure listener: %v", err)
+		fmt.Fprintf(os.Stderr, "failed to configure listener: %v\n", err); return fmt.Errorf("failed to configure listener: %v", err)
 	}
 
 	err = s.Registry.Register(name, s.uuid, s.IpAddr, s.Port)
 	if err != nil {
 		return fmt.Errorf("failed register: %v", err)
 	}
-	log.Info().Msg("Successfully registered in consul")
+	fmt.Println("Successfully registered in consul")
 
 	return srv.Serve(lis)
 }

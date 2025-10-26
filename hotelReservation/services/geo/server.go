@@ -87,7 +87,7 @@ func (s *Server) Run() error {
 	if err != nil {
 		return fmt.Errorf("failed register: %v", err)
 	}
-	log.Info().Msg("Successfully registered in consul")
+	fmt.Println("Successfully registered in consul")
 
 	return srv.Serve(lis)
 }

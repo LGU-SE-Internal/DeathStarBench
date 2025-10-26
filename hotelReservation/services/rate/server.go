@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"net"
 	"sort"
 	"strings"
@@ -76,7 +77,7 @@ func (s *Server) Run() error {
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", s.Port))
 	if err != nil {
-		log.Fatal().Msgf("failed to listen: %v", err)
+		fmt.Fprintf(os.Stderr, "failed to listen: %v\n", err); return fmt.Errorf("failed to listen: %v", err)
 	}
 
 	err = s.Registry.Register(name, s.uuid, s.IpAddr, s.Port)
@@ -85,7 +86,7 @@ func (s *Server) Run() error {
 	}
 	// Use fmt.Printf as logger may not be initialized yet during Run()
 	if log != nil {
-		log.Info().Msg("Successfully registered in consul")
+		fmt.Println("Successfully registered in consul")
 	} else {
 		fmt.Println("Successfully registered in consul")
 	}
