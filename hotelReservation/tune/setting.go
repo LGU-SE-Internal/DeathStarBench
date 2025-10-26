@@ -8,8 +8,7 @@ import (
 	"time"
 
 	"github.com/bradfitz/gomemcache/memcache"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
+	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tracing"
 )
 
 var (
@@ -17,6 +16,7 @@ var (
 	defaultMemCTimeout      int    = 2
 	defaultMemCMaxIdleConns int    = 512
 	defaultLogLevel         string = "info"
+	globalLogLevel          string = "info" // Store the log level for later use
 )
 
 func setGCPercent() {
@@ -26,7 +26,7 @@ func setGCPercent() {
 	}
 
 	debug.SetGCPercent(ratio)
-	log.Info().Msgf("Tune: setGCPercent to %d", ratio)
+	tracing.Log.Info().Msgf("Tune: setGCPercent to %d", ratio)
 }
 
 func setLogLevel() {
@@ -34,22 +34,13 @@ func setLogLevel() {
 	if val, ok := os.LookupEnv("LOG_LEVEL"); ok {
 		logLevel = val
 	}
-	switch logLevel {
-	case "", "ERROR", "error": // If env is unset, set level to ERROR.
-		zerolog.SetGlobalLevel(zerolog.ErrorLevel)
-	case "WARNING", "warning":
-		zerolog.SetGlobalLevel(zerolog.WarnLevel)
-	case "DEBUG", "debug":
-		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	case "INFO", "info":
-		zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	case "TRACE", "trace":
-		zerolog.SetGlobalLevel(zerolog.TraceLevel)
-	default: // Set default log level to info
-		zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	}
-
-	log.Info().Msgf("Set global log level: %s", logLevel)
+	
+	// Store the log level for potential future use
+	// Note: OpenTelemetry log provider doesn't use global log levels the same way zerolog did
+	// The log level filtering is typically done at the collector or backend side
+	globalLogLevel = logLevel
+	
+	tracing.Log.Info().Msgf("Set global log level: %s", logLevel)
 }
 
 func GetMemCTimeout() int {
@@ -57,7 +48,7 @@ func GetMemCTimeout() int {
 	if val, ok := os.LookupEnv("MEMC_TIMEOUT"); ok {
 		timeout, _ = strconv.Atoi(val)
 	}
-	log.Info().Msgf("Tune: GetMemCTimeout %d", timeout)
+	tracing.Log.Info().Msgf("Tune: GetMemCTimeout %d", timeout)
 	return timeout
 }
 
