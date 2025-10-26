@@ -7,7 +7,6 @@ ports:
 container:
   command: geo
   image: hotelreservation
-  imageVersion: otel
   name: hotel-reserv-geo
   ports:
   - containerPort: 8083

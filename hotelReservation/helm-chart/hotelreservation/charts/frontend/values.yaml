@@ -7,7 +7,6 @@ serviceType: NodePort
 container:
   command: frontend
   image: hotelreservation
-  imageVersion: otel
   name: hotel-reserv-frontend
   ports:
   - containerPort: 5000
