@@ -87,67 +87,81 @@ func (l *OtelLogger) With() *OtelLoggerChain {
 
 // Trace starts a trace level log
 func (l *OtelLogger) Trace() *OtelLogEvent {
-	return &OtelLogEvent{
+	e := &OtelLogEvent{
 		logger:   l,
 		severity: log.SeverityTrace,
 		attrs:    make([]log.KeyValue, len(l.attrs)),
 	}
+	copy(e.attrs, l.attrs)
+	return e
 }
 
 // Debug starts a debug level log
 func (l *OtelLogger) Debug() *OtelLogEvent {
-	return &OtelLogEvent{
+	e := &OtelLogEvent{
 		logger:   l,
 		severity: log.SeverityDebug,
 		attrs:    make([]log.KeyValue, len(l.attrs)),
 	}
+	copy(e.attrs, l.attrs)
+	return e
 }
 
 // Info starts an info level log
 func (l *OtelLogger) Info() *OtelLogEvent {
-	return &OtelLogEvent{
+	e := &OtelLogEvent{
 		logger:   l,
 		severity: log.SeverityInfo,
 		attrs:    make([]log.KeyValue, len(l.attrs)),
 	}
+	copy(e.attrs, l.attrs)
+	return e
 }
 
 // Warn starts a warn level log
 func (l *OtelLogger) Warn() *OtelLogEvent {
-	return &OtelLogEvent{
+	e := &OtelLogEvent{
 		logger:   l,
 		severity: log.SeverityWarn,
 		attrs:    make([]log.KeyValue, len(l.attrs)),
 	}
+	copy(e.attrs, l.attrs)
+	return e
 }
 
 // Error starts an error level log
 func (l *OtelLogger) Error() *OtelLogEvent {
-	return &OtelLogEvent{
+	e := &OtelLogEvent{
 		logger:   l,
 		severity: log.SeverityError,
 		attrs:    make([]log.KeyValue, len(l.attrs)),
 	}
+	copy(e.attrs, l.attrs)
+	return e
 }
 
 // Fatal starts a fatal level log
 func (l *OtelLogger) Fatal() *OtelLogEvent {
-	return &OtelLogEvent{
+	e := &OtelLogEvent{
 		logger:   l,
 		severity: log.SeverityFatal,
 		attrs:    make([]log.KeyValue, len(l.attrs)),
 		isFatal:  true,
 	}
+	copy(e.attrs, l.attrs)
+	return e
 }
 
 // Panic starts a panic level log
 func (l *OtelLogger) Panic() *OtelLogEvent {
-	return &OtelLogEvent{
+	e := &OtelLogEvent{
 		logger:   l,
 		severity: log.SeverityFatal4,
 		attrs:    make([]log.KeyValue, len(l.attrs)),
 		isPanic:  true,
 	}
+	copy(e.attrs, l.attrs)
+	return e
 }
 
 // OtelLoggerChain is used for building logger with attributes

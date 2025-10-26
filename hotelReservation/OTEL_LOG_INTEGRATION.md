@@ -256,10 +256,11 @@ kubectl logs -n observability otel-collector-xxx | grep "logs"
 ## 依赖版本 / Dependencies
 
 ```
-go.opentelemetry.io/otel v1.32.0
-go.opentelemetry.io/otel/log v0.8.0
-go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp v0.8.0
-go.opentelemetry.io/otel/sdk/log v0.8.0
+go.opentelemetry.io/otel v1.27.0
+go.opentelemetry.io/otel/log v0.3.0
+go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp v0.3.0
+go.opentelemetry.io/otel/sdk v1.27.0
+go.opentelemetry.io/otel/sdk/log v0.3.0
 github.com/rs/zerolog v1.31.0
 ```
 

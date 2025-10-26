@@ -20,9 +20,9 @@ import (
 )
 
 var (
-	loggerProvider *sdklog.LoggerProvider
-	otelLogger     log.Logger
-	loggerMutex    sync.RWMutex
+	zerologLoggerProvider *sdklog.LoggerProvider
+	zerologOtelLogger     log.Logger
+	zerologLoggerMutex    sync.RWMutex
 )
 
 // OtelLogWriter is a writer that sends logs to OpenTelemetry
@@ -43,9 +43,9 @@ func (w *OtelLogWriter) Write(p []byte) (n int, err error) {
 	}
 
 	// Send to OpenTelemetry if logger is initialized
-	loggerMutex.RLock()
-	logger := otelLogger
-	loggerMutex.RUnlock()
+	zerologLoggerMutex.RLock()
+	logger := zerologOtelLogger
+	zerologLoggerMutex.RUnlock()
 
 	if logger != nil {
 		go sendLogToOtel(logger, logEntry)
@@ -165,10 +165,10 @@ func InitLogger(serviceName, endpoint string) error {
 	global.SetLoggerProvider(lp)
 
 	// Store logger provider and logger
-	loggerMutex.Lock()
-	loggerProvider = lp
-	otelLogger = lp.Logger("hotelReservation")
-	loggerMutex.Unlock()
+	zerologLoggerMutex.Lock()
+	zerologLoggerProvider = lp
+	zerologOtelLogger = lp.Logger("hotelReservation")
+	zerologLoggerMutex.Unlock()
 
 	return nil
 }
@@ -240,9 +240,9 @@ func CtxWithTraceID(ctx context.Context) zerolog.Logger {
 
 // ShutdownLogger gracefully shuts down the logger provider
 func ShutdownLogger(ctx context.Context) error {
-	loggerMutex.RLock()
-	lp := loggerProvider
-	loggerMutex.RUnlock()
+	zerologLoggerMutex.RLock()
+	lp := zerologLoggerProvider
+	zerologLoggerMutex.RUnlock()
 
 	if lp != nil {
 		return lp.Shutdown(ctx)
