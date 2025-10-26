@@ -77,10 +77,12 @@ func (l *OtelLogger) WithContext(ctx context.Context) *OtelLogger {
 
 // With returns a new logger with additional attributes
 func (l *OtelLogger) With() *OtelLoggerChain {
-	return &OtelLoggerChain{
+	c := &OtelLoggerChain{
 		logger: l,
 		attrs:  make([]log.KeyValue, len(l.attrs)),
 	}
+	copy(c.attrs, l.attrs)
+	return c
 }
 
 // Trace starts a trace level log
