@@ -21,7 +21,9 @@ import (
 
 func main() {
 	tune.Init()
-	log.Logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}).With().Timestamp().Caller().Logger()
+	// Initialize temporary logger for startup
+	tempLogger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}).With().Timestamp().Caller().Logger()
+	log.Logger = tempLogger
 
 	log.Info().Msg("Reading config...")
 	jsonFile, err := os.Open("config.json")

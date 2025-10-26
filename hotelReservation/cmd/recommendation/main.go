@@ -19,7 +19,9 @@ import (
 
 func main() {
 	tune.Init()
-	log.Logger = zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}).With().Timestamp().Caller().Logger()
+	// Initialize temporary logger for startup
+	tempLogger := zerolog.New(zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}).With().Timestamp().Caller().Logger()
+	log.Logger = tempLogger
 
 	log.Info().Msg("Reading config...")
 	jsonFile, err := os.Open("config.json")
@@ -47,19 +49,23 @@ func main() {
 	)
 	flag.Parse()
 
-	log.Info().Msgf("Initializing jaeger agent [service name: %v | host: %v]...", "recommendation", *jaegerAddr)
-	tracer, err := tracing.Init("recommendation", *jaegerAddr)
+	// Initialize OpenTelemetry with logging support
+	tempLogger.Info().Msgf("Initializing OpenTelemetry with logging [service name: %v | host: %v]...", "recommendation", *jaegerAddr)
+	tracer, logger, err := tracing.InitWithLogging("recommendation", *jaegerAddr)
 	if err != nil {
-		log.Panic().Msgf("Got error while initializing jaeger agent: %v", err)
+		tempLogger.Panic().Msgf("Got error while initializing OpenTelemetry: %v", err)
 	}
-	log.Info().Msg("Jaeger agent initialized")
+	
+	// Set the global logger to the one with OTLP export
+	log.Logger = logger
+	logger.Info().Msg("OpenTelemetry tracer and logger initialized")
 
-	log.Info().Msgf("Initializing consul agent [host: %v]...", *consulAddr)
+	logger.Info().Msgf("Initializing consul agent [host: %v]...", *consulAddr)
 	registry, err := registry.NewClient(*consulAddr)
 	if err != nil {
-		log.Panic().Msgf("Got error while initializing consul agent: %v", err)
+		logger.Panic().Msgf("Got error while initializing consul agent: %v", err)
 	}
-	log.Info().Msg("Consul agent initialized")
+	logger.Info().Msg("Consul agent initialized")
 
 	srv := &recommendation.Server{
 		Port:        servPort,
@@ -69,6 +75,6 @@ func main() {
 		MongoClient: mongoClient,
 	}
 
-	log.Info().Msg("Starting server...")
-	log.Fatal().Msg(srv.Run().Error())
+	logger.Info().Msg("Starting server...")
+	logger.Fatal().Msg(srv.Run().Error())
 }
