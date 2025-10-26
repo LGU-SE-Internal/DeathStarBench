@@ -132,8 +132,7 @@ func (s *Server) getGprcConn(name string) (*grpc.ClientConn, error) {
 
 // Nearby returns ids of nearby hotels ordered by ranking algo
 func (s *Server) Nearby(ctx context.Context, req *pb.NearbyRequest) (*pb.SearchResult, error) {
-	// Get logger with automatic trace context
-	logger := tracing.Log.WithContext(ctx)
+	logger := tracing.LoggerFromContext(ctx)
 	
 	// find nearby hotels
 	logger.Trace().Msg("in Search Nearby")

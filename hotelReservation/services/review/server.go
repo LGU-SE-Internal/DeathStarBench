@@ -112,6 +112,7 @@ type ImageHelper struct {
 }
 
 func (s *Server) GetReviews(ctx context.Context, req *pb.Request) (*pb.Result, error) {
+	logger := tracing.LoggerFromContext(ctx)
 
 	res := new(pb.Result)
 	reviews := make([]*pb.ReviewComm, 0)
@@ -123,7 +124,7 @@ func (s *Server) GetReviews(ctx context.Context, req *pb.Request) (*pb.Result, e
 	item, err := s.MemcClient.Get(hotelId)
 	memSpan.End()
 	if err != nil && err != memcache.ErrCacheMiss {
-		log.Panic().Msgf("Tried to get hotelId [%v], but got memmcached error = %s", hotelId, err)
+		logger.Panic().Msgf("Tried to get hotelId [%v], but got memmcached error = %s", hotelId, err)
 	} else {
 		if err == memcache.ErrCacheMiss {
 			_, mongoSpan := s.Tracer.Start(ctx, "mongo_review")
@@ -136,14 +137,14 @@ func (s *Server) GetReviews(ctx context.Context, req *pb.Request) (*pb.Result, e
 
 			curr, err := c.Find(context.TODO(), bson.M{"hotelId": hotelId})
 			if err != nil {
-				log.Error().Msgf("Failed get reviews: ", err)
+				logger.Error().Msgf("Failed get reviews: ", err)
 			}
 
 			var reviewHelpers []ReviewHelper
 			//err = c.Find(bson.M{"hotelId": hotelId}).All(&reviewHelpers)
 			curr.All(context.TODO(), &reviewHelpers)
 			if err != nil {
-				log.Error().Msgf("Failed get hotels data: ", err)
+				logger.Error().Msgf("Failed get hotels data: ", err)
 			}
 
 			for _, reviewHelper := range reviewHelpers {
@@ -158,16 +159,16 @@ func (s *Server) GetReviews(ctx context.Context, req *pb.Request) (*pb.Result, e
 
 			reviewJson, err := json.Marshal(reviews)
 			if err != nil {
-				log.Error().Msgf("Failed to marshal hotel [id: %v] with err:", hotelId, err)
+				logger.Error().Msgf("Failed to marshal hotel [id: %v] with err:", hotelId, err)
 			}
 			memcStr := string(reviewJson)
 
 			s.MemcClient.Set(&memcache.Item{Key: hotelId, Value: []byte(memcStr)})
 		} else {
 			reviewsStr := string(item.Value)
-			log.Trace().Msgf("memc hit with %v", reviewsStr)
+			logger.Trace().Msgf("memc hit with %v", reviewsStr)
 			if err := json.Unmarshal([]byte(reviewsStr), &reviews); err != nil {
-				log.Panic().Msgf("Failed to unmarshal reviews: %s", err)
+				logger.Panic().Msgf("Failed to unmarshal reviews: %s", err)
 			}
 		}
 	}

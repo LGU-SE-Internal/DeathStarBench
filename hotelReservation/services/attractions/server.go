@@ -28,7 +28,7 @@ const (
 )
 
 var (
-	// log is the logger instance
+	// log is the logger instance for non-request logging (initialization, etc.)
 	log = tracing.Log
 )
 
@@ -115,7 +115,8 @@ func (s *Server) Shutdown() {
 
 // NearbyRest returns all restaurants close to the hotel.
 func (s *Server) NearbyRest(ctx context.Context, req *pb.Request) (*pb.Result, error) {
-	log.Trace().Msgf("In Attractions NearbyRest")
+	logger := tracing.LoggerFromContext(ctx)
+	logger.Trace().Msgf("In Attractions NearbyRest")
 
 	_, mongoSpan := s.Tracer.Start(ctx, "mongo_restaurant")
 	mongoSpan.SetAttributes(attribute.String("span.kind", "client"))
@@ -124,7 +125,7 @@ func (s *Server) NearbyRest(ctx context.Context, req *pb.Request) (*pb.Result, e
 
 	curr, err := c.Find(context.TODO(), bson.M{"hotelId": req.HotelId})
 	if err != nil {
-		log.Error().Msgf("Failed get hotels: ", err)
+		logger.Error().Msgf("Failed get hotels: %v", err)
 	}
 	var hotelReqs []point
 	curr.All(context.TODO(), &hotelReqs)
@@ -136,16 +137,14 @@ func (s *Server) NearbyRest(ctx context.Context, req *pb.Request) (*pb.Result, e
 	}
 
 	var (
-	// log is the logger instance
-	log = tracing.Log
 		points = s.getNearbyPointsRest(ctx, float64(hotelReq.Plat), float64(hotelReq.Plon))
 		res    = &pb.Result{}
 	)
 
-	log.Trace().Msgf("restaurants after getNearbyPoints, len = %d", len(points))
+	logger.Trace().Msgf("restaurants after getNearbyPoints, len = %d", len(points))
 
 	for _, p := range points {
-		log.Trace().Msgf("In restaurants Nearby return restaurantId = %s", p.Id())
+		logger.Trace().Msgf("In restaurants Nearby return restaurantId = %s", p.Id())
 		res.AttractionIds = append(res.AttractionIds, p.Id())
 	}
 
@@ -154,7 +153,8 @@ func (s *Server) NearbyRest(ctx context.Context, req *pb.Request) (*pb.Result, e
 
 // NearbyMus returns all museums close to the hotel.
 func (s *Server) NearbyMus(ctx context.Context, req *pb.Request) (*pb.Result, error) {
-	log.Trace().Msgf("In Attractions NearbyMus")
+	logger := tracing.LoggerFromContext(ctx)
+	logger.Trace().Msgf("In Attractions NearbyMus")
 
 	_, mongoSpan := s.Tracer.Start(ctx, "mongo_museum")
 	mongoSpan.SetAttributes(attribute.String("span.kind", "client"))
@@ -163,7 +163,7 @@ func (s *Server) NearbyMus(ctx context.Context, req *pb.Request) (*pb.Result, er
 
 	curr, err := c.Find(context.TODO(), bson.M{"hotelId": req.HotelId})
 	if err != nil {
-		log.Error().Msgf("Failed get hotels: ", err)
+		logger.Error().Msgf("Failed get hotels: ", err)
 	}
 	var hotelReqs []point
 	curr.All(context.TODO(), &hotelReqs)
@@ -179,10 +179,10 @@ func (s *Server) NearbyMus(ctx context.Context, req *pb.Request) (*pb.Result, er
 		res    = &pb.Result{}
 	)
 
-	log.Trace().Msgf("museums after getNearbyPoints, len = %d", len(points))
+	logger.Trace().Msgf("museums after getNearbyPoints, len = %d", len(points))
 
 	for _, p := range points {
-		log.Trace().Msgf("In museums Nearby return museumId = %s", p.Id())
+		logger.Trace().Msgf("In museums Nearby return museumId = %s", p.Id())
 		res.AttractionIds = append(res.AttractionIds, p.Id())
 	}
 
@@ -191,7 +191,8 @@ func (s *Server) NearbyMus(ctx context.Context, req *pb.Request) (*pb.Result, er
 
 // NearbyCinema returns all cinemas close to the hotel.
 func (s *Server) NearbyCinema(ctx context.Context, req *pb.Request) (*pb.Result, error) {
-	log.Trace().Msgf("In Attractions NearbyCinema")
+	logger := tracing.LoggerFromContext(ctx)
+	logger.Trace().Msgf("In Attractions NearbyCinema")
 
 	_, mongoSpan := s.Tracer.Start(ctx, "mongo_cinema")
 	mongoSpan.SetAttributes(attribute.String("span.kind", "client"))
@@ -200,7 +201,7 @@ func (s *Server) NearbyCinema(ctx context.Context, req *pb.Request) (*pb.Result,
 
 	curr, err := c.Find(context.TODO(), bson.M{"hotelId": req.HotelId})
 	if err != nil {
-		log.Error().Msgf("Failed get hotels: ", err)
+		logger.Error().Msgf("Failed get hotels: ", err)
 	}
 	var hotelReqs []point
 	curr.All(context.TODO(), &hotelReqs)
@@ -216,10 +217,10 @@ func (s *Server) NearbyCinema(ctx context.Context, req *pb.Request) (*pb.Result,
 		res    = &pb.Result{}
 	)
 
-	log.Trace().Msgf("cinemas after getNearbyPoints, len = %d", len(points))
+	logger.Trace().Msgf("cinemas after getNearbyPoints, len = %d", len(points))
 
 	for _, p := range points {
-		log.Trace().Msgf("In cinemas Nearby return cinemaId = %s", p.Id())
+		logger.Trace().Msgf("In cinemas Nearby return cinemaId = %s", p.Id())
 		res.AttractionIds = append(res.AttractionIds, p.Id())
 	}
 
@@ -227,7 +228,8 @@ func (s *Server) NearbyCinema(ctx context.Context, req *pb.Request) (*pb.Result,
 }
 
 func (s *Server) getNearbyPointsHotel(ctx context.Context, lat, lon float64) []geoindex.Point {
-	log.Trace().Msgf("In geo getNearbyPoints, lat = %f, lon = %f", lat, lon)
+	logger := tracing.LoggerFromContext(ctx)
+	logger.Trace().Msgf("In geo getNearbyPoints, lat = %f, lon = %f", lat, lon)
 
 	center := &geoindex.GeoPoint{
 		Pid:  "",
@@ -245,7 +247,8 @@ func (s *Server) getNearbyPointsHotel(ctx context.Context, lat, lon float64) []g
 }
 
 func (s *Server) getNearbyPointsRest(ctx context.Context, lat, lon float64) []geoindex.Point {
-	log.Trace().Msgf("In geo getNearbyPointsRest, lat = %f, lon = %f", lat, lon)
+	logger := tracing.LoggerFromContext(ctx)
+	logger.Trace().Msgf("In geo getNearbyPointsRest, lat = %f, lon = %f", lat, lon)
 
 	center := &geoindex.GeoPoint{
 		Pid:  "",
@@ -263,7 +266,8 @@ func (s *Server) getNearbyPointsRest(ctx context.Context, lat, lon float64) []ge
 }
 
 func (s *Server) getNearbyPointsMus(ctx context.Context, lat, lon float64) []geoindex.Point {
-	log.Trace().Msgf("In geo getNearbyPointsMus, lat = %f, lon = %f", lat, lon)
+	logger := tracing.LoggerFromContext(ctx)
+	logger.Trace().Msgf("In geo getNearbyPointsMus, lat = %f, lon = %f", lat, lon)
 
 	center := &geoindex.GeoPoint{
 		Pid:  "",
@@ -281,7 +285,8 @@ func (s *Server) getNearbyPointsMus(ctx context.Context, lat, lon float64) []geo
 }
 
 func (s *Server) getNearbyPointsCinema(ctx context.Context, lat, lon float64) []geoindex.Point {
-	log.Trace().Msgf("In geo getNearbyPointsCinema, lat = %f, lon = %f", lat, lon)
+	logger := tracing.LoggerFromContext(ctx)
+	logger.Trace().Msgf("In geo getNearbyPointsCinema, lat = %f, lon = %f", lat, lon)
 
 	center := &geoindex.GeoPoint{
 		Pid:  "",

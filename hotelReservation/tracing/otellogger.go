@@ -419,3 +419,16 @@ func InitWithOtelLogging(serviceName, host string) (trace.Tracer, *OtelLogger, e
 
 	return tracer, Logger(), nil
 }
+
+// LoggerFromContext returns a logger with trace context automatically injected
+// This should be used in request handlers to ensure logs are correlated with traces
+func LoggerFromContext(ctx context.Context) *OtelLogger {
+	if Log == nil {
+		// Return a no-op logger if not initialized
+		return &OtelLogger{
+			ctx:   ctx,
+			attrs: make([]log.KeyValue, 0),
+		}
+	}
+	return Log.WithContext(ctx)
+}

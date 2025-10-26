@@ -95,8 +95,9 @@ func (s *Server) Shutdown() {
 
 // GiveRecommendation returns recommendations within a given requirement.
 func (s *Server) GetRecommendations(ctx context.Context, req *pb.Request) (*pb.Result, error) {
+	logger := tracing.LoggerFromContext(ctx)
 	res := new(pb.Result)
-	log.Trace().Msgf("GetRecommendations")
+	logger.Trace().Msgf("GetRecommendations")
 	require := req.Require
 	if require == "dis" {
 		p1 := &geoindex.GeoPoint{
@@ -150,7 +151,7 @@ func (s *Server) GetRecommendations(ctx context.Context, req *pb.Request) (*pb.R
 			}
 		}
 	} else {
-		log.Warn().Msgf("Wrong require parameter: %v", require)
+		logger.Warn().Msgf("Wrong require parameter: %v", require)
 	}
 
 	return res, nil

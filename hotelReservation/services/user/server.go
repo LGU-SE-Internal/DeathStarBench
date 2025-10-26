@@ -94,9 +94,10 @@ func (s *Server) Shutdown() {
 
 // CheckUser returns whether the username and password are correct.
 func (s *Server) CheckUser(ctx context.Context, req *pb.Request) (*pb.Result, error) {
+	logger := tracing.LoggerFromContext(ctx)
 	res := new(pb.Result)
 
-	log.Trace().Msg("CheckUser")
+	logger.Trace().Msg("CheckUser")
 
 	sum := sha256.Sum256([]byte(req.Password))
 	pass := fmt.Sprintf("%x", sum)
@@ -106,7 +107,7 @@ func (s *Server) CheckUser(ctx context.Context, req *pb.Request) (*pb.Result, er
 		res.Correct = pass == true_pass
 	}
 
-	log.Trace().Msgf("CheckUser %d", res.Correct)
+	logger.Trace().Msgf("CheckUser %d", res.Correct)
 
 	return res, nil
 }
