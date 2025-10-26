@@ -58,9 +58,34 @@ func (w *OtelLogWriter) Write(p []byte) (n int, err error) {
 func sendLogToOtel(logger log.Logger, logEntry map[string]interface{}) {
 	ctx := context.Background()
 
-	// Get the current span context if available
-	span := trace.SpanFromContext(ctx)
-	spanCtx := span.SpanContext()
+	// Extract trace context from log entry fields and create a context with span context
+	// These fields are added by CtxWithTraceID or manually in service code
+	var traceID trace.TraceID
+	var spanID trace.SpanID
+	var hasTraceContext bool
+	
+	if traceIDStr, ok := logEntry["trace_id"].(string); ok && traceIDStr != "" {
+		if parsedTraceID, err := trace.TraceIDFromHex(traceIDStr); err == nil {
+			traceID = parsedTraceID
+			hasTraceContext = true
+		}
+	}
+	if spanIDStr, ok := logEntry["span_id"].(string); ok && spanIDStr != "" {
+		if parsedSpanID, err := trace.SpanIDFromHex(spanIDStr); err == nil {
+			spanID = parsedSpanID
+		}
+	}
+
+	// If we have trace context, create a span context and add it to the context
+	// This allows the OpenTelemetry logger to properly associate logs with traces
+	if hasTraceContext {
+		spanContext := trace.NewSpanContext(trace.SpanContextConfig{
+			TraceID: traceID,
+			SpanID:  spanID,
+			TraceFlags: trace.FlagsSampled,
+		})
+		ctx = trace.ContextWithSpanContext(ctx, spanContext)
+	}
 
 	// Extract log level and message
 	level, _ := logEntry["level"].(string)
@@ -76,20 +101,12 @@ func sendLogToOtel(logger log.Logger, logEntry map[string]interface{}) {
 	logRecord.SetSeverity(severity)
 	logRecord.SetSeverityText(strings.ToUpper(level))
 
-	// Prepare attributes including trace context
+	// Prepare attributes (excluding trace_id and span_id as they're now set via context)
 	attrs := make([]log.KeyValue, 0)
 	
-	// Add trace context if available
-	if spanCtx.HasTraceID() {
-		attrs = append(attrs, log.String("trace_id", spanCtx.TraceID().String()))
-	}
-	if spanCtx.HasSpanID() {
-		attrs = append(attrs, log.String("span_id", spanCtx.SpanID().String()))
-	}
-
 	// Add other fields as attributes
 	for k, v := range logEntry {
-		if k == "level" || k == "message" || k == "time" {
+		if k == "level" || k == "message" || k == "time" || k == "trace_id" || k == "span_id" {
 			continue
 		}
 		attrs = append(attrs, log.String(k, toString(v)))
@@ -97,7 +114,7 @@ func sendLogToOtel(logger log.Logger, logEntry map[string]interface{}) {
 	
 	logRecord.AddAttributes(attrs...)
 
-	// Emit the log record
+	// Emit the log record with the context containing trace information
 	logger.Emit(ctx, logRecord)
 }
 
