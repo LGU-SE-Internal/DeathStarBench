@@ -6,7 +6,7 @@ import (
 	"os"
 
 	consul "github.com/hashicorp/consul/api"
-	"github.com/rs/zerolog/log"
+	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tracing"
 )
 
 // NewClient returns a new Client with connection to consul
@@ -55,12 +55,16 @@ func getLocalIP() (string, error) {
 		grpcNet := os.Getenv("DSB_GRPC_NETWORK")
 		_, ipNetGrpc, err := net.ParseCIDR(grpcNet)
 		if err != nil {
-			log.Error().Msgf("An invalid network CIDR is set in environment DSB_HOTELRESERV_GRPC_NETWORK: %v", grpcNet)
+			if tracing.Log != nil {
+				tracing.Log.Error().Msgf("An invalid network CIDR is set in environment DSB_HOTELRESERV_GRPC_NETWORK: %v", grpcNet)
+			}
 		} else {
 			for _, ip := range ips {
 				if ipNetGrpc.Contains(ip) {
 					ipGrpc = ip.String()
-					log.Info().Msgf("gRPC traffic is routed to the dedicated network %s", ipGrpc)
+					if tracing.Log != nil {
+						tracing.Log.Info().Msgf("gRPC traffic is routed to the dedicated network %s", ipGrpc)
+					}
 					break
 				}
 			}
@@ -88,7 +92,9 @@ func (c *Client) Register(name string, id string, ip string, port int) error {
 		Port:    port,
 		Address: ip,
 	}
-	log.Info().Msgf("Trying to register service [ name: %s, id: %s, address: %s:%d ]", name, id, ip, port)
+	if tracing.Log != nil {
+		tracing.Log.Info().Msgf("Trying to register service [ name: %s, id: %s, address: %s:%d ]", name, id, ip, port)
+	}
 	return c.Agent().ServiceRegister(reg)
 }
 

@@ -2,10 +2,10 @@ package tracing
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strconv"
 
-	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
@@ -36,7 +36,7 @@ func Init(serviceName, host string) (trace.Tracer, error) {
 		endpoint = val
 	}
 
-	log.Info().Msgf("OpenTelemetry client: adjusted sample ratio %f, endpoint: %s", ratio, endpoint)
+	fmt.Printf("OpenTelemetry client: adjusted sample ratio %f, endpoint: %s\n", ratio, endpoint)
 
 	// Create OTLP HTTP exporter
 	ctx := context.Background()
@@ -46,7 +46,7 @@ func Init(serviceName, host string) (trace.Tracer, error) {
 	)
 	exporter, err := otlptrace.New(ctx, client)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to create OTLP exporter")
+		fmt.Fprintf(os.Stderr, "Failed to create OTLP exporter: %v\n", err)
 		return nil, err
 	}
 
@@ -57,7 +57,7 @@ func Init(serviceName, host string) (trace.Tracer, error) {
 		),
 	)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to create resource")
+		fmt.Fprintf(os.Stderr, "Failed to create resource: %v\n", err)
 		return nil, err
 	}
 
@@ -77,6 +77,6 @@ func Init(serviceName, host string) (trace.Tracer, error) {
 		propagation.Baggage{},
 	))
 
-	log.Info().Msg("OpenTelemetry tracer initialized successfully")
+	fmt.Println("OpenTelemetry tracer initialized successfully")
 	return tp.Tracer(serviceName), nil
 }

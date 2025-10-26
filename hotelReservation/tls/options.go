@@ -3,11 +3,11 @@ package tls
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
 
-	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
@@ -65,12 +65,12 @@ func checkTLS() (bool, string) {
 		if _, ok := cipherSuites[val]; ok {
 			return true, val
 		} else {
-			log.Warn().Msgf("specified TLS cipher suite %v is invalid or unimplemented.", val)
+			fmt.Fprintf(os.Stderr, "specified TLS cipher suite %v is invalid or unimplemented.\n", val)
 			validCiphers := make([]string, 0, len(cipherSuites))
 			for k := range cipherSuites {
 				validCiphers = append(validCiphers, k)
 			}
-			log.Warn().Msgf("Please use the supported TLS cipher suite %v.", validCiphers)
+			fmt.Fprintf(os.Stderr, "Please use the supported TLS cipher suite %v.\n", validCiphers)
 			return false, ""
 		}
 	}
@@ -82,11 +82,11 @@ func init() {
 	if needTLS {
 		b, err := ioutil.ReadFile("x509/ca_cert.pem")
 		if err != nil {
-			log.Panic().Msgf("failed to read credentials: %v", err)
+			panic(fmt.Sprintf("failed to read credentials: %v", err))
 		}
 		cp := x509.NewCertPool()
 		if !cp.AppendCertsFromPEM(b) {
-			log.Panic().Msgf("credentials: failed to append certificates")
+			panic("credentials: failed to append certificates")
 		}
 		config := tls.Config{
 			ServerName: "x.test.example.com",
@@ -97,7 +97,7 @@ func init() {
 			RootCAs:                  cp,
 		}
 		if cipher != "" {
-			log.Info().Msgf("TLS enabled cipher suite %s", cipher)
+			fmt.Printf("TLS enabled cipher suite %s\n", cipher)
 			config.CipherSuites = append(config.CipherSuites, cipherSuites[cipher])
 			httpsopt.CipherSuites = append(httpsopt.CipherSuites, cipherSuites[cipher])
 			switch cipher {
@@ -105,7 +105,7 @@ func init() {
 				httpsopt.MinVersion = tls.VersionTLS13
 			}
 		} else {
-			log.Info().Msgf("TLS enabled without specified cipher suite")
+			fmt.Println("TLS enabled without specified cipher suite")
 		}
 
 		var creds credentials.TransportCredentials
@@ -114,11 +114,11 @@ func init() {
 
 		creds, err = credentials.NewServerTLSFromFile("x509/server_cert.pem", "x509/server_key.pem")
 		if err != nil {
-			log.Panic().Msgf("failed to create credentials: %v", err)
+			panic(fmt.Sprintf("failed to create credentials: %v", err))
 		}
 		serveropt = grpc.Creds(creds)
 	} else {
-		log.Info().Msgf("TLS disabled.")
+		fmt.Println("TLS disabled.")
 		dialopt = nil
 		serveropt = nil
 	}

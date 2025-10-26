@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/rs/zerolog/log"
+	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tracing"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -30,7 +30,7 @@ type Address struct {
 }
 
 func initializeDatabase(url string) (*mongo.Client, func()) {
-	log.Info().Msg("Generating test data...")
+	tracing.Log.Info().Msg("Generating test data...")
 
 	newProfiles := []interface{}{
 		Hotel{
@@ -160,25 +160,25 @@ func initializeDatabase(url string) (*mongo.Client, func()) {
 	}
 
 	uri := fmt.Sprintf("mongodb://%s", url)
-	log.Info().Msgf("Attempting connection to %v", uri)
+	tracing.Log.Info().Msgf("Attempting connection to %v", uri)
 
 	opts := options.Client().ApplyURI(uri)
 	client, err := mongo.Connect(context.TODO(), opts)
 	if err != nil {
-		log.Panic().Msg(err.Error())
+		tracing.Log.Panic().Msg(err.Error())
 	}
-	log.Info().Msg("Successfully connected to MongoDB")
+	tracing.Log.Info().Msg("Successfully connected to MongoDB")
 
 	collection := client.Database("profile-db").Collection("hotels")
 	_, err = collection.InsertMany(context.TODO(), newProfiles)
 	if err != nil {
-		log.Fatal().Msg(err.Error())
+		tracing.Log.Fatal().Msg(err.Error())
 	}
-	log.Info().Msg("Successfully inserted test data into profile DB")
+	tracing.Log.Info().Msg("Successfully inserted test data into profile DB")
 
 	return client, func() {
 		if err := client.Disconnect(context.TODO()); err != nil {
-			log.Fatal().Msg(err.Error())
+			tracing.Log.Fatal().Msg(err.Error())
 		}
 	}
 }
