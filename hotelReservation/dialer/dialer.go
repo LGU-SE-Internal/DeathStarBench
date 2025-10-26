@@ -36,7 +36,7 @@ func Dial(name string, opts ...DialOption) (*grpc.ClientConn, error) {
 		grpc.WithKeepaliveParams(keepalive.ClientParameters{
 			Time:                30 * time.Second,
 			Timeout:             5 * time.Second,
-			PermitWithoutStream: true,
+			PermitWithoutStream: false,
 		}),
 	}
 	if tlsopt := tls.GetDialOpt(); tlsopt != nil {
