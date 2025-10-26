@@ -34,7 +34,8 @@ func Dial(name string, opts ...DialOption) (*grpc.ClientConn, error) {
 
 	dialopts := []grpc.DialOption{
 		grpc.WithKeepaliveParams(keepalive.ClientParameters{
-			Timeout:             120 * time.Second,
+			Time:                30 * time.Second,
+			Timeout:             5 * time.Second,
 			PermitWithoutStream: true,
 		}),
 	}

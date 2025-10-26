@@ -17,6 +17,17 @@ Supported actions:
 - luarocks (apt-get install luarocks)
 - luasocket (luarocks install luasocket)
 
+## install
+
+```bash
+go mod tidy
+go mod vendor
+docker build -t  10.10.10.240/library/hotelreservation:otel .
+docker push 10.10.10.240/library/hotelreservation:otel 
+helm install hotelreservation helm-chart/hotelreservation/ -n hotelreservation --create-namespace
+```
+
+
 ## Running the hotel reservation application
 ### Before you start
 - Install Docker and Docker Compose.
