@@ -83,7 +83,12 @@ func (s *Server) Run() error {
 	if err != nil {
 		return fmt.Errorf("failed register: %v", err)
 	}
-	log.Info().Msg("Successfully registered in consul")
+	// Use fmt.Printf as logger may not be initialized yet during Run()
+	if log != nil {
+		log.Info().Msg("Successfully registered in consul")
+	} else {
+		fmt.Println("Successfully registered in consul")
+	}
 
 	return srv.Serve(lis)
 }

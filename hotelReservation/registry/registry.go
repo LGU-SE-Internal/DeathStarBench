@@ -92,9 +92,8 @@ func (c *Client) Register(name string, id string, ip string, port int) error {
 		Port:    port,
 		Address: ip,
 	}
-	if tracing.Log != nil {
-		tracing.Log.Info().Msgf("Trying to register service [ name: %s, id: %s, address: %s:%d ]", name, id, ip, port)
-	}
+	// Use fmt.Printf since this is called during initialization, before OpenTelemetry logger is ready
+	fmt.Printf("Trying to register service [ name: %s, id: %s, address: %s:%d ]\n", name, id, ip, port)
 	return c.Agent().ServiceRegister(reg)
 }
 
