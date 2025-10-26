@@ -15,8 +15,8 @@ var (
 	defaultGCPercent        int    = 100
 	defaultMemCTimeout      int    = 2
 	defaultMemCMaxIdleConns int    = 512
-	defaultLogLevel         string = "info"
-	globalLogLevel          string = "info" // Store the log level for later use
+	defaultLogLevel         string = "trace"
+	globalLogLevel          string = "trace" // Store the log level for later use
 )
 
 func setGCPercent() {
