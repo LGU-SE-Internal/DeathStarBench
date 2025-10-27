@@ -10,7 +10,7 @@ import (
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/registry"
 	pb "github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/services/recommendation/proto"
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tls"
-"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tracing"
+"github.com/rs/zerolog"
 	"github.com/google/uuid"
 	"github.com/hailocab/go-geoindex"
 	"github.com/rs/zerolog/log"
@@ -91,7 +91,27 @@ func (s *Server) Shutdown() {
 
 // GiveRecommendation returns recommendations within a given requirement.
 func (s *Server) GetRecommendations(ctx context.Context, req *pb.Request) (*pb.Result, error) {
-	logger := tracing.CtxWithTraceID(ctx)
+	// Get logger with trace context
+	logger := zerolog.Ctx(ctx)
+	if logger.GetLevel() == zerolog.Disabled {
+		globalLogger := log.Logger
+		logger = &globalLogger
+	}
+	
+	// Extract trace information and add to logger
+	span := trace.SpanFromContext(ctx)
+	if span.IsRecording() {
+		spanCtx := span.SpanContext()
+		if spanCtx.HasTraceID() {
+			newLogger := logger.With().Str("trace_id", spanCtx.TraceID().String()).Logger()
+			logger = &newLogger
+		}
+		if spanCtx.HasSpanID() {
+			newLogger := logger.With().Str("span_id", spanCtx.SpanID().String()).Logger()
+			logger = &newLogger
+		}
+	}
+	
 	res := new(pb.Result)
 	require := req.Require
 	

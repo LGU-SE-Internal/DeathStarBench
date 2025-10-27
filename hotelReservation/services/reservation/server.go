@@ -13,7 +13,7 @@ import (
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/registry"
 	pb "github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/services/reservation/proto"
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tls"
-"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tracing"
+"github.com/rs/zerolog"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
@@ -92,7 +92,27 @@ func (s *Server) Shutdown() {
 
 // MakeReservation makes a reservation based on given information
 func (s *Server) MakeReservation(ctx context.Context, req *pb.Request) (*pb.Result, error) {
-	logger := tracing.CtxWithTraceID(ctx)
+	// Get logger with trace context
+	logger := zerolog.Ctx(ctx)
+	if logger.GetLevel() == zerolog.Disabled {
+		globalLogger := log.Logger
+		logger = &globalLogger
+	}
+	
+	// Extract trace information and add to logger
+	span := trace.SpanFromContext(ctx)
+	if span.IsRecording() {
+		spanCtx := span.SpanContext()
+		if spanCtx.HasTraceID() {
+			newLogger := logger.With().Str("trace_id", spanCtx.TraceID().String()).Logger()
+			logger = &newLogger
+		}
+		if spanCtx.HasSpanID() {
+			newLogger := logger.With().Str("span_id", spanCtx.SpanID().String()).Logger()
+			logger = &newLogger
+		}
+	}
+	
 	res := new(pb.Result)
 	res.HotelId = make([]string, 0)
 

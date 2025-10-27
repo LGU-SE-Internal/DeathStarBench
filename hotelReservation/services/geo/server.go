@@ -9,9 +9,9 @@ import (
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/registry"
 	pb "github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/services/geo/proto"
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tls"
-	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tracing"
 	"github.com/google/uuid"
 	"github.com/hailocab/go-geoindex"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -95,7 +95,27 @@ func (s *Server) Shutdown() {
 
 // Nearby returns all hotels within a given distance.
 func (s *Server) Nearby(ctx context.Context, req *pb.Request) (*pb.Result, error) {
-	logger := tracing.CtxWithTraceID(ctx)
+	// Get logger with trace context
+	logger := zerolog.Ctx(ctx)
+	if logger.GetLevel() == zerolog.Disabled {
+		// If no logger in context, use global logger
+		globalLogger := log.Logger
+		logger = &globalLogger
+	}
+	
+	// Extract trace information and add to logger
+	span := trace.SpanFromContext(ctx)
+	if span.IsRecording() {
+		spanCtx := span.SpanContext()
+		if spanCtx.HasTraceID() {
+			newLogger := logger.With().Str("trace_id", spanCtx.TraceID().String()).Logger()
+			logger = &newLogger
+		}
+		if spanCtx.HasSpanID() {
+			newLogger := logger.With().Str("span_id", spanCtx.SpanID().String()).Logger()
+			logger = &newLogger
+		}
+	}
 	
 	logger.Info().
 		Float64("lat", float64(req.Lat)).
@@ -120,7 +140,27 @@ func (s *Server) Nearby(ctx context.Context, req *pb.Request) (*pb.Result, error
 }
 
 func (s *Server) getNearbyPoints(ctx context.Context, lat, lon float64) []geoindex.Point {
-	logger := tracing.CtxWithTraceID(ctx)
+	// Get logger with trace context
+	logger := zerolog.Ctx(ctx)
+	if logger.GetLevel() == zerolog.Disabled {
+		globalLogger := log.Logger
+		logger = &globalLogger
+	}
+	
+	// Extract trace information and add to logger
+	span := trace.SpanFromContext(ctx)
+	if span.IsRecording() {
+		spanCtx := span.SpanContext()
+		if spanCtx.HasTraceID() {
+			newLogger := logger.With().Str("trace_id", spanCtx.TraceID().String()).Logger()
+			logger = &newLogger
+		}
+		if spanCtx.HasSpanID() {
+			newLogger := logger.With().Str("span_id", spanCtx.SpanID().String()).Logger()
+			logger = &newLogger
+		}
+	}
+	
 	logger.Debug().
 		Float64("lat", lat).
 		Float64("lon", lon).
