@@ -93,8 +93,15 @@ func (s *Server) Shutdown() {
 func (s *Server) GetRecommendations(ctx context.Context, req *pb.Request) (*pb.Result, error) {
 	logger := tracing.CtxWithTraceID(ctx)
 	res := new(pb.Result)
-	logger.Trace().Msgf("GetRecommendations")
 	require := req.Require
+	
+	// Log the recommendation request with context
+	logger.Info().
+		Str("require_type", require).
+		Float64("lat", req.Lat).
+		Float64("lon", req.Lon).
+		Msg("Processing recommendation request")
+	
 	if require == "dis" {
 		p1 := &geoindex.GeoPoint{
 			Pid:  "",
@@ -122,6 +129,11 @@ func (s *Server) GetRecommendations(ctx context.Context, req *pb.Request) (*pb.R
 				res.HotelIds = append(res.HotelIds, hotel.HId)
 			}
 		}
+		logger.Debug().
+			Str("require_type", "distance").
+			Int("results_count", len(res.HotelIds)).
+			Float64("min_distance_km", min).
+			Msg("Distance-based recommendations completed")
 	} else if require == "rate" {
 		max := 0.0
 		for _, hotel := range s.hotels {
@@ -134,6 +146,11 @@ func (s *Server) GetRecommendations(ctx context.Context, req *pb.Request) (*pb.R
 				res.HotelIds = append(res.HotelIds, hotel.HId)
 			}
 		}
+		logger.Debug().
+			Str("require_type", "rate").
+			Int("results_count", len(res.HotelIds)).
+			Float64("max_rate", max).
+			Msg("Rate-based recommendations completed")
 	} else if require == "price" {
 		min := math.MaxFloat64
 		for _, hotel := range s.hotels {
@@ -146,8 +163,15 @@ func (s *Server) GetRecommendations(ctx context.Context, req *pb.Request) (*pb.R
 				res.HotelIds = append(res.HotelIds, hotel.HId)
 			}
 		}
+		logger.Debug().
+			Str("require_type", "price").
+			Int("results_count", len(res.HotelIds)).
+			Float64("min_price", min).
+			Msg("Price-based recommendations completed")
 	} else {
-		logger.Warn().Msgf("Wrong require parameter: %v", require)
+		logger.Warn().
+			Str("require_type", require).
+			Msg("Invalid recommendation requirement parameter")
 	}
 
 	return res, nil

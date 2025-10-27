@@ -94,6 +94,12 @@ func (s *Server) GetRates(ctx context.Context, req *pb.Request) (*pb.Result, err
 	logger := tracing.CtxWithTraceID(ctx)
 	res := new(pb.Result)
 
+	logger.Info().
+		Int("hotel_count", len(req.HotelIds)).
+		Str("in_date", req.InDate).
+		Str("out_date", req.OutDate).
+		Msg("Getting hotel rates")
+
 	ratePlans := make(RatePlans, 0)
 
 	hotelIds := []string{}
@@ -112,11 +118,17 @@ func (s *Server) GetRates(ctx context.Context, req *pb.Request) (*pb.Result, err
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
 	if err != nil && err != memcache.ErrCacheMiss {
-		logger.Panic().Msgf("Memmcached error while trying to get hotel [id: %v]= %s", hotelIds, err)
+		logger.Panic().
+			Strs("hotel_ids", hotelIds).
+			Err(err).
+			Msg("Memcached error while getting hotel rates")
 	} else {
 		for hotelId, item := range resMap {
 			rateStrs := strings.Split(string(item.Value), "\n")
-			logger.Trace().Msgf("memc hit, hotelId = %s,rate strings: %v", hotelId, rateStrs)
+			logger.Debug().
+				Str("hotel_id", hotelId).
+				Int("rate_plans", len(rateStrs)).
+				Msg("Rate cache hit")
 
 			for _, rateStr := range rateStrs {
 				if len(rateStr) != 0 {
@@ -132,8 +144,9 @@ func (s *Server) GetRates(ctx context.Context, req *pb.Request) (*pb.Result, err
 		wg.Add(len(rateMap))
 		for hotelId := range rateMap {
 			go func(id string) {
-				logger.Trace().Msgf("memc miss, hotelId = %s", id)
-				logger.Trace().Msg("memcached miss, set up mongo connection")
+				logger.Debug().
+					Str("hotel_id", id).
+					Msg("Rate cache miss, fetching from database")
 
 				_, mongoSpan := s.Tracer.Start(ctx, "mongo_rate")
 				mongoSpan.SetAttributes(attribute.String("span.kind", "client"))
@@ -142,7 +155,10 @@ func (s *Server) GetRates(ctx context.Context, req *pb.Request) (*pb.Result, err
 				collection := s.MongoClient.Database("rate-db").Collection("inventory")
 				curr, err := collection.Find(context.TODO(), bson.D{})
 				if err != nil {
-					logger.Error().Msgf("Failed get rate data: ", err)
+					logger.Error().
+						Str("hotel_id", id).
+						Err(err).
+						Msg("Failed to get rate data from database")
 				}
 
 				tmpRatePlans := make(RatePlans, 0)

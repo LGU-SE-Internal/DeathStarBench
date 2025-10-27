@@ -283,15 +283,10 @@ func InitWithLogging(serviceName, host string) (trace.Tracer, zerolog.Logger, er
 // via the TraceContextHook. The logger must have been created with the hook (via InitWithLogging).
 // Usage: logger := tracing.CtxWithTraceID(ctx); logger.Info().Msg("message")
 func CtxWithTraceID(ctx context.Context) *zerolog.Logger {
-	// Get logger from context or use global logger
-	logger := zerolog.Ctx(ctx)
-	if logger.GetLevel() == zerolog.Disabled {
-		// No logger in context, use global logger and store it in the context
-		// so the TraceContextHook can access the context
-		ctx = log.Logger.WithContext(ctx)
-		return zerolog.Ctx(ctx)
-	}
-	return logger
+	// Always use the global logger and store it in the context
+	// so the TraceContextHook can access the context via e.GetCtx()
+	ctx = log.Logger.WithContext(ctx)
+	return zerolog.Ctx(ctx)
 }
 
 // ShutdownLogger gracefully shuts down the logger provider

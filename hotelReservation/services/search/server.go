@@ -11,9 +11,9 @@ import (
 	rate "github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/services/rate/proto"
 	pb "github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/services/search/proto"
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tls"
+	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tracing"
 	"github.com/google/uuid"
 	_ "github.com/mbobakov/grpc-consul-resolver"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel/trace"
@@ -128,53 +128,45 @@ func (s *Server) getGprcConn(name string) (*grpc.ClientConn, error) {
 
 // Nearby returns ids of nearby hotels ordered by ranking algo
 func (s *Server) Nearby(ctx context.Context, req *pb.NearbyRequest) (*pb.SearchResult, error) {
-	// Get logger with trace context
-	logger := zerolog.Ctx(ctx)
-	if logger.GetLevel() == zerolog.Disabled {
-		// If no logger in context, use global logger
-		globalLogger := log.Logger
-		logger = &globalLogger
-	}
+	// Get logger with trace context using the hook-based approach
+	logger := tracing.CtxWithTraceID(ctx)
 	
-	// Extract trace information and add to logger
-	span := trace.SpanFromContext(ctx)
-	if span.IsRecording() {
-		spanCtx := span.SpanContext()
-		if spanCtx.HasTraceID() {
-			newLogger := logger.With().Str("trace_id", spanCtx.TraceID().String()).Logger()
-			logger = &newLogger
-		}
-		if spanCtx.HasSpanID() {
-			newLogger := logger.With().Str("span_id", spanCtx.SpanID().String()).Logger()
-			logger = &newLogger
-		}
-	}
+	logger.Info().
+		Float64("lat", float64(req.Lat)).
+		Float64("lon", float64(req.Lon)).
+		Str("in_date", req.InDate).
+		Str("out_date", req.OutDate).
+		Msg("Searching nearby hotels")
 	
 	// find nearby hotels
-	logger.Trace().Msg("in Search Nearby")
-
-	logger.Trace().Msgf("nearby lat = %f", req.Lat)
-	logger.Trace().Msgf("nearby lon = %f", req.Lon)
+	logger.Debug().Msg("Querying geo service for nearby hotels")
 
 	nearby, err := s.geoClient.Nearby(ctx, &geo.Request{
 		Lat: req.Lat,
 		Lon: req.Lon,
 	})
 	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get nearby hotels from geo service")
 		return nil, err
 	}
 
+	logger.Debug().
+		Int("nearby_count", len(nearby.HotelIds)).
+		Msg("Retrieved nearby hotels from geo service")
+
 	for _, hid := range nearby.HotelIds {
-		logger.Trace().Msgf("get Nearby hotelId = %s", hid)
+		logger.Trace().Str("hotel_id", hid).Msg("Found nearby hotel")
 	}
 
 	// find rates for hotels
+	logger.Debug().Msg("Querying rate service for hotel rates")
 	rates, err := s.rateClient.GetRates(ctx, &rate.Request{
 		HotelIds: nearby.HotelIds,
 		InDate:   req.InDate,
 		OutDate:  req.OutDate,
 	})
 	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get rates from rate service")
 		return nil, err
 	}
 
@@ -186,8 +178,16 @@ func (s *Server) Nearby(ctx context.Context, req *pb.NearbyRequest) (*pb.SearchR
 	// build the response
 	res := new(pb.SearchResult)
 	for _, ratePlan := range rates.RatePlans {
-		logger.Trace().Msgf("get RatePlan HotelId = %s, Code = %s", ratePlan.HotelId, ratePlan.Code)
+		logger.Trace().
+			Str("hotel_id", ratePlan.HotelId).
+			Str("rate_code", ratePlan.Code).
+			Msg("Adding hotel to search results")
 		res.HotelIds = append(res.HotelIds, ratePlan.HotelId)
 	}
+	
+	logger.Info().
+		Int("results_count", len(res.HotelIds)).
+		Msg("Search nearby completed")
+	
 	return res, nil
 }

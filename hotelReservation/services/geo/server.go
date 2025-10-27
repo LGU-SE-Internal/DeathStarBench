@@ -96,26 +96,35 @@ func (s *Server) Shutdown() {
 // Nearby returns all hotels within a given distance.
 func (s *Server) Nearby(ctx context.Context, req *pb.Request) (*pb.Result, error) {
 	logger := tracing.CtxWithTraceID(ctx)
-	logger.Trace().Msgf("In geo Nearby")
+	
+	logger.Info().
+		Float64("lat", float64(req.Lat)).
+		Float64("lon", float64(req.Lon)).
+		Msg("Searching nearby hotels")
 
 	var (
 		points = s.getNearbyPoints(ctx, float64(req.Lat), float64(req.Lon))
 		res    = &pb.Result{}
 	)
 
-	logger.Trace().Msgf("geo after getNearbyPoints, len = %d", len(points))
-
 	for _, p := range points {
-		logger.Trace().Msgf("In geo Nearby return hotelId = %s", p.Id())
+		logger.Trace().Str("hotel_id", p.Id()).Msg("Found nearby hotel")
 		res.HotelIds = append(res.HotelIds, p.Id())
 	}
+	
+	logger.Debug().
+		Int("results_count", len(res.HotelIds)).
+		Msg("Nearby search completed")
 
 	return res, nil
 }
 
 func (s *Server) getNearbyPoints(ctx context.Context, lat, lon float64) []geoindex.Point {
 	logger := tracing.CtxWithTraceID(ctx)
-	logger.Trace().Msgf("In geo getNearbyPoints, lat = %f, lon = %f", lat, lon)
+	logger.Debug().
+		Float64("lat", lat).
+		Float64("lon", lon).
+		Msg("Getting nearby points from geo index")
 
 	center := &geoindex.GeoPoint{
 		Pid:  "",

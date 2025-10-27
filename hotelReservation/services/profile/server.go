@@ -92,7 +92,10 @@ func (s *Server) Shutdown() {
 // GetProfiles returns hotel profiles for requested IDs
 func (s *Server) GetProfiles(ctx context.Context, req *pb.Request) (*pb.Result, error) {
 	logger := tracing.CtxWithTraceID(ctx)
-	logger.Trace().Msgf("In GetProfiles")
+	
+	logger.Info().
+		Int("hotel_count", len(req.HotelIds)).
+		Msg("Getting hotel profiles")
 
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
@@ -114,11 +117,17 @@ func (s *Server) GetProfiles(ctx context.Context, req *pb.Request) (*pb.Result, 
 	hotels := make([]*pb.Hotel, 0)
 
 	if err != nil && err != memcache.ErrCacheMiss {
-		logger.Panic().Msgf("Tried to get hotelIds [%v], but got memmcached error = %s", hotelIds, err)
+		logger.Panic().
+			Strs("hotel_ids", hotelIds).
+			Err(err).
+			Msg("Memcached error while getting hotel profiles")
 	} else {
 		for hotelId, item := range resMap {
 			profileStr := string(item.Value)
-			logger.Trace().Msgf("memc hit with %v", profileStr)
+			logger.Debug().
+				Str("hotel_id", hotelId).
+				Int("profile_size", len(profileStr)).
+				Msg("Profile cache hit")
 
 			hotelProf := new(pb.Hotel)
 			json.Unmarshal(item.Value, hotelProf)
@@ -161,6 +170,8 @@ func (s *Server) GetProfiles(ctx context.Context, req *pb.Request) (*pb.Result, 
 	wg.Wait()
 
 	res.Hotels = hotels
-	logger.Trace().Msgf("In GetProfiles after getting resp")
+	logger.Info().
+		Int("profiles_returned", len(hotels)).
+		Msg("Get profiles completed")
 	return res, nil
 }

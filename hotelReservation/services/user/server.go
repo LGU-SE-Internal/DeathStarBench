@@ -93,7 +93,9 @@ func (s *Server) CheckUser(ctx context.Context, req *pb.Request) (*pb.Result, er
 	logger := tracing.CtxWithTraceID(ctx)
 	res := new(pb.Result)
 
-	logger.Trace().Msg("CheckUser")
+	logger.Info().
+		Str("username", req.Username).
+		Msg("Checking user credentials")
 
 	sum := sha256.Sum256([]byte(req.Password))
 	pass := fmt.Sprintf("%x", sum)
@@ -103,7 +105,10 @@ func (s *Server) CheckUser(ctx context.Context, req *pb.Request) (*pb.Result, er
 		res.Correct = pass == true_pass
 	}
 
-	logger.Trace().Msgf("CheckUser %d", res.Correct)
+	logger.Info().
+		Str("username", req.Username).
+		Bool("authenticated", res.Correct).
+		Msg("User authentication completed")
 
 	return res, nil
 }
