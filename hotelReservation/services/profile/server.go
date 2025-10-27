@@ -12,6 +12,7 @@ import (
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/registry"
 	pb "github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/services/profile/proto"
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tls"
+	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tracing"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
@@ -90,7 +91,8 @@ func (s *Server) Shutdown() {
 
 // GetProfiles returns hotel profiles for requested IDs
 func (s *Server) GetProfiles(ctx context.Context, req *pb.Request) (*pb.Result, error) {
-	log.Trace().Msgf("In GetProfiles")
+	logger := tracing.CtxWithTraceID(ctx)
+	logger.Trace().Msgf("In GetProfiles")
 
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
@@ -112,11 +114,11 @@ func (s *Server) GetProfiles(ctx context.Context, req *pb.Request) (*pb.Result, 
 	hotels := make([]*pb.Hotel, 0)
 
 	if err != nil && err != memcache.ErrCacheMiss {
-		log.Panic().Msgf("Tried to get hotelIds [%v], but got memmcached error = %s", hotelIds, err)
+		logger.Panic().Msgf("Tried to get hotelIds [%v], but got memmcached error = %s", hotelIds, err)
 	} else {
 		for hotelId, item := range resMap {
 			profileStr := string(item.Value)
-			log.Trace().Msgf("memc hit with %v", profileStr)
+			logger.Trace().Msgf("memc hit with %v", profileStr)
 
 			hotelProf := new(pb.Hotel)
 			json.Unmarshal(item.Value, hotelProf)
@@ -137,7 +139,7 @@ func (s *Server) GetProfiles(ctx context.Context, req *pb.Request) (*pb.Result, 
 				mongoSpan.End()
 
 				if err != nil {
-					log.Error().Msgf("Failed get hotels data: ", err)
+					logger.Error().Msgf("Failed get hotels data: ", err)
 				}
 
 				mutex.Lock()
@@ -146,7 +148,7 @@ func (s *Server) GetProfiles(ctx context.Context, req *pb.Request) (*pb.Result, 
 
 				profJson, err := json.Marshal(hotelProf)
 				if err != nil {
-					log.Error().Msgf("Failed to marshal hotel [id: %v] with err:", hotelProf.Id, err)
+					logger.Error().Msgf("Failed to marshal hotel [id: %v] with err:", hotelProf.Id, err)
 				}
 				memcStr := string(profJson)
 
@@ -159,6 +161,6 @@ func (s *Server) GetProfiles(ctx context.Context, req *pb.Request) (*pb.Result, 
 	wg.Wait()
 
 	res.Hotels = hotels
-	log.Trace().Msgf("In GetProfiles after getting resp")
+	logger.Trace().Msgf("In GetProfiles after getting resp")
 	return res, nil
 }

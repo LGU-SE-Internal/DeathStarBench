@@ -13,6 +13,7 @@ import (
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/registry"
 	pb "github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/services/reservation/proto"
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tls"
+"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tracing"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
@@ -91,6 +92,7 @@ func (s *Server) Shutdown() {
 
 // MakeReservation makes a reservation based on given information
 func (s *Server) MakeReservation(ctx context.Context, req *pb.Request) (*pb.Result, error) {
+	logger := tracing.CtxWithTraceID(ctx)
 	res := new(pb.Result)
 	res.HotelId = make([]string, 0)
 
@@ -123,22 +125,22 @@ func (s *Server) MakeReservation(ctx context.Context, req *pb.Request) (*pb.Resu
 		if err == nil {
 			// memcached hit
 			count, _ = strconv.Atoi(string(item.Value))
-			log.Trace().Msgf("memcached hit %s = %d", memc_key, count)
+			logger.Trace().Msgf("memcached hit %s = %d", memc_key, count)
 			memc_date_num_map[memc_key] = count + int(req.RoomNumber)
 
 		} else if err == memcache.ErrCacheMiss {
 			// memcached miss
-			log.Trace().Msgf("memcached miss")
+			logger.Trace().Msgf("memcached miss")
 			var reserve []reservation
 
 			filter := bson.D{{"hotelId", hotelId}, {"inDate", indate}, {"outDate", outdate}}
 			curr, err := resCollection.Find(context.TODO(), filter)
 			if err != nil {
-				log.Error().Msgf("Failed get reservation data: ", err)
+				logger.Error().Msgf("Failed get reservation data: ", err)
 			}
 			curr.All(context.TODO(), &reserve)
 			if err != nil {
-				log.Panic().Msgf("Tried to find hotelId [%v] from date [%v] to date [%v], but got error", hotelId, indate, outdate, err.Error())
+				logger.Panic().Msgf("Tried to find hotelId [%v] from date [%v] to date [%v], but got error", hotelId, indate, outdate, err.Error())
 			}
 
 			for _, r := range reserve {
@@ -148,7 +150,7 @@ func (s *Server) MakeReservation(ctx context.Context, req *pb.Request) (*pb.Resu
 			memc_date_num_map[memc_key] = count + int(req.RoomNumber)
 
 		} else {
-			log.Panic().Msgf("Tried to get memc_key [%v], but got memmcached error = %s", memc_key, err)
+			logger.Panic().Msgf("Tried to get memc_key [%v], but got memmcached error = %s", memc_key, err)
 		}
 
 		// check capacity

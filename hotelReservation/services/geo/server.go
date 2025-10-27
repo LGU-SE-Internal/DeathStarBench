@@ -9,6 +9,7 @@ import (
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/registry"
 	pb "github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/services/geo/proto"
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tls"
+	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tracing"
 	"github.com/google/uuid"
 	"github.com/hailocab/go-geoindex"
 	"github.com/rs/zerolog/log"
@@ -94,17 +95,18 @@ func (s *Server) Shutdown() {
 
 // Nearby returns all hotels within a given distance.
 func (s *Server) Nearby(ctx context.Context, req *pb.Request) (*pb.Result, error) {
-	log.Trace().Msgf("In geo Nearby")
+	logger := tracing.CtxWithTraceID(ctx)
+	logger.Trace().Msgf("In geo Nearby")
 
 	var (
 		points = s.getNearbyPoints(ctx, float64(req.Lat), float64(req.Lon))
 		res    = &pb.Result{}
 	)
 
-	log.Trace().Msgf("geo after getNearbyPoints, len = %d", len(points))
+	logger.Trace().Msgf("geo after getNearbyPoints, len = %d", len(points))
 
 	for _, p := range points {
-		log.Trace().Msgf("In geo Nearby return hotelId = %s", p.Id())
+		logger.Trace().Msgf("In geo Nearby return hotelId = %s", p.Id())
 		res.HotelIds = append(res.HotelIds, p.Id())
 	}
 
@@ -112,7 +114,8 @@ func (s *Server) Nearby(ctx context.Context, req *pb.Request) (*pb.Result, error
 }
 
 func (s *Server) getNearbyPoints(ctx context.Context, lat, lon float64) []geoindex.Point {
-	log.Trace().Msgf("In geo getNearbyPoints, lat = %f, lon = %f", lat, lon)
+	logger := tracing.CtxWithTraceID(ctx)
+	logger.Trace().Msgf("In geo getNearbyPoints, lat = %f, lon = %f", lat, lon)
 
 	center := &geoindex.GeoPoint{
 		Pid:  "",

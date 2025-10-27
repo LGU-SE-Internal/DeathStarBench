@@ -10,6 +10,7 @@ import (
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/registry"
 	pb "github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/services/recommendation/proto"
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tls"
+"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tracing"
 	"github.com/google/uuid"
 	"github.com/hailocab/go-geoindex"
 	"github.com/rs/zerolog/log"
@@ -90,8 +91,9 @@ func (s *Server) Shutdown() {
 
 // GiveRecommendation returns recommendations within a given requirement.
 func (s *Server) GetRecommendations(ctx context.Context, req *pb.Request) (*pb.Result, error) {
+	logger := tracing.CtxWithTraceID(ctx)
 	res := new(pb.Result)
-	log.Trace().Msgf("GetRecommendations")
+	logger.Trace().Msgf("GetRecommendations")
 	require := req.Require
 	if require == "dis" {
 		p1 := &geoindex.GeoPoint{
@@ -145,7 +147,7 @@ func (s *Server) GetRecommendations(ctx context.Context, req *pb.Request) (*pb.R
 			}
 		}
 	} else {
-		log.Warn().Msgf("Wrong require parameter: %v", require)
+		logger.Warn().Msgf("Wrong require parameter: %v", require)
 	}
 
 	return res, nil
