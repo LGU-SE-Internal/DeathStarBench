@@ -7,7 +7,7 @@ global:
   restartPolicy: Always
   serviceType: ClusterIP
   dockerRegistry: 10.10.10.240/library
-  defaultImageVersion: otel-1
+  defaultImageVersion: otel-log
   serviceDnsDomain: "cluster.local"
   services:
     environments:
