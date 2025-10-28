@@ -24,7 +24,8 @@ go mod tidy
 go mod vendor
 docker build -t  10.10.10.240/library/hotelreservation:otel .
 docker push 10.10.10.240/library/hotelreservation:otel 
-helm install hotelreservation helm-chart/hotelreservation/ -n hotelreservation --create-namespace
+helm install hotelreservation helm-chart/hotelreservation/ -n hotelreservation --create-namespace --set global.defaultImageVersion=49426e1
+helm upgrade hotelreservation helm-chart/hotelreservation/ -n hotelreservation --set global.defaultImageVersion=49426e1
 ```
 
 
