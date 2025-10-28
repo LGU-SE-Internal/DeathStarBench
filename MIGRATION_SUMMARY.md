@@ -167,6 +167,10 @@ During migration, the following build configuration issues were found in mediaMi
 ### 修复内容 / Fixes Applied
 
 1. **注释掉 Jaeger 库引用** / Commented out Jaeger library references
+   - 修复前：mediaMicroservices/src/CMakeLists.txt 中有未注释的 Jaeger 库定义
+   - 修复后：已将 Jaeger 库引用注释掉
+   - Before: Uncommented Jaeger library definitions in mediaMicroservices/src/CMakeLists.txt
+   - After: Jaeger library references commented out
    ```cmake
    #add_library(jaegertracing SHARED IMPORTED)
    #set_target_properties(jaegertracing PROPERTIES IMPORTED_LOCATION
@@ -175,15 +179,24 @@ During migration, the following build configuration issues were found in mediaMi
 
 2. **添加重试逻辑和错误日志** / Added retry logic and error logging
    - 在 mediaMicroservices/src/tracing.h 中添加了 logger.h 引用
-   - 添加了重试循环以处理 OTEL Collector 连接失败
+   - 添加了重试循环以处理 OTEL Collector 连接失败，使其与 socialNetwork 保持一致
    - Added logger.h reference in mediaMicroservices/src/tracing.h
-   - Added retry loop to handle OTEL Collector connection failures
+   - Added retry loop to handle OTEL Collector connection failures, aligning with socialNetwork
 
 3. **更新配置文件格式** / Updated configuration file format
    - 将 jaeger-config.yml 从 Jaeger 格式转换为 OpenTelemetry 格式
    - Converted jaeger-config.yml from Jaeger format to OpenTelemetry format
+   
+   修复前 / Before:
    ```yaml
-   # 新格式 / New format
+   reporter:
+     localAgentHostPort: "jaeger-agent:6831"
+   sampler:
+     param: 0.1
+   ```
+   
+   修复后 / After:
+   ```yaml
    disabled: false
    endpoint: "http://localhost:4318"
    samplerParam: 0.01
