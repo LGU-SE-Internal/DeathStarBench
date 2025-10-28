@@ -11,6 +11,7 @@ import (
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tls"
 	"github.com/google/uuid"
 	"github.com/hailocab/go-geoindex"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -110,7 +111,28 @@ func (s *Server) Shutdown() {
 
 // NearbyRest returns all restaurants close to the hotel.
 func (s *Server) NearbyRest(ctx context.Context, req *pb.Request) (*pb.Result, error) {
-	log.Trace().Msgf("In Attractions NearbyRest")
+	// Get logger with trace context
+	logger := zerolog.Ctx(ctx)
+	if logger.GetLevel() == zerolog.Disabled {
+		globalLogger := log.Logger
+		logger = &globalLogger
+	}
+	
+	// Extract trace information and add to logger
+	span := trace.SpanFromContext(ctx)
+	if span.IsRecording() {
+		spanCtx := span.SpanContext()
+		if spanCtx.HasTraceID() {
+			newLogger := logger.With().Str("trace_id", spanCtx.TraceID().String()).Logger()
+			logger = &newLogger
+		}
+		if spanCtx.HasSpanID() {
+			newLogger := logger.With().Str("span_id", spanCtx.SpanID().String()).Logger()
+			logger = &newLogger
+		}
+	}
+	
+	logger.Debug().Msgf("Finding nearby restaurants: hotel_id=%s", req.HotelId)
 
 	_, mongoSpan := s.Tracer.Start(ctx, "mongo_restaurant")
 	mongoSpan.SetAttributes(attribute.String("span.kind", "client"))
@@ -119,7 +141,7 @@ func (s *Server) NearbyRest(ctx context.Context, req *pb.Request) (*pb.Result, e
 
 	curr, err := c.Find(context.TODO(), bson.M{"hotelId": req.HotelId})
 	if err != nil {
-		log.Error().Msgf("Failed get hotels: ", err)
+		logger.Error().Msgf("Failed get hotels: %v", err)
 	}
 	var hotelReqs []point
 	curr.All(context.TODO(), &hotelReqs)
@@ -131,14 +153,13 @@ func (s *Server) NearbyRest(ctx context.Context, req *pb.Request) (*pb.Result, e
 	}
 
 	var (
-		points = s.getNearbyPointsRest(ctx, float64(hotelReq.Plat), float64(hotelReq.Plon))
+		points = s.getNearbyPointsRest(ctx, float64(hotelReq.Plat), float64(hotelReq.Plon), logger)
 		res    = &pb.Result{}
 	)
 
-	log.Trace().Msgf("restaurants after getNearbyPoints, len = %d", len(points))
+	logger.Debug().Msgf("Found nearby restaurants: count=%d", len(points))
 
 	for _, p := range points {
-		log.Trace().Msgf("In restaurants Nearby return restaurantId = %s", p.Id())
 		res.AttractionIds = append(res.AttractionIds, p.Id())
 	}
 
@@ -147,7 +168,28 @@ func (s *Server) NearbyRest(ctx context.Context, req *pb.Request) (*pb.Result, e
 
 // NearbyMus returns all museums close to the hotel.
 func (s *Server) NearbyMus(ctx context.Context, req *pb.Request) (*pb.Result, error) {
-	log.Trace().Msgf("In Attractions NearbyMus")
+	// Get logger with trace context
+	logger := zerolog.Ctx(ctx)
+	if logger.GetLevel() == zerolog.Disabled {
+		globalLogger := log.Logger
+		logger = &globalLogger
+	}
+	
+	// Extract trace information and add to logger
+	span := trace.SpanFromContext(ctx)
+	if span.IsRecording() {
+		spanCtx := span.SpanContext()
+		if spanCtx.HasTraceID() {
+			newLogger := logger.With().Str("trace_id", spanCtx.TraceID().String()).Logger()
+			logger = &newLogger
+		}
+		if spanCtx.HasSpanID() {
+			newLogger := logger.With().Str("span_id", spanCtx.SpanID().String()).Logger()
+			logger = &newLogger
+		}
+	}
+	
+	logger.Debug().Msgf("Finding nearby museums: hotel_id=%s", req.HotelId)
 
 	_, mongoSpan := s.Tracer.Start(ctx, "mongo_museum")
 	mongoSpan.SetAttributes(attribute.String("span.kind", "client"))
@@ -156,7 +198,7 @@ func (s *Server) NearbyMus(ctx context.Context, req *pb.Request) (*pb.Result, er
 
 	curr, err := c.Find(context.TODO(), bson.M{"hotelId": req.HotelId})
 	if err != nil {
-		log.Error().Msgf("Failed get hotels: ", err)
+		logger.Error().Msgf("Failed get hotels: %v", err)
 	}
 	var hotelReqs []point
 	curr.All(context.TODO(), &hotelReqs)
@@ -168,14 +210,13 @@ func (s *Server) NearbyMus(ctx context.Context, req *pb.Request) (*pb.Result, er
 	}
 
 	var (
-		points = s.getNearbyPointsMus(ctx, float64(hotelReq.Plat), float64(hotelReq.Plon))
+		points = s.getNearbyPointsMus(ctx, float64(hotelReq.Plat), float64(hotelReq.Plon), logger)
 		res    = &pb.Result{}
 	)
 
-	log.Trace().Msgf("museums after getNearbyPoints, len = %d", len(points))
+	logger.Debug().Msgf("Found nearby museums: count=%d", len(points))
 
 	for _, p := range points {
-		log.Trace().Msgf("In museums Nearby return museumId = %s", p.Id())
 		res.AttractionIds = append(res.AttractionIds, p.Id())
 	}
 
@@ -184,7 +225,28 @@ func (s *Server) NearbyMus(ctx context.Context, req *pb.Request) (*pb.Result, er
 
 // NearbyCinema returns all cinemas close to the hotel.
 func (s *Server) NearbyCinema(ctx context.Context, req *pb.Request) (*pb.Result, error) {
-	log.Trace().Msgf("In Attractions NearbyCinema")
+	// Get logger with trace context
+	logger := zerolog.Ctx(ctx)
+	if logger.GetLevel() == zerolog.Disabled {
+		globalLogger := log.Logger
+		logger = &globalLogger
+	}
+	
+	// Extract trace information and add to logger
+	span := trace.SpanFromContext(ctx)
+	if span.IsRecording() {
+		spanCtx := span.SpanContext()
+		if spanCtx.HasTraceID() {
+			newLogger := logger.With().Str("trace_id", spanCtx.TraceID().String()).Logger()
+			logger = &newLogger
+		}
+		if spanCtx.HasSpanID() {
+			newLogger := logger.With().Str("span_id", spanCtx.SpanID().String()).Logger()
+			logger = &newLogger
+		}
+	}
+	
+	logger.Debug().Msgf("Finding nearby cinemas: hotel_id=%s", req.HotelId)
 
 	_, mongoSpan := s.Tracer.Start(ctx, "mongo_cinema")
 	mongoSpan.SetAttributes(attribute.String("span.kind", "client"))
@@ -193,7 +255,7 @@ func (s *Server) NearbyCinema(ctx context.Context, req *pb.Request) (*pb.Result,
 
 	curr, err := c.Find(context.TODO(), bson.M{"hotelId": req.HotelId})
 	if err != nil {
-		log.Error().Msgf("Failed get hotels: ", err)
+		logger.Error().Msgf("Failed get hotels: %v", err)
 	}
 	var hotelReqs []point
 	curr.All(context.TODO(), &hotelReqs)
@@ -205,14 +267,13 @@ func (s *Server) NearbyCinema(ctx context.Context, req *pb.Request) (*pb.Result,
 	}
 
 	var (
-		points = s.getNearbyPointsCinema(ctx, float64(hotelReq.Plat), float64(hotelReq.Plon))
+		points = s.getNearbyPointsCinema(ctx, float64(hotelReq.Plat), float64(hotelReq.Plon), logger)
 		res    = &pb.Result{}
 	)
 
-	log.Trace().Msgf("cinemas after getNearbyPoints, len = %d", len(points))
+	logger.Debug().Msgf("Found nearby cinemas: count=%d", len(points))
 
 	for _, p := range points {
-		log.Trace().Msgf("In cinemas Nearby return cinemaId = %s", p.Id())
 		res.AttractionIds = append(res.AttractionIds, p.Id())
 	}
 
@@ -237,8 +298,8 @@ func (s *Server) getNearbyPointsHotel(ctx context.Context, lat, lon float64) []g
 	)
 }
 
-func (s *Server) getNearbyPointsRest(ctx context.Context, lat, lon float64) []geoindex.Point {
-	log.Trace().Msgf("In geo getNearbyPointsRest, lat = %f, lon = %f", lat, lon)
+func (s *Server) getNearbyPointsRest(ctx context.Context, lat, lon float64, logger *zerolog.Logger) []geoindex.Point {
+	logger.Trace().Msgf("Searching restaurants near: lat=%v, lon=%v", lat, lon)
 
 	center := &geoindex.GeoPoint{
 		Pid:  "",
@@ -255,8 +316,8 @@ func (s *Server) getNearbyPointsRest(ctx context.Context, lat, lon float64) []ge
 	)
 }
 
-func (s *Server) getNearbyPointsMus(ctx context.Context, lat, lon float64) []geoindex.Point {
-	log.Trace().Msgf("In geo getNearbyPointsMus, lat = %f, lon = %f", lat, lon)
+func (s *Server) getNearbyPointsMus(ctx context.Context, lat, lon float64, logger *zerolog.Logger) []geoindex.Point {
+	logger.Trace().Msgf("Searching museums near: lat=%v, lon=%v", lat, lon)
 
 	center := &geoindex.GeoPoint{
 		Pid:  "",
@@ -273,8 +334,8 @@ func (s *Server) getNearbyPointsMus(ctx context.Context, lat, lon float64) []geo
 	)
 }
 
-func (s *Server) getNearbyPointsCinema(ctx context.Context, lat, lon float64) []geoindex.Point {
-	log.Trace().Msgf("In geo getNearbyPointsCinema, lat = %f, lon = %f", lat, lon)
+func (s *Server) getNearbyPointsCinema(ctx context.Context, lat, lon float64, logger *zerolog.Logger) []geoindex.Point {
+	logger.Trace().Msgf("Searching cinemas near: lat=%v, lon=%v", lat, lon)
 
 	center := &geoindex.GeoPoint{
 		Pid:  "",
