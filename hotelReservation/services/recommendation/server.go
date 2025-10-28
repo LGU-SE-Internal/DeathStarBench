@@ -10,6 +10,7 @@ import (
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/registry"
 	pb "github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/services/recommendation/proto"
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tls"
+"github.com/rs/zerolog"
 	"github.com/google/uuid"
 	"github.com/hailocab/go-geoindex"
 	"github.com/rs/zerolog/log"
@@ -90,9 +91,33 @@ func (s *Server) Shutdown() {
 
 // GiveRecommendation returns recommendations within a given requirement.
 func (s *Server) GetRecommendations(ctx context.Context, req *pb.Request) (*pb.Result, error) {
+	// Get logger with trace context
+	logger := zerolog.Ctx(ctx)
+	if logger.GetLevel() == zerolog.Disabled {
+		globalLogger := log.Logger
+		logger = &globalLogger
+	}
+	
+	// Extract trace information and add to logger
+	span := trace.SpanFromContext(ctx)
+	if span.IsRecording() {
+		spanCtx := span.SpanContext()
+		if spanCtx.HasTraceID() {
+			newLogger := logger.With().Str("trace_id", spanCtx.TraceID().String()).Logger()
+			logger = &newLogger
+		}
+		if spanCtx.HasSpanID() {
+			newLogger := logger.With().Str("span_id", spanCtx.SpanID().String()).Logger()
+			logger = &newLogger
+		}
+	}
+	
 	res := new(pb.Result)
-	log.Trace().Msgf("GetRecommendations")
 	require := req.Require
+	
+	// Log the recommendation request with context
+	logger.Info().Msgf("Processing recommendation request: require_type=%s, lat=%v, lon=%v", require, req.Lat, req.Lon)
+	
 	if require == "dis" {
 		p1 := &geoindex.GeoPoint{
 			Pid:  "",
@@ -120,6 +145,7 @@ func (s *Server) GetRecommendations(ctx context.Context, req *pb.Request) (*pb.R
 				res.HotelIds = append(res.HotelIds, hotel.HId)
 			}
 		}
+		logger.Debug().Msgf("Distance-based recommendations completed: require_type=distance, results_count=%d, min_distance_km=%v", len(res.HotelIds), min)
 	} else if require == "rate" {
 		max := 0.0
 		for _, hotel := range s.hotels {
@@ -132,6 +158,7 @@ func (s *Server) GetRecommendations(ctx context.Context, req *pb.Request) (*pb.R
 				res.HotelIds = append(res.HotelIds, hotel.HId)
 			}
 		}
+		logger.Debug().Msgf("Rate-based recommendations completed: require_type=rate, results_count=%d, max_rate=%v", len(res.HotelIds), max)
 	} else if require == "price" {
 		min := math.MaxFloat64
 		for _, hotel := range s.hotels {
@@ -144,8 +171,9 @@ func (s *Server) GetRecommendations(ctx context.Context, req *pb.Request) (*pb.R
 				res.HotelIds = append(res.HotelIds, hotel.HId)
 			}
 		}
+		logger.Debug().Msgf("Price-based recommendations completed: require_type=price, results_count=%d, min_price=%v", len(res.HotelIds), min)
 	} else {
-		log.Warn().Msgf("Wrong require parameter: %v", require)
+		logger.Warn().Msgf("Invalid recommendation requirement parameter: require_type=%s", require)
 	}
 
 	return res, nil
@@ -156,13 +184,13 @@ func loadRecommendations(client *mongo.Client) map[string]Hotel {
 	collection := client.Database("recommendation-db").Collection("recommendation")
 	curr, err := collection.Find(context.TODO(), bson.D{})
 	if err != nil {
-		log.Error().Msgf("Failed get hotels data: ", err)
+		log.Error().Msgf("Failed get hotels data: %v", err)
 	}
 
 	var hotels []Hotel
 	curr.All(context.TODO(), &hotels)
 	if err != nil {
-		log.Error().Msgf("Failed get hotels data: ", err)
+		log.Error().Msgf("Failed get hotels data: %v", err)
 	}
 
 	profiles := make(map[string]Hotel)

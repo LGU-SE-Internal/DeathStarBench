@@ -150,31 +150,35 @@ func (s *Server) Nearby(ctx context.Context, req *pb.NearbyRequest) (*pb.SearchR
 		}
 	}
 	
+	logger.Info().Msgf("Searching nearby hotels: lat=%v, lon=%v, in_date=%s, out_date=%s", req.Lat, req.Lon, req.InDate, req.OutDate)
+	
 	// find nearby hotels
-	logger.Trace().Msg("in Search Nearby")
-
-	logger.Trace().Msgf("nearby lat = %f", req.Lat)
-	logger.Trace().Msgf("nearby lon = %f", req.Lon)
+	logger.Debug().Msg("Querying geo service for nearby hotels")
 
 	nearby, err := s.geoClient.Nearby(ctx, &geo.Request{
 		Lat: req.Lat,
 		Lon: req.Lon,
 	})
 	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get nearby hotels from geo service")
 		return nil, err
 	}
 
+	logger.Debug().Msgf("Retrieved nearby hotels from geo service: nearby_count=%d", len(nearby.HotelIds))
+
 	for _, hid := range nearby.HotelIds {
-		logger.Trace().Msgf("get Nearby hotelId = %s", hid)
+		logger.Trace().Msgf("Found nearby hotel: hotel_id=%s", hid)
 	}
 
 	// find rates for hotels
+	logger.Debug().Msg("Querying rate service for hotel rates")
 	rates, err := s.rateClient.GetRates(ctx, &rate.Request{
 		HotelIds: nearby.HotelIds,
 		InDate:   req.InDate,
 		OutDate:  req.OutDate,
 	})
 	if err != nil {
+		logger.Error().Err(err).Msg("Failed to get rates from rate service")
 		return nil, err
 	}
 
@@ -186,8 +190,11 @@ func (s *Server) Nearby(ctx context.Context, req *pb.NearbyRequest) (*pb.SearchR
 	// build the response
 	res := new(pb.SearchResult)
 	for _, ratePlan := range rates.RatePlans {
-		logger.Trace().Msgf("get RatePlan HotelId = %s, Code = %s", ratePlan.HotelId, ratePlan.Code)
+		logger.Trace().Msgf("Adding hotel to search results: hotel_id=%s, rate_code=%s", ratePlan.HotelId, ratePlan.Code)
 		res.HotelIds = append(res.HotelIds, ratePlan.HotelId)
 	}
+	
+	logger.Info().Msgf("Search nearby completed: results_count=%d", len(res.HotelIds))
+	
 	return res, nil
 }

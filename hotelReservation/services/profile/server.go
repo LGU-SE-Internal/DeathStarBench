@@ -13,6 +13,7 @@ import (
 	pb "github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/services/profile/proto"
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tls"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -90,7 +91,28 @@ func (s *Server) Shutdown() {
 
 // GetProfiles returns hotel profiles for requested IDs
 func (s *Server) GetProfiles(ctx context.Context, req *pb.Request) (*pb.Result, error) {
-	log.Trace().Msgf("In GetProfiles")
+	// Get logger with trace context
+	logger := zerolog.Ctx(ctx)
+	if logger.GetLevel() == zerolog.Disabled {
+		globalLogger := log.Logger
+		logger = &globalLogger
+	}
+	
+	// Extract trace information and add to logger
+	span := trace.SpanFromContext(ctx)
+	if span.IsRecording() {
+		spanCtx := span.SpanContext()
+		if spanCtx.HasTraceID() {
+			newLogger := logger.With().Str("trace_id", spanCtx.TraceID().String()).Logger()
+			logger = &newLogger
+		}
+		if spanCtx.HasSpanID() {
+			newLogger := logger.With().Str("span_id", spanCtx.SpanID().String()).Logger()
+			logger = &newLogger
+		}
+	}
+	
+	logger.Info().Msgf("Getting hotel profiles: hotel_count=%d", len(req.HotelIds))
 
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
@@ -112,11 +134,14 @@ func (s *Server) GetProfiles(ctx context.Context, req *pb.Request) (*pb.Result, 
 	hotels := make([]*pb.Hotel, 0)
 
 	if err != nil && err != memcache.ErrCacheMiss {
-		log.Panic().Msgf("Tried to get hotelIds [%v], but got memmcached error = %s", hotelIds, err)
+		logger.Panic().
+			Strs("hotel_ids", hotelIds).
+			Err(err).
+			Msg("Memcached error while getting hotel profiles")
 	} else {
 		for hotelId, item := range resMap {
 			profileStr := string(item.Value)
-			log.Trace().Msgf("memc hit with %v", profileStr)
+			logger.Debug().Msgf("Profile cache hit: hotel_id=%s, profile_size=%d", hotelId, len(profileStr))
 
 			hotelProf := new(pb.Hotel)
 			json.Unmarshal(item.Value, hotelProf)
@@ -137,7 +162,7 @@ func (s *Server) GetProfiles(ctx context.Context, req *pb.Request) (*pb.Result, 
 				mongoSpan.End()
 
 				if err != nil {
-					log.Error().Msgf("Failed get hotels data: ", err)
+					logger.Error().Msgf("Failed get hotels data: ", err)
 				}
 
 				mutex.Lock()
@@ -146,7 +171,7 @@ func (s *Server) GetProfiles(ctx context.Context, req *pb.Request) (*pb.Result, 
 
 				profJson, err := json.Marshal(hotelProf)
 				if err != nil {
-					log.Error().Msgf("Failed to marshal hotel [id: %v] with err:", hotelProf.Id, err)
+					logger.Error().Msgf("Failed to marshal hotel [id: %v] with err:", hotelProf.Id, err)
 				}
 				memcStr := string(profJson)
 
@@ -159,6 +184,6 @@ func (s *Server) GetProfiles(ctx context.Context, req *pb.Request) (*pb.Result, 
 	wg.Wait()
 
 	res.Hotels = hotels
-	log.Trace().Msgf("In GetProfiles after getting resp")
+	logger.Info().Msgf("Get profiles completed: profiles_returned=%d", len(hotels))
 	return res, nil
 }

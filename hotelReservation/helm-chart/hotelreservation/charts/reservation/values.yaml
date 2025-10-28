@@ -7,7 +7,6 @@ ports:
 container:
   command: reservation
   image: hotelreservation
-  imageVersion: otel
   name: hotel-reserv-reservation
   ports:
   - containerPort: 8087

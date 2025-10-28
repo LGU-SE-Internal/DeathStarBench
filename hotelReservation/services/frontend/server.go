@@ -20,6 +20,7 @@ import (
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tls"
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tracing"
 	_ "github.com/mbobakov/grpc-consul-resolver"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
@@ -213,7 +214,28 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	ctx := r.Context()
 
-	log.Trace().Msg("starts searchHandler")
+	// Get logger with trace context
+	logger := zerolog.Ctx(ctx)
+	if logger.GetLevel() == zerolog.Disabled {
+		globalLogger := log.Logger
+		logger = &globalLogger
+	}
+	
+	// Extract trace information and add to logger
+	span := trace.SpanFromContext(ctx)
+	if span.IsRecording() {
+		spanCtx := span.SpanContext()
+		if spanCtx.HasTraceID() {
+			newLogger := logger.With().Str("trace_id", spanCtx.TraceID().String()).Logger()
+			logger = &newLogger
+		}
+		if spanCtx.HasSpanID() {
+			newLogger := logger.With().Str("span_id", spanCtx.SpanID().String()).Logger()
+			logger = &newLogger
+		}
+	}
+
+	logger.Info().Msg("Processing hotel search request")
 
 	// in/out dates from query params
 	inDate, outDate := r.URL.Query().Get("inDate"), r.URL.Query().Get("outDate")
@@ -234,9 +256,8 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 	Lon, _ := strconv.ParseFloat(sLon, 32)
 	lon := float32(Lon)
 
-	log.Trace().Msg("starts searchHandler querying downstream")
+	logger.Debug().Msgf("Querying search service: lat=%v, lon=%v, in_date=%s, out_date=%s", lat, lon, inDate, outDate)
 
-	log.Trace().Msgf("SEARCH [lat: %v, lon: %v, inDate: %v, outDate: %v", lat, lon, inDate, outDate)
 	// search for best hotels
 	searchResp, err := s.searchClient.Nearby(ctx, &search.NearbyRequest{
 		Lat:     lat,
@@ -245,11 +266,12 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 		OutDate: outDate,
 	})
 	if err != nil {
+		logger.Error().Err(err).Msg("Search service failed")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	log.Trace().Msg("SearchHandler gets searchResp")
+	logger.Debug().Msgf("Search service completed: hotels_found=%d", len(searchResp.HotelIds))
 	//for _, hid := range searchResp.HotelIds {
 	//	log.Trace().Msgf("Search Handler hotelId = %s", hid)
 	//}
@@ -268,13 +290,12 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 		RoomNumber:   1,
 	})
 	if err != nil {
-		log.Error().Msg("SearchHandler CheckAvailability failed")
+		logger.Error().Err(err).Msg("Reservation check availability failed")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	log.Trace().Msgf("searchHandler gets reserveResp")
-	log.Trace().Msgf("searchHandler gets reserveResp.HotelId = %s", reservationResp.HotelId)
+	logger.Debug().Msgf("Checked availability: available_hotels=%d", len(reservationResp.HotelId))
 
 	// hotel profiles
 	profileResp, err := s.profileClient.GetProfiles(ctx, &profile.Request{
@@ -282,12 +303,12 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 		Locale:   locale,
 	})
 	if err != nil {
-		log.Error().Msg("SearchHandler GetProfiles failed")
+		logger.Error().Err(err).Msg("Get profiles failed")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	log.Trace().Msg("searchHandler gets profileResp")
+	logger.Info().Msgf("Search request completed: profiles_returned=%d", len(profileResp.Hotels))
 
 	json.NewEncoder(w).Encode(geoJSONResponse(profileResp.Hotels))
 }
@@ -295,6 +316,27 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Server) recommendHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	ctx := r.Context()
+
+	// Get logger with trace context
+	logger := zerolog.Ctx(ctx)
+	if logger.GetLevel() == zerolog.Disabled {
+		globalLogger := log.Logger
+		logger = &globalLogger
+	}
+	
+	// Extract trace information and add to logger
+	span := trace.SpanFromContext(ctx)
+	if span.IsRecording() {
+		spanCtx := span.SpanContext()
+		if spanCtx.HasTraceID() {
+			newLogger := logger.With().Str("trace_id", spanCtx.TraceID().String()).Logger()
+			logger = &newLogger
+		}
+		if spanCtx.HasSpanID() {
+			newLogger := logger.With().Str("span_id", spanCtx.SpanID().String()).Logger()
+			logger = &newLogger
+		}
+	}
 
 	sLat, sLon := r.URL.Query().Get("lat"), r.URL.Query().Get("lon")
 	if sLat == "" || sLon == "" {
@@ -312,6 +354,8 @@ func (s *Server) recommendHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	logger.Info().Msgf("Processing recommendation request: lat=%v, lon=%v, require_type=%s", lat, lon, require)
+
 	// recommend hotels
 	recResp, err := s.recommendationClient.GetRecommendations(ctx, &recommendation.Request{
 		Require: require,
@@ -319,6 +363,7 @@ func (s *Server) recommendHandler(w http.ResponseWriter, r *http.Request) {
 		Lon:     float64(lon),
 	})
 	if err != nil {
+		logger.Error().Err(err).Msg("Recommendation service failed")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -335,9 +380,12 @@ func (s *Server) recommendHandler(w http.ResponseWriter, r *http.Request) {
 		Locale:   locale,
 	})
 	if err != nil {
+		logger.Error().Err(err).Msg("Get profiles failed")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	logger.Info().Msgf("Recommendation request completed: recommendations=%d", len(profileResp.Hotels))
 
 	json.NewEncoder(w).Encode(geoJSONResponse(profileResp.Hotels))
 }
@@ -554,11 +602,34 @@ func (s *Server) userHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	ctx := r.Context()
 
+	// Get logger with trace context
+	logger := zerolog.Ctx(ctx)
+	if logger.GetLevel() == zerolog.Disabled {
+		globalLogger := log.Logger
+		logger = &globalLogger
+	}
+	
+	// Extract trace information and add to logger
+	span := trace.SpanFromContext(ctx)
+	if span.IsRecording() {
+		spanCtx := span.SpanContext()
+		if spanCtx.HasTraceID() {
+			newLogger := logger.With().Str("trace_id", spanCtx.TraceID().String()).Logger()
+			logger = &newLogger
+		}
+		if spanCtx.HasSpanID() {
+			newLogger := logger.With().Str("span_id", spanCtx.SpanID().String()).Logger()
+			logger = &newLogger
+		}
+	}
+
 	username, password := r.URL.Query().Get("username"), r.URL.Query().Get("password")
 	if username == "" || password == "" {
 		http.Error(w, "Please specify username and password", http.StatusBadRequest)
 		return
 	}
+
+	logger.Info().Msgf("User authentication request: username=%s", username)
 
 	// Check username and password
 	recResp, err := s.userClient.CheckUser(ctx, &user.Request{
@@ -566,6 +637,7 @@ func (s *Server) userHandler(w http.ResponseWriter, r *http.Request) {
 		Password: password,
 	})
 	if err != nil {
+		logger.Error().Err(err).Msg("User authentication failed")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -574,6 +646,8 @@ func (s *Server) userHandler(w http.ResponseWriter, r *http.Request) {
 	if recResp.Correct == false {
 		str = "Failed. Please check your username and password. "
 	}
+
+	logger.Info().Msgf("User authentication completed: username=%s, authenticated=%v", username, recResp.Correct)
 
 	res := map[string]interface{}{
 		"message": str,
@@ -585,6 +659,27 @@ func (s *Server) userHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Server) reservationHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	ctx := r.Context()
+
+	// Get logger with trace context
+	logger := zerolog.Ctx(ctx)
+	if logger.GetLevel() == zerolog.Disabled {
+		globalLogger := log.Logger
+		logger = &globalLogger
+	}
+	
+	// Extract trace information and add to logger
+	span := trace.SpanFromContext(ctx)
+	if span.IsRecording() {
+		spanCtx := span.SpanContext()
+		if spanCtx.HasTraceID() {
+			newLogger := logger.With().Str("trace_id", spanCtx.TraceID().String()).Logger()
+			logger = &newLogger
+		}
+		if spanCtx.HasSpanID() {
+			newLogger := logger.With().Str("span_id", spanCtx.SpanID().String()).Logger()
+			logger = &newLogger
+		}
+	}
 
 	inDate, outDate := r.URL.Query().Get("inDate"), r.URL.Query().Get("outDate")
 	if inDate == "" || outDate == "" {
@@ -621,12 +716,15 @@ func (s *Server) reservationHandler(w http.ResponseWriter, r *http.Request) {
 		numberOfRoom, _ = strconv.Atoi(num)
 	}
 
+	logger.Info().Msgf("Processing reservation request: hotel_id=%s, in_date=%s, out_date=%s, customer_name=%s, username=%s, room_number=%d", hotelId, inDate, outDate, customerName, username, numberOfRoom)
+
 	// Check username and password
 	recResp, err := s.userClient.CheckUser(ctx, &user.Request{
 		Username: username,
 		Password: password,
 	})
 	if err != nil {
+		logger.Error().Err(err).Msg("User authentication failed")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -634,6 +732,7 @@ func (s *Server) reservationHandler(w http.ResponseWriter, r *http.Request) {
 	str := "Reserve successfully!"
 	if recResp.Correct == false {
 		str = "Failed. Please check your username and password. "
+		logger.Warn().Msgf("Authentication failed for reservation: username=%s", username)
 	}
 
 	// Make reservation
@@ -645,11 +744,15 @@ func (s *Server) reservationHandler(w http.ResponseWriter, r *http.Request) {
 		RoomNumber:   int32(numberOfRoom),
 	})
 	if err != nil {
+		logger.Error().Err(err).Msg("Reservation failed")
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	if len(resResp.HotelId) == 0 {
 		str = "Failed. Already reserved. "
+		logger.Warn().Msgf("Hotel already reserved: hotel_id=%s", hotelId)
+	} else {
+		logger.Info().Msgf("Reservation completed successfully: hotel_id=%s, success=true", hotelId)
 	}
 
 	res := map[string]interface{}{

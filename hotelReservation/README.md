@@ -24,7 +24,8 @@ go mod tidy
 go mod vendor
 docker build -t  10.10.10.240/library/hotelreservation:otel .
 docker push 10.10.10.240/library/hotelreservation:otel 
-helm install hotelreservation helm-chart/hotelreservation/ -n hotelreservation --create-namespace
+helm install hotelreservation helm-chart/hotelreservation/ -n hotelreservation --create-namespace --set global.defaultImageVersion=49426e1
+helm upgrade hotelreservation helm-chart/hotelreservation/ -n hotelreservation --set global.defaultImageVersion=49426e1
 ```
 
 
@@ -69,7 +70,7 @@ Read the Readme file in Kubernetes directory.
 ```bash
 ../wrk2/wrk -D exp -t <num-threads> -c <num-conns> -d <duration> -L -s ./wrk2/scripts/hotel-reservation/mixed-workload_type_1.lua http://x.x.x.x:5000 -R <reqs-per-sec>
 
-../wrk2/wrk -D exp -t 10 -c 100 -d 30s -L -s ./wrk2/scripts/hotel-reservation/mixed-workload_type_1.lua http://10.10.10.220:32504 -R 30
+../wrk2/wrk -D exp -t 10 -c 100 -d 30s -L -s ./wrk2/scripts/hotel-reservation/mixed-workload_type_1.lua http://10.10.10.220:31970 -R 30
 ```
 
 ### Questions and contact

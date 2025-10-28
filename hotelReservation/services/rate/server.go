@@ -15,6 +15,7 @@ import (
 	pb "github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/services/rate/proto"
 	"github.com/delimitrou/DeathStarBench/tree/master/hotelReservation/tls"
 	"github.com/google/uuid"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -90,7 +91,30 @@ func (s *Server) Shutdown() {
 
 // GetRates gets rates for hotels for specific date range.
 func (s *Server) GetRates(ctx context.Context, req *pb.Request) (*pb.Result, error) {
+	// Get logger with trace context
+	logger := zerolog.Ctx(ctx)
+	if logger.GetLevel() == zerolog.Disabled {
+		globalLogger := log.Logger
+		logger = &globalLogger
+	}
+	
+	// Extract trace information and add to logger
+	span := trace.SpanFromContext(ctx)
+	if span.IsRecording() {
+		spanCtx := span.SpanContext()
+		if spanCtx.HasTraceID() {
+			newLogger := logger.With().Str("trace_id", spanCtx.TraceID().String()).Logger()
+			logger = &newLogger
+		}
+		if spanCtx.HasSpanID() {
+			newLogger := logger.With().Str("span_id", spanCtx.SpanID().String()).Logger()
+			logger = &newLogger
+		}
+	}
+	
 	res := new(pb.Result)
+
+	logger.Info().Msgf("Getting hotel rates: hotel_count=%d, in_date=%s, out_date=%s", len(req.HotelIds), req.InDate, req.OutDate)
 
 	ratePlans := make(RatePlans, 0)
 
@@ -110,11 +134,14 @@ func (s *Server) GetRates(ctx context.Context, req *pb.Request) (*pb.Result, err
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
 	if err != nil && err != memcache.ErrCacheMiss {
-		log.Panic().Msgf("Memmcached error while trying to get hotel [id: %v]= %s", hotelIds, err)
+		logger.Panic().
+			Strs("hotel_ids", hotelIds).
+			Err(err).
+			Msg("Memcached error while getting hotel rates")
 	} else {
 		for hotelId, item := range resMap {
 			rateStrs := strings.Split(string(item.Value), "\n")
-			log.Trace().Msgf("memc hit, hotelId = %s,rate strings: %v", hotelId, rateStrs)
+			logger.Debug().Msgf("Rate cache hit: hotel_id=%s, rate_plans=%d", hotelId, len(rateStrs))
 
 			for _, rateStr := range rateStrs {
 				if len(rateStr) != 0 {
@@ -130,8 +157,9 @@ func (s *Server) GetRates(ctx context.Context, req *pb.Request) (*pb.Result, err
 		wg.Add(len(rateMap))
 		for hotelId := range rateMap {
 			go func(id string) {
-				log.Trace().Msgf("memc miss, hotelId = %s", id)
-				log.Trace().Msg("memcached miss, set up mongo connection")
+				logger.Debug().
+					Str("hotel_id", id).
+					Msg("Rate cache miss, fetching from database")
 
 				_, mongoSpan := s.Tracer.Start(ctx, "mongo_rate")
 				mongoSpan.SetAttributes(attribute.String("span.kind", "client"))
@@ -140,20 +168,20 @@ func (s *Server) GetRates(ctx context.Context, req *pb.Request) (*pb.Result, err
 				collection := s.MongoClient.Database("rate-db").Collection("inventory")
 				curr, err := collection.Find(context.TODO(), bson.D{})
 				if err != nil {
-					log.Error().Msgf("Failed get rate data: ", err)
+					logger.Error().Msgf("Failed to get rate data from database: hotel_id=%s, error=%v", id, err)
 				}
 
 				tmpRatePlans := make(RatePlans, 0)
 				curr.All(context.TODO(), &tmpRatePlans)
 				if err != nil {
-					log.Error().Msgf("Failed get rate data: ", err)
+					logger.Error().Msgf("Failed get rate data: ", err)
 				}
 
 				mongoSpan.End()
 
 				memcStr := ""
 				if err != nil {
-					log.Panic().Msgf("Tried to find hotelId [%v], but got error", id, err.Error())
+					logger.Panic().Msgf("Tried to find hotelId [%v], but got error", id, err.Error())
 				} else {
 					for _, r := range tmpRatePlans {
 						mutex.Lock()
@@ -161,7 +189,7 @@ func (s *Server) GetRates(ctx context.Context, req *pb.Request) (*pb.Result, err
 						mutex.Unlock()
 						rateJson, err := json.Marshal(r)
 						if err != nil {
-							log.Error().Msgf("Failed to marshal plan [Code: %v] with error: %s", r.Code, err)
+							logger.Error().Msgf("Failed to marshal plan [Code: %v] with error: %s", r.Code, err)
 						}
 						memcStr = memcStr + string(rateJson) + "\n"
 					}
