@@ -309,7 +309,6 @@ func (s *Server) CheckAvailability(ctx context.Context, req *pb.Request) (*pb.Re
 	reqCommand := []string{}
 	queryMap := make(map[string]map[string]string)
 	for _, hotelId := range req.HotelId {
-		log.Trace().Msgf("reservation check hotel %s", hotelId)
 		inDate, _ := time.Parse(
 			time.RFC3339,
 			req.InDate+"T12:00:00+00:00")
