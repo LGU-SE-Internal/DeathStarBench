@@ -13,9 +13,9 @@ if(Boost_FOUND)
   link_directories(${Boost_LIBRARY_DIRS})
 endif()
 
-add_library(jaegertracing SHARED IMPORTED)
-set_target_properties(jaegertracing PROPERTIES IMPORTED_LOCATION
-    /usr/local/lib/libjaegertracing.so)
+#add_library(jaegertracing SHARED IMPORTED)
+#set_target_properties(jaegertracing PROPERTIES IMPORTED_LOCATION
+#    /usr/local/lib/libjaegertracing.so)
 
 set(THRIFT_GEN_CPP_DIR ../../gen-cpp)
 
