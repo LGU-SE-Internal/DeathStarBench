@@ -19,6 +19,8 @@
 - ✅ 更新 Docker 构建 / Updated Docker build
 - ✅ 更新 Helm Chart / Updated Helm Chart
 - ✅ 移除 Jaeger 依赖 / Removed Jaeger dependency
+- ✅ 修复构建配置问题 / Fixed build configuration issues
+- ✅ 更新配置文件格式 / Updated configuration file format
 
 ### 2. socialNetwork (C++)
 - ✅ 更新核心追踪代码 / Updated core tracing code
@@ -26,6 +28,7 @@
 - ✅ 更新 Docker 构建 / Updated Docker build
 - ✅ 更新 Helm Chart / Updated Helm Chart
 - ✅ 移除 Jaeger 依赖 / Removed Jaeger dependency
+- ✅ 更新配置文件格式 / Updated configuration file format
 
 ### 3. hotelReservation (Go)
 - ✅ 更新追踪库 / Updated tracing library
@@ -142,3 +145,50 @@ kubectl run -it --rm debug --image=curlimages/curl --restart=Never -- \
 2. 逐步增加采样率观察性能影响 / Gradually increase sampling ratio to observe performance impact
 3. 监控 OTEL Collector 的资源使用 / Monitor OTEL Collector resource usage
 4. 确认所有服务都能成功发送追踪数据 / Confirm all services can send trace data successfully
+
+## 构建问题修复 / Build Issues Fixed
+
+### 问题描述 / Issue Description
+在迁移过程中发现 mediaMicroservices 的构建配置存在以下问题：
+During migration, the following build configuration issues were found in mediaMicroservices:
+
+1. **CMakeLists.txt 中残留 Jaeger 库引用** / Jaeger library references remained in CMakeLists.txt
+   - `mediaMicroservices/src/CMakeLists.txt` 中未注释的 Jaeger 库定义导致链接失败
+   - Uncommented Jaeger library definitions in `mediaMicroservices/src/CMakeLists.txt` caused linking failures
+
+2. **tracing.h 缺少错误处理** / Missing error handling in tracing.h
+   - mediaMicroservices 的 tracing.h 缺少重试逻辑和日志记录
+   - mediaMicroservices' tracing.h lacked retry logic and logging
+
+3. **配置文件格式未更新** / Configuration file format not updated
+   - jaeger-config.yml 仍使用旧的 Jaeger 配置格式
+   - jaeger-config.yml still used old Jaeger configuration format
+
+### 修复内容 / Fixes Applied
+
+1. **注释掉 Jaeger 库引用** / Commented out Jaeger library references
+   ```cmake
+   #add_library(jaegertracing SHARED IMPORTED)
+   #set_target_properties(jaegertracing PROPERTIES IMPORTED_LOCATION
+   #    /usr/local/lib/libjaegertracing.so)
+   ```
+
+2. **添加重试逻辑和错误日志** / Added retry logic and error logging
+   - 在 mediaMicroservices/src/tracing.h 中添加了 logger.h 引用
+   - 添加了重试循环以处理 OTEL Collector 连接失败
+   - Added logger.h reference in mediaMicroservices/src/tracing.h
+   - Added retry loop to handle OTEL Collector connection failures
+
+3. **更新配置文件格式** / Updated configuration file format
+   - 将 jaeger-config.yml 从 Jaeger 格式转换为 OpenTelemetry 格式
+   - Converted jaeger-config.yml from Jaeger format to OpenTelemetry format
+   ```yaml
+   # 新格式 / New format
+   disabled: false
+   endpoint: "http://localhost:4318"
+   samplerParam: 0.01
+   ```
+
+### 影响 / Impact
+这些修复确保了 socialNetwork 和 mediaMicroservices 都能成功构建并使用 OpenTelemetry。
+These fixes ensure both socialNetwork and mediaMicroservices can build successfully and use OpenTelemetry.
