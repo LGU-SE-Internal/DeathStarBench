@@ -7,6 +7,7 @@
 #include <yaml-cpp/yaml.h>
 #include <map>
 #include <cstdlib>
+#include "logger.h"
 
 #include "opentelemetry/sdk/trace/tracer_provider.h"
 #include "opentelemetry/sdk/trace/simple_processor.h"
@@ -54,28 +55,38 @@ void SetUpTracer(
   };
   auto resource_ptr = resource::Resource::Create(resource_attributes);
 
-  // Create OTLP HTTP exporter
-  otlp::OtlpHttpExporterOptions exporter_options;
-  exporter_options.url = otel_endpoint + "/v1/traces";
-  
-  auto exporter = std::unique_ptr<trace_sdk::SpanExporter>(
-    new otlp::OtlpHttpExporter(exporter_options));
+  bool r = false;
+  while (!r) {
+    try {
+      // Create OTLP HTTP exporter
+      otlp::OtlpHttpExporterOptions exporter_options;
+      exporter_options.url = otel_endpoint + "/v1/traces";
+      
+      auto exporter = std::unique_ptr<trace_sdk::SpanExporter>(
+        new otlp::OtlpHttpExporter(exporter_options));
 
-  // Create batch span processor
-  trace_sdk::BatchSpanProcessorOptions processor_options;
-  auto processor = std::unique_ptr<trace_sdk::SpanProcessor>(
-    new trace_sdk::BatchSpanProcessor(std::move(exporter), processor_options));
+      // Create batch span processor
+      trace_sdk::BatchSpanProcessorOptions processor_options;
+      auto processor = std::unique_ptr<trace_sdk::SpanProcessor>(
+        new trace_sdk::BatchSpanProcessor(std::move(exporter), processor_options));
 
-  // Create tracer provider
-  auto provider = std::shared_ptr<trace_api::TracerProvider>(
-    new trace_sdk::TracerProvider(std::move(processor), resource_ptr));
+      // Create tracer provider
+      auto provider = std::shared_ptr<trace_api::TracerProvider>(
+        new trace_sdk::TracerProvider(std::move(processor), resource_ptr));
 
-  // Set global tracer provider
-  trace_api::Provider::SetTracerProvider(provider);
+      // Set global tracer provider
+      trace_api::Provider::SetTracerProvider(provider);
 
-  // Set global propagator
-  opentelemetry::context::propagation::GlobalTextMapPropagator::SetGlobalPropagator(
-    std::make_shared<opentelemetry::trace::propagation::HttpTraceContext>());
+      // Set global propagator
+      opentelemetry::context::propagation::GlobalTextMapPropagator::SetGlobalPropagator(
+        std::make_shared<opentelemetry::trace::propagation::HttpTraceContext>());
+      
+      r = true;
+    } catch(...) {
+      LOG(error) << "Failed to connect to OTEL collector, retrying ...";
+      sleep(1);
+    }
+  }
 }
 
 } //namespace media_service
