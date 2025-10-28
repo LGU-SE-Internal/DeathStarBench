@@ -150,12 +150,7 @@ func (s *Server) Nearby(ctx context.Context, req *pb.NearbyRequest) (*pb.SearchR
 		}
 	}
 	
-	logger.Info().
-		Float64("lat", float64(req.Lat)).
-		Float64("lon", float64(req.Lon)).
-		Str("in_date", req.InDate).
-		Str("out_date", req.OutDate).
-		Msg("Searching nearby hotels")
+	logger.Info().Msgf("Searching nearby hotels: lat=%v, lon=%v, in_date=%s, out_date=%s", req.Lat, req.Lon, req.InDate, req.OutDate)
 	
 	// find nearby hotels
 	logger.Debug().Msg("Querying geo service for nearby hotels")
@@ -169,12 +164,10 @@ func (s *Server) Nearby(ctx context.Context, req *pb.NearbyRequest) (*pb.SearchR
 		return nil, err
 	}
 
-	logger.Debug().
-		Int("nearby_count", len(nearby.HotelIds)).
-		Msg("Retrieved nearby hotels from geo service")
+	logger.Debug().Msgf("Retrieved nearby hotels from geo service: nearby_count=%d", len(nearby.HotelIds))
 
 	for _, hid := range nearby.HotelIds {
-		logger.Trace().Str("hotel_id", hid).Msg("Found nearby hotel")
+		logger.Trace().Msgf("Found nearby hotel: hotel_id=%s", hid)
 	}
 
 	// find rates for hotels
@@ -197,16 +190,11 @@ func (s *Server) Nearby(ctx context.Context, req *pb.NearbyRequest) (*pb.SearchR
 	// build the response
 	res := new(pb.SearchResult)
 	for _, ratePlan := range rates.RatePlans {
-		logger.Trace().
-			Str("hotel_id", ratePlan.HotelId).
-			Str("rate_code", ratePlan.Code).
-			Msg("Adding hotel to search results")
+		logger.Trace().Msgf("Adding hotel to search results: hotel_id=%s, rate_code=%s", ratePlan.HotelId, ratePlan.Code)
 		res.HotelIds = append(res.HotelIds, ratePlan.HotelId)
 	}
 	
-	logger.Info().
-		Int("results_count", len(res.HotelIds)).
-		Msg("Search nearby completed")
+	logger.Info().Msgf("Search nearby completed: results_count=%d", len(res.HotelIds))
 	
 	return res, nil
 }

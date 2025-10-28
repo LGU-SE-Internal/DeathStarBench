@@ -114,11 +114,7 @@ func (s *Server) GetRates(ctx context.Context, req *pb.Request) (*pb.Result, err
 	
 	res := new(pb.Result)
 
-	logger.Info().
-		Int("hotel_count", len(req.HotelIds)).
-		Str("in_date", req.InDate).
-		Str("out_date", req.OutDate).
-		Msg("Getting hotel rates")
+	logger.Info().Msgf("Getting hotel rates: hotel_count=%d, in_date=%s, out_date=%s", len(req.HotelIds), req.InDate, req.OutDate)
 
 	ratePlans := make(RatePlans, 0)
 
@@ -145,10 +141,7 @@ func (s *Server) GetRates(ctx context.Context, req *pb.Request) (*pb.Result, err
 	} else {
 		for hotelId, item := range resMap {
 			rateStrs := strings.Split(string(item.Value), "\n")
-			logger.Debug().
-				Str("hotel_id", hotelId).
-				Int("rate_plans", len(rateStrs)).
-				Msg("Rate cache hit")
+			logger.Debug().Msgf("Rate cache hit: hotel_id=%s, rate_plans=%d", hotelId, len(rateStrs))
 
 			for _, rateStr := range rateStrs {
 				if len(rateStr) != 0 {
@@ -175,10 +168,7 @@ func (s *Server) GetRates(ctx context.Context, req *pb.Request) (*pb.Result, err
 				collection := s.MongoClient.Database("rate-db").Collection("inventory")
 				curr, err := collection.Find(context.TODO(), bson.D{})
 				if err != nil {
-					logger.Error().
-						Str("hotel_id", id).
-						Err(err).
-						Msg("Failed to get rate data from database")
+					logger.Error().Msgf("Failed to get rate data from database: hotel_id=%s, error=%v", id, err)
 				}
 
 				tmpRatePlans := make(RatePlans, 0)

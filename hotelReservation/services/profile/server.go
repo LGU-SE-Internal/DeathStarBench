@@ -112,9 +112,7 @@ func (s *Server) GetProfiles(ctx context.Context, req *pb.Request) (*pb.Result, 
 		}
 	}
 	
-	logger.Info().
-		Int("hotel_count", len(req.HotelIds)).
-		Msg("Getting hotel profiles")
+	logger.Info().Msgf("Getting hotel profiles: hotel_count=%d", len(req.HotelIds))
 
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
@@ -143,10 +141,7 @@ func (s *Server) GetProfiles(ctx context.Context, req *pb.Request) (*pb.Result, 
 	} else {
 		for hotelId, item := range resMap {
 			profileStr := string(item.Value)
-			logger.Debug().
-				Str("hotel_id", hotelId).
-				Int("profile_size", len(profileStr)).
-				Msg("Profile cache hit")
+			logger.Debug().Msgf("Profile cache hit: hotel_id=%s, profile_size=%d", hotelId, len(profileStr))
 
 			hotelProf := new(pb.Hotel)
 			json.Unmarshal(item.Value, hotelProf)
@@ -189,8 +184,6 @@ func (s *Server) GetProfiles(ctx context.Context, req *pb.Request) (*pb.Result, 
 	wg.Wait()
 
 	res.Hotels = hotels
-	logger.Info().
-		Int("profiles_returned", len(hotels)).
-		Msg("Get profiles completed")
+	logger.Info().Msgf("Get profiles completed: profiles_returned=%d", len(hotels))
 	return res, nil
 }

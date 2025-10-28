@@ -117,10 +117,7 @@ func (s *Server) Nearby(ctx context.Context, req *pb.Request) (*pb.Result, error
 		}
 	}
 	
-	logger.Info().
-		Float64("lat", float64(req.Lat)).
-		Float64("lon", float64(req.Lon)).
-		Msg("Searching nearby hotels")
+	logger.Info().Msgf("Searching nearby hotels: lat=%v, lon=%v", req.Lat, req.Lon)
 
 	var (
 		points = s.getNearbyPoints(ctx, float64(req.Lat), float64(req.Lon))
@@ -128,13 +125,11 @@ func (s *Server) Nearby(ctx context.Context, req *pb.Request) (*pb.Result, error
 	)
 
 	for _, p := range points {
-		logger.Trace().Str("hotel_id", p.Id()).Msg("Found nearby hotel")
+		logger.Trace().Msgf("Found nearby hotel: hotel_id=%s", p.Id())
 		res.HotelIds = append(res.HotelIds, p.Id())
 	}
 	
-	logger.Debug().
-		Int("results_count", len(res.HotelIds)).
-		Msg("Nearby search completed")
+	logger.Debug().Msgf("Nearby search completed: results_count=%d", len(res.HotelIds))
 
 	return res, nil
 }

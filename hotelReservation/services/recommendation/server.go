@@ -116,11 +116,7 @@ func (s *Server) GetRecommendations(ctx context.Context, req *pb.Request) (*pb.R
 	require := req.Require
 	
 	// Log the recommendation request with context
-	logger.Info().
-		Str("require_type", require).
-		Float64("lat", req.Lat).
-		Float64("lon", req.Lon).
-		Msg("Processing recommendation request")
+	logger.Info().Msgf("Processing recommendation request: require_type=%s, lat=%v, lon=%v", require, req.Lat, req.Lon)
 	
 	if require == "dis" {
 		p1 := &geoindex.GeoPoint{
@@ -149,11 +145,7 @@ func (s *Server) GetRecommendations(ctx context.Context, req *pb.Request) (*pb.R
 				res.HotelIds = append(res.HotelIds, hotel.HId)
 			}
 		}
-		logger.Debug().
-			Str("require_type", "distance").
-			Int("results_count", len(res.HotelIds)).
-			Float64("min_distance_km", min).
-			Msg("Distance-based recommendations completed")
+		logger.Debug().Msgf("Distance-based recommendations completed: require_type=distance, results_count=%d, min_distance_km=%v", len(res.HotelIds), min)
 	} else if require == "rate" {
 		max := 0.0
 		for _, hotel := range s.hotels {
@@ -166,11 +158,7 @@ func (s *Server) GetRecommendations(ctx context.Context, req *pb.Request) (*pb.R
 				res.HotelIds = append(res.HotelIds, hotel.HId)
 			}
 		}
-		logger.Debug().
-			Str("require_type", "rate").
-			Int("results_count", len(res.HotelIds)).
-			Float64("max_rate", max).
-			Msg("Rate-based recommendations completed")
+		logger.Debug().Msgf("Rate-based recommendations completed: require_type=rate, results_count=%d, max_rate=%v", len(res.HotelIds), max)
 	} else if require == "price" {
 		min := math.MaxFloat64
 		for _, hotel := range s.hotels {
@@ -183,15 +171,9 @@ func (s *Server) GetRecommendations(ctx context.Context, req *pb.Request) (*pb.R
 				res.HotelIds = append(res.HotelIds, hotel.HId)
 			}
 		}
-		logger.Debug().
-			Str("require_type", "price").
-			Int("results_count", len(res.HotelIds)).
-			Float64("min_price", min).
-			Msg("Price-based recommendations completed")
+		logger.Debug().Msgf("Price-based recommendations completed: require_type=price, results_count=%d, min_price=%v", len(res.HotelIds), min)
 	} else {
-		logger.Warn().
-			Str("require_type", require).
-			Msg("Invalid recommendation requirement parameter")
+		logger.Warn().Msgf("Invalid recommendation requirement parameter: require_type=%s", require)
 	}
 
 	return res, nil

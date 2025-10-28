@@ -116,13 +116,7 @@ func (s *Server) MakeReservation(ctx context.Context, req *pb.Request) (*pb.Resu
 	res := new(pb.Result)
 	res.HotelId = make([]string, 0)
 
-	logger.Info().
-		Str("hotel_id", req.HotelId[0]).
-		Str("in_date", req.InDate).
-		Str("out_date", req.OutDate).
-		Int32("room_number", req.RoomNumber).
-		Str("customer_name", req.CustomerName).
-		Msg("Making hotel reservation")
+	logger.Info().Msgf("Making hotel reservation: hotel_id=%s, in_date=%s, out_date=%s, room_number=%d, customer_name=%s", req.HotelId[0], req.InDate, req.OutDate, req.RoomNumber, req.CustomerName)
 
 	database := s.MongoClient.Database("reservation-db")
 	resCollection := database.Collection("reservation")
@@ -153,17 +147,12 @@ func (s *Server) MakeReservation(ctx context.Context, req *pb.Request) (*pb.Resu
 		if err == nil {
 			// memcached hit
 			count, _ = strconv.Atoi(string(item.Value))
-			logger.Debug().
-				Str("memc_key", memc_key).
-				Int("current_reservations", count).
-				Msg("Reservation cache hit")
+			logger.Debug().Msgf("Reservation cache hit: memc_key=%s, current_reservations=%d", memc_key, count)
 			memc_date_num_map[memc_key] = count + int(req.RoomNumber)
 
 		} else if err == memcache.ErrCacheMiss {
 			// memcached miss
-			logger.Debug().
-				Str("date_range", indate+" to "+outdate).
-				Msg("Reservation cache miss, querying database")
+			logger.Debug().Msgf("Reservation cache miss, querying database: date_range=%s to %s", indate, outdate)
 			var reserve []reservation
 
 			filter := bson.D{{"hotelId", hotelId}, {"inDate", indate}, {"outDate", outdate}}

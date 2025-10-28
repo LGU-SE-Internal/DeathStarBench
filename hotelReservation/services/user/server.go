@@ -113,9 +113,7 @@ func (s *Server) CheckUser(ctx context.Context, req *pb.Request) (*pb.Result, er
 	
 	res := new(pb.Result)
 
-	logger.Info().
-		Str("username", req.Username).
-		Msg("Checking user credentials")
+	logger.Info().Msgf("Checking user credentials: username=%s", req.Username)
 
 	sum := sha256.Sum256([]byte(req.Password))
 	pass := fmt.Sprintf("%x", sum)
@@ -125,10 +123,7 @@ func (s *Server) CheckUser(ctx context.Context, req *pb.Request) (*pb.Result, er
 		res.Correct = pass == true_pass
 	}
 
-	logger.Info().
-		Str("username", req.Username).
-		Bool("authenticated", res.Correct).
-		Msg("User authentication completed")
+	logger.Info().Msgf("User authentication completed: username=%s, authenticated=%v", req.Username, res.Correct)
 
 	return res, nil
 }

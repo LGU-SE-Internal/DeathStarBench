@@ -256,12 +256,7 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 	Lon, _ := strconv.ParseFloat(sLon, 32)
 	lon := float32(Lon)
 
-	logger.Debug().
-		Float64("lat", float64(lat)).
-		Float64("lon", float64(lon)).
-		Str("in_date", inDate).
-		Str("out_date", outDate).
-		Msg("Querying search service")
+	logger.Debug().Msgf("Querying search service: lat=%v, lon=%v, in_date=%s, out_date=%s", lat, lon, inDate, outDate)
 
 	// search for best hotels
 	searchResp, err := s.searchClient.Nearby(ctx, &search.NearbyRequest{
@@ -276,9 +271,7 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Debug().
-		Int("hotels_found", len(searchResp.HotelIds)).
-		Msg("Search service completed")
+	logger.Debug().Msgf("Search service completed: hotels_found=%d", len(searchResp.HotelIds))
 	//for _, hid := range searchResp.HotelIds {
 	//	log.Trace().Msgf("Search Handler hotelId = %s", hid)
 	//}
@@ -302,9 +295,7 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Debug().
-		Int("available_hotels", len(reservationResp.HotelId)).
-		Msg("Checked availability")
+	logger.Debug().Msgf("Checked availability: available_hotels=%d", len(reservationResp.HotelId))
 
 	// hotel profiles
 	profileResp, err := s.profileClient.GetProfiles(ctx, &profile.Request{
@@ -317,9 +308,7 @@ func (s *Server) searchHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Info().
-		Int("profiles_returned", len(profileResp.Hotels)).
-		Msg("Search request completed")
+	logger.Info().Msgf("Search request completed: profiles_returned=%d", len(profileResp.Hotels))
 
 	json.NewEncoder(w).Encode(geoJSONResponse(profileResp.Hotels))
 }
@@ -365,11 +354,7 @@ func (s *Server) recommendHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Info().
-		Float64("lat", lat).
-		Float64("lon", lon).
-		Str("require_type", require).
-		Msg("Processing recommendation request")
+	logger.Info().Msgf("Processing recommendation request: lat=%v, lon=%v, require_type=%s", lat, lon, require)
 
 	// recommend hotels
 	recResp, err := s.recommendationClient.GetRecommendations(ctx, &recommendation.Request{
@@ -400,9 +385,7 @@ func (s *Server) recommendHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Info().
-		Int("recommendations", len(profileResp.Hotels)).
-		Msg("Recommendation request completed")
+	logger.Info().Msgf("Recommendation request completed: recommendations=%d", len(profileResp.Hotels))
 
 	json.NewEncoder(w).Encode(geoJSONResponse(profileResp.Hotels))
 }
@@ -646,9 +629,7 @@ func (s *Server) userHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	logger.Info().
-		Str("username", username).
-		Msg("User authentication request")
+	logger.Info().Msgf("User authentication request: username=%s", username)
 
 	// Check username and password
 	recResp, err := s.userClient.CheckUser(ctx, &user.Request{
@@ -666,10 +647,7 @@ func (s *Server) userHandler(w http.ResponseWriter, r *http.Request) {
 		str = "Failed. Please check your username and password. "
 	}
 
-	logger.Info().
-		Str("username", username).
-		Bool("authenticated", recResp.Correct).
-		Msg("User authentication completed")
+	logger.Info().Msgf("User authentication completed: username=%s, authenticated=%v", username, recResp.Correct)
 
 	res := map[string]interface{}{
 		"message": str,
@@ -738,14 +716,7 @@ func (s *Server) reservationHandler(w http.ResponseWriter, r *http.Request) {
 		numberOfRoom, _ = strconv.Atoi(num)
 	}
 
-	logger.Info().
-		Str("hotel_id", hotelId).
-		Str("in_date", inDate).
-		Str("out_date", outDate).
-		Str("customer_name", customerName).
-		Str("username", username).
-		Int("room_number", numberOfRoom).
-		Msg("Processing reservation request")
+	logger.Info().Msgf("Processing reservation request: hotel_id=%s, in_date=%s, out_date=%s, customer_name=%s, username=%s, room_number=%d", hotelId, inDate, outDate, customerName, username, numberOfRoom)
 
 	// Check username and password
 	recResp, err := s.userClient.CheckUser(ctx, &user.Request{
@@ -761,9 +732,7 @@ func (s *Server) reservationHandler(w http.ResponseWriter, r *http.Request) {
 	str := "Reserve successfully!"
 	if recResp.Correct == false {
 		str = "Failed. Please check your username and password. "
-		logger.Warn().
-			Str("username", username).
-			Msg("Authentication failed for reservation")
+		logger.Warn().Msgf("Authentication failed for reservation: username=%s", username)
 	}
 
 	// Make reservation
@@ -781,14 +750,9 @@ func (s *Server) reservationHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(resResp.HotelId) == 0 {
 		str = "Failed. Already reserved. "
-		logger.Warn().
-			Str("hotel_id", hotelId).
-			Msg("Hotel already reserved")
+		logger.Warn().Msgf("Hotel already reserved: hotel_id=%s", hotelId)
 	} else {
-		logger.Info().
-			Str("hotel_id", hotelId).
-			Bool("success", true).
-			Msg("Reservation completed successfully")
+		logger.Info().Msgf("Reservation completed successfully: hotel_id=%s, success=true", hotelId)
 	}
 
 	res := map[string]interface{}{
