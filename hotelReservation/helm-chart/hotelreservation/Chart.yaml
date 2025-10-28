@@ -6,6 +6,8 @@ version: 0.1.0
 appVersion: "1.16.0"
 
 dependencies:
+  - name: attractions
+    version: 0.1.0
   - name: consul
     version: 0.1.0
   - name: frontend
@@ -17,6 +19,8 @@ dependencies:
   - name: memcached-rate
     version: 0.1.0
   - name: memcached-reserve
+    version: 0.1.0
+  - name: mongodb-attractions
     version: 0.1.0
   - name: mongodb-geo
     version: 0.1.0
