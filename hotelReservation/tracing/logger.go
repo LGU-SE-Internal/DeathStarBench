@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
 	otellog "go.opentelemetry.io/otel/log"
 	"go.opentelemetry.io/otel/log/global"
@@ -25,40 +24,6 @@ var (
 	otelLogger     otellog.Logger
 	loggerMutex    sync.RWMutex
 )
-
-// TraceContextHook is a zerolog hook that automatically adds trace context to logs
-type TraceContextHook struct{}
-
-// Run implements zerolog.Hook interface
-func (h TraceContextHook) Run(e *zerolog.Event, level zerolog.Level, msg string) {
-	ctx := e.GetCtx()
-	if ctx == nil {
-		return
-	}
-	
-	span := trace.SpanFromContext(ctx)
-	if !span.IsRecording() {
-		return
-	}
-	
-	spanCtx := span.SpanContext()
-	if spanCtx.HasTraceID() {
-		e.Str("trace_id", spanCtx.TraceID().String())
-	}
-	if spanCtx.HasSpanID() {
-		e.Str("span_id", spanCtx.SpanID().String())
-	}
-}
-
-// LoggerWithTraceContext returns a logger with trace context from the span
-// This should be called at the start of each request handler to get a logger
-// that automatically includes trace_id and span_id in all log entries via the TraceContextHook
-func LoggerWithTraceContext(ctx context.Context, baseLogger zerolog.Logger) *zerolog.Logger {
-	// Store the logger in the context so the hook can access the context
-	ctx = baseLogger.WithContext(ctx)
-	// Return the logger from context
-	return zerolog.Ctx(ctx)
-}
 
 // OtelLogWriter is a writer that sends logs to OpenTelemetry
 type OtelLogWriter struct {
@@ -266,37 +231,13 @@ func InitWithLogging(serviceName, host string) (trace.Tracer, zerolog.Logger, er
 		consoleWriter: consoleWriter,
 	}
 
-	// Create logger with the dual writer and trace context hook
-	// The hook automatically adds trace_id and span_id to all logs when a span context is available
+	// Create logger with the dual writer
 	logger := zerolog.New(otelWriter).
 		With().
 		Timestamp().
 		Caller().
-		Logger().
-		Hook(TraceContextHook{})
+		Logger()
 	logger.Info().Msg("OpenTelemetry logger initialized successfully")
 
 	return tracer, logger, nil
-}
-
-// CtxWithTraceID returns a logger that will automatically include trace_id and span_id
-// via the TraceContextHook. The logger must have been created with the hook (via InitWithLogging).
-// Usage: logger := tracing.CtxWithTraceID(ctx); logger.Info().Msg("message")
-func CtxWithTraceID(ctx context.Context) *zerolog.Logger {
-	// Always use the global logger and store it in the context
-	// so the TraceContextHook can access the context via e.GetCtx()
-	ctx = log.Logger.WithContext(ctx)
-	return zerolog.Ctx(ctx)
-}
-
-// ShutdownLogger gracefully shuts down the logger provider
-func ShutdownLogger(ctx context.Context) error {
-	loggerMutex.RLock()
-	lp := loggerProvider
-	loggerMutex.RUnlock()
-
-	if lp != nil {
-		return lp.Shutdown(ctx)
-	}
-	return nil
 }
