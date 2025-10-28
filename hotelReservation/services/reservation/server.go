@@ -189,7 +189,7 @@ func (s *Server) MakeReservation(ctx context.Context, req *pb.Request) (*pb.Resu
 			var num number
 			err = numCollection.FindOne(context.TODO(), &bson.D{{"hotelId", hotelId}}).Decode(&num)
 			if err != nil {
-				log.Panic().Msgf("Tried to find hotelId [%v], but got error", hotelId, err.Error())
+				log.Panic().Msgf("Tried to find hotelId [%v], but got error %v", hotelId, err.Error())
 			}
 			hotel_cap = int(num.Number)
 
@@ -230,7 +230,7 @@ func (s *Server) MakeReservation(ctx context.Context, req *pb.Request) (*pb.Resu
 			},
 		)
 		if err != nil {
-			log.Panic().Msgf("Tried to insert hotel [hotelId %v], but got error", hotelId, err.Error())
+			log.Panic().Msgf("Tried to insert hotel [hotelId %v], but got error %v", hotelId, err.Error())
 		}
 		indate = outdate
 	}
@@ -289,15 +289,15 @@ func (s *Server) CheckAvailability(ctx context.Context, req *pb.Request) (*pb.Re
 		capMongoSpan.SetAttributes(attribute.String("span.kind", "client"))
 		curr, err := numCollection.Find(context.TODO(), bson.D{{"$in", queryMissKeys}})
 		if err != nil {
-			log.Error().Msgf("Failed get reservation number data: ", err)
+			log.Error().Msgf("Failed get reservation number data: %v", err)
 		}
 		curr.All(context.TODO(), &nums)
 		if err != nil {
-			log.Error().Msgf("Failed get reservation number data: ", err)
+			log.Error().Msgf("Failed get reservation number data: %v", err)
 		}
 		capMongoSpan.End()
 		if err != nil {
-			log.Panic().Msgf("Tried to find hotelId [%v], but got error", misKeys, err.Error())
+			log.Panic().Msgf("Tried to find hotelId [%v], but got error %v", misKeys, err.Error())
 		}
 		for _, num := range nums {
 			cacheCap[num.HotelId] = num.Number
@@ -386,16 +386,16 @@ func (s *Server) CheckAvailability(ctx context.Context, req *pb.Request) (*pb.Re
 					reserveMongoSpan.SetAttributes(attribute.String("span.kind", "client"))
 					curr, err := resCollection.Find(context.TODO(), filter)
 					if err != nil {
-						log.Error().Msgf("Failed get reservation data: ", err)
+						log.Error().Msgf("Failed get reservation data: %v", err)
 					}
 					curr.All(context.TODO(), &reserve)
 					if err != nil {
-						log.Error().Msgf("Failed get reservation data: ", err)
+						log.Error().Msgf("Failed get reservation data: %v", err)
 					}
 					reserveMongoSpan.End()
 
 					if err != nil {
-						log.Panic().Msgf("Tried to find hotelId [%v] from date [%v] to date [%v], but got error",
+						log.Panic().Msgf("Tried to find hotelId [%v] from date [%v] to date [%v], but got error %v",
 							queryItem["hotelId"], queryItem["startDate"], queryItem["endDate"], err.Error())
 					}
 					var count int
