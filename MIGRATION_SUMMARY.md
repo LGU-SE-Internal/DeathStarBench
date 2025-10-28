@@ -160,9 +160,11 @@ During migration, the following build configuration issues were found in mediaMi
    - mediaMicroservices 的 tracing.h 缺少重试逻辑和日志记录
    - mediaMicroservices' tracing.h lacked retry logic and logging
 
-3. **配置文件格式未更新** / Configuration file format not updated
-   - jaeger-config.yml 仍使用旧的 Jaeger 配置格式
-   - jaeger-config.yml still used old Jaeger configuration format
+3. **配置文件分离不当** / Improper configuration file separation
+   - 服务代码仍引用 jaeger-config.yml，但该文件被错误地转换为 OTEL 格式
+   - 应该创建专用的 otel-config.yml 并删除 jaeger-config.yml
+   - Service code still referenced jaeger-config.yml, which was incorrectly converted to OTEL format
+   - Should create dedicated otel-config.yml and remove jaeger-config.yml
 
 ### 修复内容 / Fixes Applied
 
@@ -183,19 +185,15 @@ During migration, the following build configuration issues were found in mediaMi
    - Added logger.h reference in mediaMicroservices/src/tracing.h
    - Added retry loop to handle OTEL Collector connection failures, aligning with socialNetwork
 
-3. **更新配置文件格式** / Updated configuration file format
-   - 将 jaeger-config.yml 从 Jaeger 格式转换为 OpenTelemetry 格式
-   - Converted jaeger-config.yml from Jaeger format to OpenTelemetry format
+3. **创建专用的 OpenTelemetry 配置文件** / Created dedicated OpenTelemetry configuration files
+   - 创建新的 otel-config.yml 文件替代混用的 jaeger-config.yml
+   - 更新所有 25 个服务文件以引用新的 otel-config.yml
+   - 删除旧的 jaeger-config.yml 文件
+   - Created new otel-config.yml files instead of reusing jaeger-config.yml
+   - Updated all 25 service files to reference the new otel-config.yml
+   - Removed old jaeger-config.yml files
    
-   修复前 / Before:
-   ```yaml
-   reporter:
-     localAgentHostPort: "jaeger-agent:6831"
-   sampler:
-     param: 0.1
-   ```
-   
-   修复后 / After:
+   新的 OTEL 配置格式 / New OTEL configuration format:
    ```yaml
    disabled: false
    endpoint: "http://localhost:4318"
