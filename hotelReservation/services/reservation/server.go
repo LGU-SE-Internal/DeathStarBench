@@ -183,20 +183,20 @@ func (s *Server) MakeReservation(ctx context.Context, req *pb.Request) (*pb.Resu
 		if err == nil {
 			// memcached hit
 			hotel_cap, _ = strconv.Atoi(string(item.Value))
-			log.Trace().Msgf("memcached hit %s = %d", memc_cap_key, hotel_cap)
+			logger.Trace().Msgf("memcached hit %s = %d", memc_cap_key, hotel_cap)
 		} else if err == memcache.ErrCacheMiss {
 			// memcached miss
 			var num number
 			err = numCollection.FindOne(context.TODO(), &bson.D{{"hotelId", hotelId}}).Decode(&num)
 			if err != nil {
-				log.Panic().Msgf("Tried to find hotelId [%v], but got error %v", hotelId, err.Error())
+				logger.Panic().Msgf("Tried to find hotelId [%v], but got error %v", hotelId, err.Error())
 			}
 			hotel_cap = int(num.Number)
 
 			// write to memcache
 			s.MemcClient.Set(&memcache.Item{Key: memc_cap_key, Value: []byte(strconv.Itoa(hotel_cap))})
 		} else {
-			log.Panic().Msgf("Tried to get memc_cap_key [%v], but got memmcached error = %s", memc_cap_key, err)
+			logger.Panic().Msgf("Tried to get memc_cap_key [%v], but got memmcached error = %s", memc_cap_key, err)
 		}
 
 		if count+int(req.RoomNumber) > hotel_cap {
@@ -230,7 +230,7 @@ func (s *Server) MakeReservation(ctx context.Context, req *pb.Request) (*pb.Resu
 			},
 		)
 		if err != nil {
-			log.Panic().Msgf("Tried to insert hotel [hotelId %v], but got error %v", hotelId, err.Error())
+			logger.Panic().Msgf("Tried to insert hotel [hotelId %v], but got error %v", hotelId, err.Error())
 		}
 		indate = outdate
 	}

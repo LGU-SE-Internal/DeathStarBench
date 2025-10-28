@@ -281,8 +281,6 @@ func (s *Server) NearbyCinema(ctx context.Context, req *pb.Request) (*pb.Result,
 }
 
 func (s *Server) getNearbyPointsHotel(ctx context.Context, lat, lon float64) []geoindex.Point {
-	log.Trace().Msgf("In geo getNearbyPoints, lat = %f, lon = %f", lat, lon)
-
 	center := &geoindex.GeoPoint{
 		Pid:  "",
 		Plat: lat,
@@ -354,8 +352,6 @@ func (s *Server) getNearbyPointsCinema(ctx context.Context, lat, lon float64, lo
 
 // newGeoIndex returns a geo index with points loaded
 func newGeoIndex(client *mongo.Client) *geoindex.ClusteringIndex {
-	log.Trace().Msg("new geo newGeoIndex")
-
 	collection := client.Database("attractions-db").Collection("hotels")
 	curr, err := collection.Find(context.TODO(), bson.D{})
 	if err != nil {
@@ -379,8 +375,6 @@ func newGeoIndex(client *mongo.Client) *geoindex.ClusteringIndex {
 
 // newGeoIndexRest returns a geo index with points loaded
 func newGeoIndexRest(client *mongo.Client) *geoindex.ClusteringIndex {
-	log.Trace().Msg("new geo newGeoIndexRest")
-
 	collection := client.Database("attractions-db").Collection("restaurants")
 	curr, err := collection.Find(context.TODO(), bson.D{})
 	if err != nil {
@@ -404,8 +398,6 @@ func newGeoIndexRest(client *mongo.Client) *geoindex.ClusteringIndex {
 
 // newGeoIndexMus returns a geo index with points loaded
 func newGeoIndexMus(client *mongo.Client) *geoindex.ClusteringIndex {
-	log.Trace().Msg("new geo newGeoIndexMus")
-
 	collection := client.Database("attractions-db").Collection("museums")
 	curr, err := collection.Find(context.TODO(), bson.D{})
 	if err != nil {
@@ -429,8 +421,6 @@ func newGeoIndexMus(client *mongo.Client) *geoindex.ClusteringIndex {
 
 // newGeoIndexCinema returns a geo index with points loaded
 func newGeoIndexCinema(client *mongo.Client) *geoindex.ClusteringIndex {
-	log.Trace().Msg("new geo newGeoIndexCinema")
-
 	collection := client.Database("attractions-db").Collection("cinemas")
 	curr, err := collection.Find(context.TODO(), bson.D{})
 	if err != nil {
