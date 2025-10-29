@@ -53,7 +53,7 @@ func main() {
 	// log.Info().Msg("Successfull")
 
 	serv_port, _ := strconv.Atoi(result["AttractionsPort"])
-	serv_ip := result["AttractionsIP"]
+	serv_ip := result["AttractionsIP"]  // Will be empty, allowing auto-detection
 	log.Info().Msgf("Read target port: %v", serv_port)
 	log.Info().Msgf("Read consul address: %v", result["consulAddress"])
 	log.Info().Msgf("Read jaeger address: %v", result["jaegerAddress"])

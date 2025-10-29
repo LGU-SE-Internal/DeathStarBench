@@ -20,8 +20,7 @@
     "UserPort": "8086",
     "UserMongoAddress": "mongodb-user-{{ include "hotel-reservation.fullname" . }}.{{ .Release.Namespace }}.svc.{{ .Values.global.serviceDnsDomain }}:27023",
     "AttractionsPort": "8089",
-    "AttractionsMongoAddress": "mongodb-attractions-{{ include "hotel-reservation.fullname" . }}.{{ .Release.Namespace }}.svc.{{ .Values.global.serviceDnsDomain }}:27024",
-    "AttractionsIP": "attractions-{{ include "hotel-reservation.fullname" . }}.{{ .Release.Namespace }}.svc.{{ .Values.global.serviceDnsDomain }}"
+    "AttractionsMongoAddress": "mongodb-attractions-{{ include "hotel-reservation.fullname" . }}.{{ .Release.Namespace }}.svc.{{ .Values.global.serviceDnsDomain }}:27024"
 }
 {{- end }}
 
