@@ -477,14 +477,14 @@ func (s *Server) restaurantHandler(w http.ResponseWriter, r *http.Request) {
 
 	revResp, err := s.attractionsClient.NearbyRest(ctx, &revInput)
 
-	str = "Have restaurants = " + strconv.Itoa(len(revResp.AttractionIds))
-	if len(revResp.AttractionIds) == 0 {
-		str = "Failed. No Restaurants. "
-	}
-
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	str = "Have restaurants = " + strconv.Itoa(len(revResp.AttractionIds))
+	if len(revResp.AttractionIds) == 0 {
+		str = "Failed. No Restaurants. "
 	}
 
 	res := map[string]interface{}{
@@ -529,14 +529,14 @@ func (s *Server) museumHandler(w http.ResponseWriter, r *http.Request) {
 
 	revResp, err := s.attractionsClient.NearbyMus(ctx, &revInput)
 
-	str = "Have museums = " + strconv.Itoa(len(revResp.AttractionIds))
-	if len(revResp.AttractionIds) == 0 {
-		str = "Failed. No Museums. "
-	}
-
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	str = "Have museums = " + strconv.Itoa(len(revResp.AttractionIds))
+	if len(revResp.AttractionIds) == 0 {
+		str = "Failed. No Museums. "
 	}
 
 	res := map[string]interface{}{
@@ -581,14 +581,14 @@ func (s *Server) cinemaHandler(w http.ResponseWriter, r *http.Request) {
 
 	revResp, err := s.attractionsClient.NearbyCinema(ctx, &revInput)
 
-	str = "Have cinemas = " + strconv.Itoa(len(revResp.AttractionIds))
-	if len(revResp.AttractionIds) == 0 {
-		str = "Failed. No Cinemas. "
-	}
-
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	str = "Have cinemas = " + strconv.Itoa(len(revResp.AttractionIds))
+	if len(revResp.AttractionIds) == 0 {
+		str = "Failed. No Cinemas. "
 	}
 
 	res := map[string]interface{}{
