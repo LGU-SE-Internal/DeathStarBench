@@ -33,6 +33,8 @@ type point struct {
 
 func initializeDatabase(url string) (*mongo.Client, func()) {
 
+	// Initialize hotel points (coordinates for geo-lookup) for hotels 1-80
+	// This matches the geo service database initialization
 	newPoints := []interface{}{
 		point{"1", 37.7867, -122.4112},
 		point{"2", 37.7854, -122.4005},
@@ -40,6 +42,14 @@ func initializeDatabase(url string) (*mongo.Client, func()) {
 		point{"4", 37.7936, -122.3930},
 		point{"5", 37.7831, -122.4181},
 		point{"6", 37.7863, -122.4015},
+	}
+
+	// Generate hotel points for hotels 7-80 (same as geo service)
+	for i := 7; i <= 80; i++ {
+		hotelID := fmt.Sprintf("%d", i)
+		lat := 37.7835 + float64(i)/500.0*3
+		lon := -122.41 + float64(i)/500.0*4
+		newPoints = append(newPoints, point{hotelID, lat, lon})
 	}
 
 	newRestaurants := []interface{}{

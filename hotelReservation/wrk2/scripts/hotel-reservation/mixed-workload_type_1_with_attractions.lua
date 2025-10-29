@@ -110,7 +110,8 @@ local function user_login()
 end
 
 local function nearby_restaurants()
-  local hotel_id = tostring(math.random(1, 6))
+  -- Attractions DB has hotel coordinates for hotels 1-80 (see cmd/attractions/db.go)
+  local hotel_id = tostring(math.random(1, 80))
   local user_name, password = get_user()
   local method = "GET"
   local path = url .. "/restaurants?username=" .. user_name .. 
@@ -120,7 +121,8 @@ local function nearby_restaurants()
 end
 
 local function nearby_museums()
-  local hotel_id = tostring(math.random(1, 6))
+  -- Attractions DB has hotel coordinates for hotels 1-80 (see cmd/attractions/db.go)
+  local hotel_id = tostring(math.random(1, 80))
   local user_name, password = get_user()
   local method = "GET"
   local path = url .. "/museums?username=" .. user_name .. 
@@ -130,7 +132,8 @@ local function nearby_museums()
 end
 
 local function nearby_cinemas()
-  local hotel_id = tostring(math.random(1, 6))
+  -- Attractions DB has hotel coordinates for hotels 1-80 (see cmd/attractions/db.go)
+  local hotel_id = tostring(math.random(1, 80))
   local user_name, password = get_user()
   local method = "GET"
   local path = url .. "/cinema?username=" .. user_name .. 
