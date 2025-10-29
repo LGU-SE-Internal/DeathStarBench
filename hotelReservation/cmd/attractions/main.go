@@ -89,5 +89,7 @@ func main() {
 	}
 
 	logger.Info().Msg("Starting server...")
-	logger.Fatal().Msg(srv.Run().Error())
+	if err := srv.Run(); err != nil {
+		logger.Fatal().Msgf("Server error: %v", err)
+	}
 }
