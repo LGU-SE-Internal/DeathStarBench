@@ -103,6 +103,7 @@ RUN apt-get update \
     -DWITH_OTLP_HTTP=ON \
     -DWITH_EXAMPLES=OFF \
     -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+    -DWITH_ABSEIL=ON \
     .. \
   && make -j$(nproc) \
   && make install \
