@@ -72,9 +72,8 @@ RUN apt-get update \
   && ldconfig \
   && cd /tmp \
   # Install gRPC (required for OpenTelemetry OTLP)
-  && wget -O grpc-1.43.0.tar.gz https://github.com/grpc/grpc/archive/refs/tags/v1.43.0.tar.gz \
-  && tar -zxf grpc-1.43.0.tar.gz \
-  && cd grpc-1.43.0 \
+  && git clone --recurse-submodules -b v1.43.0 --depth 1 https://github.com/grpc/grpc.git \
+  && cd grpc \
   && mkdir -p cmake-build \
   && cd cmake-build \
   && cmake -DgRPC_INSTALL=ON \
@@ -131,8 +130,7 @@ RUN apt-get update \
     yaml-cpp-yaml-cpp-${LIB_YAML_VERSION} \
     protobuf-3.19.4.tar.gz \
     protobuf-3.19.4 \
-    grpc-1.43.0.tar.gz \
-    grpc-1.43.0 \
+    grpc \
     opentelemetry-cpp-${LIB_OPENTELEMETRY_VERSION}.tar.gz \
     opentelemetry-cpp-${LIB_OPENTELEMETRY_VERSION} \
     cpp-jwt-${LIB_CPP_JWT_VERSION}.tar.gz \
