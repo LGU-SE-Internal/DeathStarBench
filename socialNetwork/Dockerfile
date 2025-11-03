@@ -13,10 +13,18 @@ ARG LIB_SIMPLEAMQPCLIENT_VERSION=2.4.0
 ARG LIB_HIREDIS_VERSION=1.0.0
 ARG LIB_REDIS_PLUS_PLUS_VERSION=1.2.3
 
-ARG BUILD_DEPS="ca-certificates g++ cmake wget git libmemcached-dev automake bison flex libboost-all-dev libevent-dev libssl-dev libtool make pkg-config librabbitmq-dev python3-dev python3-pip python3-setuptools python3-wheel"
+ARG BUILD_DEPS="ca-certificates g++ wget git libmemcached-dev automake bison flex libboost-all-dev libevent-dev libssl-dev libtool make pkg-config librabbitmq-dev python3-dev python3-pip python3-setuptools python3-wheel"
+ARG CMAKE_VERSION=3.20.0
 
 RUN apt-get update \
   && apt-get install -y ${BUILD_DEPS} --no-install-recommends \
+  # Install newer CMake (OpenTelemetry requires CMake >= 3.7)
+  && cd /tmp \
+  && wget https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz \
+  && tar -zxf cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz \
+  && cp -r cmake-${CMAKE_VERSION}-linux-x86_64/bin/* /usr/local/bin/ \
+  && cp -r cmake-${CMAKE_VERSION}-linux-x86_64/share/* /usr/local/share/ \
+  && rm -rf cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz cmake-${CMAKE_VERSION}-linux-x86_64 \
   # Install mongo-c-driver
   && cd /tmp \
   && wget https://github.com/mongodb/mongo-c-driver/releases/download/${LIB_MONGOC_VERSION}/mongo-c-driver-${LIB_MONGOC_VERSION}.tar.gz \
@@ -147,7 +155,7 @@ RUN apt-get update \
     AMQP-CPP \
     SimpleAmqpClient
 
-ENV LD_LIBRARY_PATH /usr/local/lib:${LD_LIBRARY_PATH}
+ENV LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH:-}"
 RUN ldconfig
 
 # Build the application

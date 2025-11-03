@@ -9,10 +9,18 @@ ARG LIB_YAML_VERSION=0.6.2
 ARG LIB_CPP_JWT_VERSION=1.1.1
 ARG LIB_CPP_REDIS_VERSION=4.3.1
 
-ARG BUILD_DEPS="ca-certificates g++ cmake wget git libmemcached-dev automake bison flex libboost-all-dev libevent-dev libssl-dev libtool make pkg-config"
+ARG BUILD_DEPS="ca-certificates g++ wget git libmemcached-dev automake bison flex libboost-all-dev libevent-dev libssl-dev libtool make pkg-config"
+ARG CMAKE_VERSION=3.20.0
 
 RUN apt-get update \
   && apt-get install -y ${BUILD_DEPS} --no-install-recommends \
+  # Install newer CMake (OpenTelemetry requires CMake >= 3.7)
+  && cd /tmp \
+  && wget https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz \
+  && tar -zxf cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz \
+  && cp -r cmake-${CMAKE_VERSION}-linux-x86_64/bin/* /usr/local/bin/ \
+  && cp -r cmake-${CMAKE_VERSION}-linux-x86_64/share/* /usr/local/share/ \
+  && rm -rf cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz cmake-${CMAKE_VERSION}-linux-x86_64 \
   # Install mongo-c-driver
   && cd /tmp \
   && wget https://github.com/mongodb/mongo-c-driver/releases/download/${LIB_MONGOC_VERSION}/mongo-c-driver-${LIB_MONGOC_VERSION}.tar.gz \
@@ -103,7 +111,7 @@ RUN apt-get update \
     cpp-jwt-${LIB_CPP_JWT_VERSION} \
     cpp_redis
 
-ENV LD_LIBRARY_PATH /usr/local/lib:${LD_LIBRARY_PATH}
+ENV LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH:-}"
 RUN ldconfig
 
 # Build the application
