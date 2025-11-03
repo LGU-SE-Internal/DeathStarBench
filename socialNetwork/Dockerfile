@@ -66,6 +66,30 @@ RUN apt-get update \
   && make -j$(nproc) \
   && make install \
   && cd /tmp \
+  # Install Protobuf (required for OpenTelemetry OTLP)
+  && wget -O protobuf-3.19.4.tar.gz https://github.com/protocolbuffers/protobuf/releases/download/v3.19.4/protobuf-all-3.19.4.tar.gz \
+  && tar -zxf protobuf-3.19.4.tar.gz \
+  && cd protobuf-3.19.4 \
+  && ./configure --prefix=/usr/local \
+  && make -j$(nproc) \
+  && make install \
+  && ldconfig \
+  && cd /tmp \
+  # Install gRPC (required for OpenTelemetry OTLP)
+  && wget -O grpc-1.43.0.tar.gz https://github.com/grpc/grpc/archive/refs/tags/v1.43.0.tar.gz \
+  && tar -zxf grpc-1.43.0.tar.gz \
+  && cd grpc-1.43.0 \
+  && mkdir -p cmake-build \
+  && cd cmake-build \
+  && cmake -DgRPC_INSTALL=ON \
+    -DgRPC_BUILD_TESTS=OFF \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DgRPC_PROTOBUF_PROVIDER=package \
+    -DgRPC_SSL_PROVIDER=package \
+    .. \
+  && make -j$(nproc) \
+  && make install \
+  && cd /tmp \
   # Install OpenTelemetry C++
   && wget -O opentelemetry-cpp-${LIB_OPENTELEMETRY_VERSION}.tar.gz https://github.com/open-telemetry/opentelemetry-cpp/archive/v${LIB_OPENTELEMETRY_VERSION}.tar.gz \
   && tar -zxf opentelemetry-cpp-${LIB_OPENTELEMETRY_VERSION}.tar.gz \
@@ -145,10 +169,14 @@ RUN apt-get update \
     thrift-${LIB_THRIFT_VERSION} \
     json-${LIB_JSON_VERSION}.tar.gz \
     json-${LIB_JSON_VERSION} \
-    opentelemetry-cpp-${LIB_OPENTELEMETRY_VERSION}.tar.gz \
-    opentelemetry-cpp-${LIB_OPENTELEMETRY_VERSION} \
     yaml-cpp-${LIB_YAML_VERSION}.tar.gz \
     yaml-cpp-yaml-cpp-${LIB_YAML_VERSION} \
+    protobuf-3.19.4.tar.gz \
+    protobuf-3.19.4 \
+    grpc-1.43.0.tar.gz \
+    grpc-1.43.0 \
+    opentelemetry-cpp-${LIB_OPENTELEMETRY_VERSION}.tar.gz \
+    opentelemetry-cpp-${LIB_OPENTELEMETRY_VERSION} \
     cpp-jwt-${LIB_CPP_JWT_VERSION}.tar.gz \
     cpp-jwt-${LIB_CPP_JWT_VERSION} \
     cpp_redis \
