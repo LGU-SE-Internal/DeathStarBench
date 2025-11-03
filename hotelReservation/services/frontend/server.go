@@ -144,11 +144,7 @@ func (s *Server) initReviewClient(name string) error {
 }
 
 func (s *Server) initAttractionsClient(name string) error {
-	conn, err := dialer.Dial(
-		name,
-		dialer.WithTracer(s.Tracer),
-		dialer.WithBalancer(s.Registry.Client),
-	)
+	conn, err := s.getGprcConn(name)
 	if err != nil {
 		return fmt.Errorf("dialer error: %v", err)
 	}
@@ -473,18 +469,21 @@ func (s *Server) restaurantHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Trace().Msgf("Calling NearbyRest for hotelId: %s", hotelId)
 	revInput := attractions.Request{HotelId: hotelId}
 
 	revResp, err := s.attractionsClient.NearbyRest(ctx, &revInput)
 
+	if err != nil {
+		log.Error().Err(err).Msgf("NearbyRest failed for hotelId %s", hotelId)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	log.Trace().Msgf("NearbyRest success for hotelId %s: %d restaurants", hotelId, len(revResp.AttractionIds))
+
 	str = "Have restaurants = " + strconv.Itoa(len(revResp.AttractionIds))
 	if len(revResp.AttractionIds) == 0 {
 		str = "Failed. No Restaurants. "
-	}
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
 	}
 
 	res := map[string]interface{}{
@@ -525,18 +524,21 @@ func (s *Server) museumHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Trace().Msgf("Calling NearbyMus for hotelId: %s", hotelId)
 	revInput := attractions.Request{HotelId: hotelId}
 
 	revResp, err := s.attractionsClient.NearbyMus(ctx, &revInput)
 
+	if err != nil {
+		log.Error().Err(err).Msgf("NearbyMus failed for hotelId %s", hotelId)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	log.Trace().Msgf("NearbyMus success for hotelId %s: %d museums", hotelId, len(revResp.AttractionIds))
+
 	str = "Have museums = " + strconv.Itoa(len(revResp.AttractionIds))
 	if len(revResp.AttractionIds) == 0 {
 		str = "Failed. No Museums. "
-	}
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
 	}
 
 	res := map[string]interface{}{
@@ -577,18 +579,21 @@ func (s *Server) cinemaHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Trace().Msgf("Calling NearbyCinema for hotelId: %s", hotelId)
 	revInput := attractions.Request{HotelId: hotelId}
 
 	revResp, err := s.attractionsClient.NearbyCinema(ctx, &revInput)
 
+	if err != nil {
+		log.Error().Err(err).Msgf("NearbyCinema failed for hotelId %s", hotelId)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	log.Trace().Msgf("NearbyCinema success for hotelId %s: %d cinemas", hotelId, len(revResp.AttractionIds))
+
 	str = "Have cinemas = " + strconv.Itoa(len(revResp.AttractionIds))
 	if len(revResp.AttractionIds) == 0 {
 		str = "Failed. No Cinemas. "
-	}
-
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
 	}
 
 	res := map[string]interface{}{
