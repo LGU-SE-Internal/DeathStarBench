@@ -132,7 +132,7 @@ func (s *Server) NearbyRest(ctx context.Context, req *pb.Request) (*pb.Result, e
 		}
 	}
 	
-	logger.Debug().Msgf("Finding nearby restaurants: hotel_id=%s", req.HotelId)
+	logger.Info().Msgf("Finding nearby restaurants: hotel_id=%s", req.HotelId)
 
 	_, mongoSpan := s.Tracer.Start(ctx, "mongo_restaurant")
 	mongoSpan.SetAttributes(attribute.String("span.kind", "client"))
@@ -157,7 +157,7 @@ func (s *Server) NearbyRest(ctx context.Context, req *pb.Request) (*pb.Result, e
 		res    = &pb.Result{}
 	)
 
-	logger.Debug().Msgf("Found nearby restaurants: count=%d", len(points))
+	logger.Info().Msgf("Found nearby restaurants: count=%d", len(points))
 
 	for _, p := range points {
 		res.AttractionIds = append(res.AttractionIds, p.Id())
@@ -189,7 +189,7 @@ func (s *Server) NearbyMus(ctx context.Context, req *pb.Request) (*pb.Result, er
 		}
 	}
 	
-	logger.Debug().Msgf("Finding nearby museums: hotel_id=%s", req.HotelId)
+	logger.Info().Msgf("Finding nearby museums: hotel_id=%s", req.HotelId)
 
 	_, mongoSpan := s.Tracer.Start(ctx, "mongo_museum")
 	mongoSpan.SetAttributes(attribute.String("span.kind", "client"))
@@ -214,7 +214,7 @@ func (s *Server) NearbyMus(ctx context.Context, req *pb.Request) (*pb.Result, er
 		res    = &pb.Result{}
 	)
 
-	logger.Debug().Msgf("Found nearby museums: count=%d", len(points))
+	logger.Info().Msgf("Found nearby museums: count=%d", len(points))
 
 	for _, p := range points {
 		res.AttractionIds = append(res.AttractionIds, p.Id())
@@ -246,7 +246,7 @@ func (s *Server) NearbyCinema(ctx context.Context, req *pb.Request) (*pb.Result,
 		}
 	}
 	
-	logger.Debug().Msgf("Finding nearby cinemas: hotel_id=%s", req.HotelId)
+	logger.Info().Msgf("Finding nearby cinemas: hotel_id=%s", req.HotelId)
 
 	_, mongoSpan := s.Tracer.Start(ctx, "mongo_cinema")
 	mongoSpan.SetAttributes(attribute.String("span.kind", "client"))
@@ -271,7 +271,7 @@ func (s *Server) NearbyCinema(ctx context.Context, req *pb.Request) (*pb.Result,
 		res    = &pb.Result{}
 	)
 
-	logger.Debug().Msgf("Found nearby cinemas: count=%d", len(points))
+	logger.Info().Msgf("Found nearby cinemas: count=%d", len(points))
 
 	for _, p := range points {
 		res.AttractionIds = append(res.AttractionIds, p.Id())
@@ -297,7 +297,7 @@ func (s *Server) getNearbyPointsHotel(ctx context.Context, lat, lon float64) []g
 }
 
 func (s *Server) getNearbyPointsRest(ctx context.Context, lat, lon float64, logger *zerolog.Logger) []geoindex.Point {
-	logger.Trace().Msgf("Searching restaurants near: lat=%v, lon=%v", lat, lon)
+	logger.Debug().Msgf("Searching restaurants near: lat=%v, lon=%v", lat, lon)
 
 	center := &geoindex.GeoPoint{
 		Pid:  "",
@@ -315,7 +315,7 @@ func (s *Server) getNearbyPointsRest(ctx context.Context, lat, lon float64, logg
 }
 
 func (s *Server) getNearbyPointsMus(ctx context.Context, lat, lon float64, logger *zerolog.Logger) []geoindex.Point {
-	logger.Trace().Msgf("Searching museums near: lat=%v, lon=%v", lat, lon)
+	logger.Debug().Msgf("Searching museums near: lat=%v, lon=%v", lat, lon)
 
 	center := &geoindex.GeoPoint{
 		Pid:  "",
@@ -333,7 +333,7 @@ func (s *Server) getNearbyPointsMus(ctx context.Context, lat, lon float64, logge
 }
 
 func (s *Server) getNearbyPointsCinema(ctx context.Context, lat, lon float64, logger *zerolog.Logger) []geoindex.Point {
-	logger.Trace().Msgf("Searching cinemas near: lat=%v, lon=%v", lat, lon)
+	logger.Debug().Msgf("Searching cinemas near: lat=%v, lon=%v", lat, lon)
 
 	center := &geoindex.GeoPoint{
 		Pid:  "",
