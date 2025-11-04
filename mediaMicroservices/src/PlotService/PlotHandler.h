@@ -45,15 +45,15 @@ void PlotHandler::ReadPlot(
     int64_t plot_id,
     const std::map<std::string, std::string> & carrier) {
 
-  // Initialize a span
-  TextMapReader reader(carrier);
-  std::map<std::string, std::string> writer_text_map;
-  TextMapWriter writer(writer_text_map);
-  auto parent_span = opentracing::Tracer::Global()->Extract(reader);
-  auto span = opentracing::Tracer::Global()->StartSpan(
-      "ReadPlot",
-      { opentracing::ChildOf(parent_span->get()) });
-  opentracing::Tracer::Global()->Inject(span->context(), writer);
+  // // Initialize a span
+  // TextMapReader reader(carrier);
+  // std::map<std::string, std::string> writer_text_map;
+  // TextMapWriter writer(writer_text_map);
+  // auto parent_span = opentracing::Tracer::Global()->Extract(reader);
+  // auto span = opentracing::Tracer::Global()->StartSpan(
+      // "ReadPlot",
+      // { opentracing::ChildOf(parent_span->get()) });
+  // opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   memcached_return_t memcached_rc;
   memcached_st *memcached_client = memcached_pool_pop(
@@ -69,8 +69,8 @@ void PlotHandler::ReadPlot(
   uint32_t memcached_flags;
 
   // Look for the movie id from memcached
-  auto get_span = opentracing::Tracer::Global()->StartSpan(
-      "MmcGetPlot", { opentracing::ChildOf(&span->context()) });
+  // auto get_span = opentracing::Tracer::Global()->StartSpan(
+      // "MmcGetPlot", { opentracing::ChildOf(&span->context()) });
   auto plot_id_str = std::to_string(plot_id);
 
   char* plot_mmc = memcached_get(
@@ -121,8 +121,8 @@ void PlotHandler::ReadPlot(
     bson_t *query = bson_new();
     BSON_APPEND_INT64(query, "plot_id", plot_id);
 
-    auto find_span = opentracing::Tracer::Global()->StartSpan(
-        "MongoFindPlot", { opentracing::ChildOf(&span->context()) });
+    // auto find_span = opentracing::Tracer::Global()->StartSpan(
+        // "MongoFindPlot", { opentracing::ChildOf(&span->context()) });
     mongoc_cursor_t *cursor = mongoc_collection_find_with_opts(
         collection, query, nullptr, nullptr);
     const bson_t *doc;
@@ -144,8 +144,8 @@ void PlotHandler::ReadPlot(
             _memcached_client_pool, true, &memcached_rc);
 
         // Upload the plot to memcached
-        auto set_span = opentracing::Tracer::Global()->StartSpan(
-            "MmcSetPlot", { opentracing::ChildOf(&span->context()) });
+        // auto set_span = opentracing::Tracer::Global()->StartSpan(
+            // "MmcSetPlot", { opentracing::ChildOf(&span->context()) });
         memcached_rc = memcached_set(
             memcached_client,
             plot_id_str.c_str(),
@@ -195,15 +195,15 @@ void PlotHandler::WritePlot(
     int64_t plot_id,
     const std::string &plot,
     const std::map<std::string, std::string> &carrier) {
-  // Initialize a span
-  TextMapReader reader(carrier);
-  std::map<std::string, std::string> writer_text_map;
-  TextMapWriter writer(writer_text_map);
-  auto parent_span = opentracing::Tracer::Global()->Extract(reader);
-  auto span = opentracing::Tracer::Global()->StartSpan(
-      "WritePlot",
-      { opentracing::ChildOf(parent_span->get()) });
-  opentracing::Tracer::Global()->Inject(span->context(), writer);
+  // // Initialize a span
+  // TextMapReader reader(carrier);
+  // std::map<std::string, std::string> writer_text_map;
+  // TextMapWriter writer(writer_text_map);
+  // auto parent_span = opentracing::Tracer::Global()->Extract(reader);
+  // auto span = opentracing::Tracer::Global()->StartSpan(
+      // "WritePlot",
+      // { opentracing::ChildOf(parent_span->get()) });
+  // opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   bson_t *new_doc = bson_new();
   BSON_APPEND_INT64(new_doc, "plot_id", plot_id);
@@ -227,8 +227,8 @@ void PlotHandler::WritePlot(
     throw se;
   }
   bson_error_t error;
-  auto insert_span = opentracing::Tracer::Global()->StartSpan(
-      "MongoInsertPlot", { opentracing::ChildOf(&span->context()) });
+  // auto insert_span = opentracing::Tracer::Global()->StartSpan(
+      // "MongoInsertPlot", { opentracing::ChildOf(&span->context()) });
   bool plotinsert = mongoc_collection_insert_one (
       collection, new_doc, nullptr, nullptr, &error);
   insert_span->Finish();

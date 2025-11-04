@@ -51,15 +51,15 @@ void UserReviewHandler::UploadUserReview(
     int64_t timestamp,
     const std::map<std::string, std::string> &carrier) {
 
-  // Initialize a span
-  TextMapReader reader(carrier);
-  std::map<std::string, std::string> writer_text_map;
-  TextMapWriter writer(writer_text_map);
-  auto parent_span = opentracing::Tracer::Global()->Extract(reader);
-  auto span = opentracing::Tracer::Global()->StartSpan(
-      "UploadUserReview",
-      { opentracing::ChildOf(parent_span->get()) });
-  opentracing::Tracer::Global()->Inject(span->context(), writer);
+  // // Initialize a span
+  // TextMapReader reader(carrier);
+  // std::map<std::string, std::string> writer_text_map;
+  // TextMapWriter writer(writer_text_map);
+  // auto parent_span = opentracing::Tracer::Global()->Extract(reader);
+  // auto span = opentracing::Tracer::Global()->StartSpan(
+      // "UploadUserReview",
+      // { opentracing::ChildOf(parent_span->get()) });
+  // opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   mongoc_client_t *mongodb_client = mongoc_client_pool_pop(
       _mongodb_client_pool);
@@ -82,8 +82,8 @@ void UserReviewHandler::UploadUserReview(
 
   bson_t *query = bson_new();
   BSON_APPEND_INT64(query, "user_id", user_id);
-  auto find_span = opentracing::Tracer::Global()->StartSpan(
-      "MongoFindUser", {opentracing::ChildOf(&span->context())});
+  // auto find_span = opentracing::Tracer::Global()->StartSpan(
+      // "MongoFindUser", {opentracing::ChildOf(&span->context())});
   mongoc_cursor_t *cursor = mongoc_collection_find_with_opts(
       collection, query, nullptr, nullptr);
   const bson_t *doc;
@@ -96,8 +96,8 @@ void UserReviewHandler::UploadUserReview(
         "timestamp", BCON_INT64(timestamp), "}", "]"
     );
     bson_error_t error;
-    auto insert_span = opentracing::Tracer::Global()->StartSpan(
-        "MongoInsert", {opentracing::ChildOf(&span->context())});
+    // auto insert_span = opentracing::Tracer::Global()->StartSpan(
+        // "MongoInsert", {opentracing::ChildOf(&span->context())});
     bool plotinsert = mongoc_collection_insert_one(
         collection, new_doc, nullptr, nullptr, &error);
     insert_span->Finish();
@@ -129,8 +129,8 @@ void UserReviewHandler::UploadUserReview(
     );
     bson_error_t error;
     bson_t reply;
-    auto update_span = opentracing::Tracer::Global()->StartSpan(
-        "MongoUpdate", {opentracing::ChildOf(&span->context())});
+    // auto update_span = opentracing::Tracer::Global()->StartSpan(
+        // "MongoUpdate", {opentracing::ChildOf(&span->context())});
     bool plotupdate = mongoc_collection_find_and_modify(
         collection, query, nullptr, update, nullptr, false, false,
         true, &reply, &error);
@@ -165,8 +165,8 @@ void UserReviewHandler::UploadUserReview(
     throw se;
   }
   auto redis_client = redis_client_wrapper->GetClient();
-  auto redis_span = opentracing::Tracer::Global()->StartSpan(
-      "RedisUpdate", {opentracing::ChildOf(&span->context())});
+  // auto redis_span = opentracing::Tracer::Global()->StartSpan(
+      // "RedisUpdate", {opentracing::ChildOf(&span->context())});
   auto num_reviews = redis_client->zcard(std::to_string(user_id));
   redis_client->sync_commit();
   auto num_reviews_reply = num_reviews.get();
@@ -187,15 +187,15 @@ void UserReviewHandler::ReadUserReviews(
     int64_t user_id, int32_t start, int32_t stop,
     const std::map<std::string, std::string> & carrier) {
 
-  // Initialize a span
-  TextMapReader reader(carrier);
-  std::map<std::string, std::string> writer_text_map;
-  TextMapWriter writer(writer_text_map);
-  auto parent_span = opentracing::Tracer::Global()->Extract(reader);
-  auto span = opentracing::Tracer::Global()->StartSpan(
-      "ReadUserReviews",
-      { opentracing::ChildOf(parent_span->get()) });
-  opentracing::Tracer::Global()->Inject(span->context(), writer);
+  // // Initialize a span
+  // TextMapReader reader(carrier);
+  // std::map<std::string, std::string> writer_text_map;
+  // TextMapWriter writer(writer_text_map);
+  // auto parent_span = opentracing::Tracer::Global()->Extract(reader);
+  // auto span = opentracing::Tracer::Global()->StartSpan(
+      // "ReadUserReviews",
+      // { opentracing::ChildOf(parent_span->get()) });
+  // opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   if (stop <= start || start < 0) {
     return;
@@ -209,8 +209,8 @@ void UserReviewHandler::ReadUserReviews(
     throw se;
   }
   auto redis_client = redis_client_wrapper->GetClient();
-  auto redis_span = opentracing::Tracer::Global()->StartSpan(
-      "RedisFind", {opentracing::ChildOf(&span->context())});
+  // auto redis_span = opentracing::Tracer::Global()->StartSpan(
+      // "RedisFind", {opentracing::ChildOf(&span->context())});
   auto review_ids_future = redis_client->zrevrange(
       std::to_string(user_id), start, stop - 1);
   redis_client->commit();
@@ -259,8 +259,8 @@ void UserReviewHandler::ReadUserReviews(
         "$slice", "[",
         BCON_INT32(0), BCON_INT32(stop),
         "]", "}", "}");
-    auto find_span = opentracing::Tracer::Global()->StartSpan(
-        "MongoFindUserReviews", {opentracing::ChildOf(&span->context())});
+    // auto find_span = opentracing::Tracer::Global()->StartSpan(
+        // "MongoFindUserReviews", {opentracing::ChildOf(&span->context())});
     mongoc_cursor_t *cursor = mongoc_collection_find_with_opts(
         collection, query, opts, nullptr);
     find_span->Finish();
@@ -336,8 +336,8 @@ void UserReviewHandler::ReadUserReviews(
       throw se;
     }
     redis_client = redis_client_wrapper->GetClient();
-    auto redis_update_span = opentracing::Tracer::Global()->StartSpan(
-        "RedisUpdate", {opentracing::ChildOf(&span->context())});
+    // auto redis_update_span = opentracing::Tracer::Global()->StartSpan(
+        // "RedisUpdate", {opentracing::ChildOf(&span->context())});
     redis_client->del(std::vector<std::string>{std::to_string(user_id)});
     std::vector<std::string> options{"NX"};
     zadd_reply_future = redis_client->zadd(

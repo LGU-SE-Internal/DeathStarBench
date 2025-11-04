@@ -40,15 +40,15 @@ void UserMentionHandler::ComposeUserMentions(
     std::vector<UserMention> &_return, int64_t req_id,
     const std::vector<std::string> &usernames,
     const std::map<std::string, std::string> &carrier) {
-  // Initialize a span
-  TextMapReader reader(carrier);
-  std::map<std::string, std::string> writer_text_map;
-  TextMapWriter writer(writer_text_map);
-  auto parent_span = opentracing::Tracer::Global()->Extract(reader);
-  auto span = opentracing::Tracer::Global()->StartSpan(
-      "compose_user_mentions_server",
-      {opentracing::ChildOf(parent_span->get())});
-  opentracing::Tracer::Global()->Inject(span->context(), writer);
+  // // Initialize a span
+  // TextMapReader reader(carrier);
+  // std::map<std::string, std::string> writer_text_map;
+  // TextMapWriter writer(writer_text_map);
+  // auto parent_span = opentracing::Tracer::Global()->Extract(reader);
+  // auto span = opentracing::Tracer::Global()->StartSpan(
+      // "compose_user_mentions_server",
+      // {opentracing::ChildOf(parent_span->get())});
+  // opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   std::vector<UserMention> user_mentions;
   if (!usernames.empty()) {
@@ -81,9 +81,9 @@ void UserMentionHandler::ComposeUserMentions(
       idx++;
     }
 
-    auto get_span = opentracing::Tracer::Global()->StartSpan(
+    // auto get_span = opentracing::Tracer::Global()->StartSpan(
         "compose_user_mentions_memcached_get_client",
-        {opentracing::ChildOf(&span->context())});
+        // {opentracing::ChildOf(&span->context())});
     rc = memcached_mget(client, keys, key_sizes, usernames.size());
     if (rc != MEMCACHED_SUCCESS) {
       LOG(error) << "Cannot get usernames of request " << req_id << ": "
@@ -180,9 +180,9 @@ void UserMentionHandler::ComposeUserMentions(
       bson_append_array_end(&query_child_0, &query_username_list);
       bson_append_document_end(query, &query_child_0);
 
-      auto find_span = opentracing::Tracer::Global()->StartSpan(
+      // auto find_span = opentracing::Tracer::Global()->StartSpan(
           "compose_user_mentions_mongo_find_client",
-          {opentracing::ChildOf(&span->context())});
+          // {opentracing::ChildOf(&span->context())});
       mongoc_cursor_t *cursor =
           mongoc_collection_find_with_opts(collection, query, nullptr, nullptr);
       const bson_t *doc;

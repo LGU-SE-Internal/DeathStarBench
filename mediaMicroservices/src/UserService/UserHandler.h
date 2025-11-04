@@ -137,15 +137,15 @@ void UserHandler::RegisterUser(
     const std::string &password,
     const std::map<std::string, std::string> &carrier) {
 
-  // Initialize a span
-  TextMapReader reader(carrier);
-  std::map<std::string, std::string> writer_text_map;
-  TextMapWriter writer(writer_text_map);
-  auto parent_span = opentracing::Tracer::Global()->Extract(reader);
-  auto span = opentracing::Tracer::Global()->StartSpan(
-      "RegisterUser",
-      { opentracing::ChildOf(parent_span->get()) });
-  opentracing::Tracer::Global()->Inject(span->context(), writer);
+  // // Initialize a span
+  // TextMapReader reader(carrier);
+  // std::map<std::string, std::string> writer_text_map;
+  // TextMapWriter writer(writer_text_map);
+  // auto parent_span = opentracing::Tracer::Global()->Extract(reader);
+  // auto span = opentracing::Tracer::Global()->StartSpan(
+      // "RegisterUser",
+      // { opentracing::ChildOf(parent_span->get()) });
+  // opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   // Compose user_id
 
@@ -233,8 +233,8 @@ void UserHandler::RegisterUser(
     BSON_APPEND_UTF8(new_doc, "password", password_hashed.c_str());
 
     bson_error_t error;
-    auto user_insert_span = opentracing::Tracer::Global()->StartSpan(
-        "MongoInsertUser", { opentracing::ChildOf(&span->context()) });
+    // auto user_insert_span = opentracing::Tracer::Global()->StartSpan(
+        // "MongoInsertUser", { opentracing::ChildOf(&span->context()) });
     if (!mongoc_collection_insert_one(
         collection, new_doc, nullptr, nullptr, &error)) {
       LOG(error) << "Failed to insert user " << username
@@ -267,15 +267,15 @@ void UserHandler::RegisterUserWithId(
     const std::string& password, int64_t user_id,
     const std::map<std::string, std::string> & carrier) {
 
-  // Initialize a span
-  TextMapReader reader(carrier);
-  std::map<std::string, std::string> writer_text_map;
-  TextMapWriter writer(writer_text_map);
-  auto parent_span = opentracing::Tracer::Global()->Extract(reader);
-  auto span = opentracing::Tracer::Global()->StartSpan(
-      "RegisterUserWithId",
-      { opentracing::ChildOf(parent_span->get()) });
-  opentracing::Tracer::Global()->Inject(span->context(), writer);
+  // // Initialize a span
+  // TextMapReader reader(carrier);
+  // std::map<std::string, std::string> writer_text_map;
+  // TextMapWriter writer(writer_text_map);
+  // auto parent_span = opentracing::Tracer::Global()->Extract(reader);
+  // auto span = opentracing::Tracer::Global()->StartSpan(
+      // "RegisterUserWithId",
+      // { opentracing::ChildOf(parent_span->get()) });
+  // opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   mongoc_client_t *mongodb_client = mongoc_client_pool_pop(
       _mongodb_client_pool);
@@ -329,8 +329,8 @@ void UserHandler::RegisterUserWithId(
     BSON_APPEND_UTF8(new_doc, "password", password_hashed.c_str());
 
     bson_error_t error;
-    auto user_insert_span = opentracing::Tracer::Global()->StartSpan(
-        "MongoInsertUser", { opentracing::ChildOf(&span->context()) });
+    // auto user_insert_span = opentracing::Tracer::Global()->StartSpan(
+        // "MongoInsertUser", { opentracing::ChildOf(&span->context()) });
     if (!mongoc_collection_insert_one(
         collection, new_doc, nullptr, nullptr, &error)) {
       LOG(error) << "Failed to insert user " << username
@@ -362,14 +362,14 @@ void UserHandler::UploadUserWithUsername(
     const std::string &username,
     const std::map<std::string, std::string> & carrier) {
 
-  TextMapReader reader(carrier);
+  // TextMapReader reader(carrier);
   std::map<std::string, std::string> writer_text_map;
-  TextMapWriter writer(writer_text_map);
-  auto parent_span = opentracing::Tracer::Global()->Extract(reader);
-  auto span = opentracing::Tracer::Global()->StartSpan(
+  // TextMapWriter writer(writer_text_map);
+  // auto parent_span = opentracing::Tracer::Global()->Extract(reader);
+  // auto span = opentracing::Tracer::Global()->StartSpan(
       "UploadUserWithUsername",
-      { opentracing::ChildOf(parent_span->get()) });
-  opentracing::Tracer::Global()->Inject(span->context(), writer);
+      // { opentracing::ChildOf(parent_span->get()) });
+  // opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   size_t user_id_size;
   uint32_t memcached_flags;
@@ -384,8 +384,8 @@ void UserHandler::UploadUserWithUsername(
     throw se;
   }
 
-  auto id_get_span = opentracing::Tracer::Global()->StartSpan(
-      "MmcGetUserId", { opentracing::ChildOf(&span->context()) });
+  // auto id_get_span = opentracing::Tracer::Global()->StartSpan(
+      // "MmcGetUserId", { opentracing::ChildOf(&span->context()) });
   char *user_id_mmc = memcached_get(
       memcached_client,
       (username+":user_id").c_str(),
@@ -434,8 +434,8 @@ void UserHandler::UploadUserWithUsername(
     bson_t *query = bson_new();
     BSON_APPEND_UTF8(query, "username", username.c_str());
 
-    auto find_span = opentracing::Tracer::Global()->StartSpan(
-        "MongoFindUser", { opentracing::ChildOf(&span->context()) });
+    // auto find_span = opentracing::Tracer::Global()->StartSpan(
+        // "MongoFindUser", { opentracing::ChildOf(&span->context()) });
     mongoc_cursor_t *cursor = mongoc_collection_find_with_opts(
         collection, query, nullptr, nullptr);
     const bson_t *doc;
@@ -519,8 +519,8 @@ void UserHandler::UploadUserWithUsername(
   }
 
   if (user_id && !user_id_mmc) {
-    auto id_set_span = opentracing::Tracer::Global()->StartSpan(
-        "MmcSetUserId", { opentracing::ChildOf(&span->context()) });
+    // auto id_set_span = opentracing::Tracer::Global()->StartSpan(
+        // "MmcSetUserId", { opentracing::ChildOf(&span->context()) });
     std::string user_id_str = std::to_string(user_id);
     memcached_rc = memcached_set(
         memcached_client,
@@ -550,14 +550,14 @@ void UserHandler::UploadUserWithUserId(
     int64_t user_id,
     const std::map<std::string, std::string> &carrier) {
 
-  TextMapReader reader(carrier);
+  // TextMapReader reader(carrier);
   std::map<std::string, std::string> writer_text_map;
-  TextMapWriter writer(writer_text_map);
-  auto parent_span = opentracing::Tracer::Global()->Extract(reader);
-  auto span = opentracing::Tracer::Global()->StartSpan(
+  // TextMapWriter writer(writer_text_map);
+  // auto parent_span = opentracing::Tracer::Global()->Extract(reader);
+  // auto span = opentracing::Tracer::Global()->StartSpan(
       "UploadUserWithUserId",
-      { opentracing::ChildOf(parent_span->get()) });
-  opentracing::Tracer::Global()->Inject(span->context(), writer);
+      // { opentracing::ChildOf(parent_span->get()) });
+  // opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   auto compose_client_wrapper = _compose_client_pool->Pop();
   if (!compose_client_wrapper) {
@@ -588,14 +588,14 @@ void UserHandler::Login(
     const std::string &password,
     const std::map<std::string, std::string> &carrier) {
 
-  TextMapReader reader(carrier);
+  // TextMapReader reader(carrier);
   std::map<std::string, std::string> writer_text_map;
-  TextMapWriter writer(writer_text_map);
-  auto parent_span = opentracing::Tracer::Global()->Extract(reader);
-  auto span = opentracing::Tracer::Global()->StartSpan(
+  // TextMapWriter writer(writer_text_map);
+  // auto parent_span = opentracing::Tracer::Global()->Extract(reader);
+  // auto span = opentracing::Tracer::Global()->StartSpan(
       "Login",
-      { opentracing::ChildOf(parent_span->get()) });
-  opentracing::Tracer::Global()->Inject(span->context(), writer);
+      // { opentracing::ChildOf(parent_span->get()) });
+  // opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   size_t password_size;
   size_t salt_size;
@@ -612,8 +612,8 @@ void UserHandler::Login(
     throw se;
   }
 
-  auto pswd_get_span = opentracing::Tracer::Global()->StartSpan(
-      "MmcGetPassword", { opentracing::ChildOf(&span->context()) });
+  // auto pswd_get_span = opentracing::Tracer::Global()->StartSpan(
+      // "MmcGetPassword", { opentracing::ChildOf(&span->context()) });
   char *password_mmc = memcached_get(
       memcached_client,
       (username+":password").c_str(),
@@ -630,8 +630,8 @@ void UserHandler::Login(
     throw se;
   }
 
-  auto salt_get_span = opentracing::Tracer::Global()->StartSpan(
-      "MmcGetSalt", { opentracing::ChildOf(&span->context()) });
+  // auto salt_get_span = opentracing::Tracer::Global()->StartSpan(
+      // "MmcGetSalt", { opentracing::ChildOf(&span->context()) });
   char *salt_mmc = memcached_get(
       memcached_client,
       (username+":salt").c_str(),
@@ -649,8 +649,8 @@ void UserHandler::Login(
     throw se;
   }
 
-  auto id_get_span = opentracing::Tracer::Global()->StartSpan(
-      "MmcGetUserId", { opentracing::ChildOf(&span->context()) });
+  // auto id_get_span = opentracing::Tracer::Global()->StartSpan(
+      // "MmcGetUserId", { opentracing::ChildOf(&span->context()) });
   char *user_id_mmc = memcached_get(
       memcached_client,
       (username+":user_id").c_str(),
@@ -710,8 +710,8 @@ void UserHandler::Login(
     bson_t *query = bson_new();
     BSON_APPEND_UTF8(query, "username", username.c_str());
 
-    auto find_span = opentracing::Tracer::Global()->StartSpan(
-        "MongoFindUser", { opentracing::ChildOf(&span->context()) });
+    // auto find_span = opentracing::Tracer::Global()->StartSpan(
+        // "MongoFindUser", { opentracing::ChildOf(&span->context()) });
     mongoc_cursor_t *cursor = mongoc_collection_find_with_opts(
         collection, query, nullptr, nullptr);
     const bson_t *doc;
@@ -862,8 +862,8 @@ void UserHandler::Login(
   }
 
   if (salt_str && !salt_mmc) {
-    auto salt_set_span = opentracing::Tracer::Global()->StartSpan(
-        "MmcSetSalt", { opentracing::ChildOf(&span->context()) });
+    // auto salt_set_span = opentracing::Tracer::Global()->StartSpan(
+        // "MmcSetSalt", { opentracing::ChildOf(&span->context()) });
     memcached_rc = memcached_set(
         memcached_client,
         (username+":salt").c_str(),
@@ -884,8 +884,8 @@ void UserHandler::Login(
   }
 
   if (password_str && !password_mmc) {
-    auto pswd_set_span = opentracing::Tracer::Global()->StartSpan(
-        "MmcSetPassword", { opentracing::ChildOf(&span->context()) });
+    // auto pswd_set_span = opentracing::Tracer::Global()->StartSpan(
+        // "MmcSetPassword", { opentracing::ChildOf(&span->context()) });
     memcached_rc = memcached_set(
         memcached_client,
         (username+":password").c_str(),
@@ -905,8 +905,8 @@ void UserHandler::Login(
   }
 
   if (user_id && !user_id_mmc) {
-    auto id_set_span = opentracing::Tracer::Global()->StartSpan(
-        "MmcSetUserId", { opentracing::ChildOf(&span->context()) });
+    // auto id_set_span = opentracing::Tracer::Global()->StartSpan(
+        // "MmcSetUserId", { opentracing::ChildOf(&span->context()) });
     std::string user_id_str = std::to_string(user_id);
     memcached_rc = memcached_set(
         memcached_client,

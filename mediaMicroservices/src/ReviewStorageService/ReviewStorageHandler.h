@@ -42,15 +42,15 @@ void ReviewStorageHandler::StoreReview(
     const Review &review,
     const std::map<std::string, std::string> & carrier) {
 
-  // Initialize a span
-  TextMapReader reader(carrier);
-  std::map<std::string, std::string> writer_text_map;
-  TextMapWriter writer(writer_text_map);
-  auto parent_span = opentracing::Tracer::Global()->Extract(reader);
-  auto span = opentracing::Tracer::Global()->StartSpan(
-      "StoreReview",
-      { opentracing::ChildOf(parent_span->get()) });
-  opentracing::Tracer::Global()->Inject(span->context(), writer);
+  // // Initialize a span
+  // TextMapReader reader(carrier);
+  // std::map<std::string, std::string> writer_text_map;
+  // TextMapWriter writer(writer_text_map);
+  // auto parent_span = opentracing::Tracer::Global()->Extract(reader);
+  // auto span = opentracing::Tracer::Global()->StartSpan(
+      // "StoreReview",
+      // { opentracing::ChildOf(parent_span->get()) });
+  // opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   mongoc_client_t *mongodb_client = mongoc_client_pool_pop(
       _mongodb_client_pool);
@@ -81,8 +81,8 @@ void ReviewStorageHandler::StoreReview(
   BSON_APPEND_INT64(new_doc, "req_id", review.req_id);
   bson_error_t error;
 
-  auto insert_span = opentracing::Tracer::Global()->StartSpan(
-      "MongoInsertReview", { opentracing::ChildOf(&span->context()) });
+  // auto insert_span = opentracing::Tracer::Global()->StartSpan(
+      // "MongoInsertReview", { opentracing::ChildOf(&span->context()) });
   bool plotinsert = mongoc_collection_insert_one (
       collection, new_doc, nullptr, nullptr, &error);
   insert_span->Finish();
@@ -111,15 +111,15 @@ void ReviewStorageHandler::ReadReviews(
     const std::vector<int64_t> &review_ids,
     const std::map<std::string, std::string> &carrier) {
 
-  // Initialize a span
-  TextMapReader reader(carrier);
-  std::map<std::string, std::string> writer_text_map;
-  TextMapWriter writer(writer_text_map);
-  auto parent_span = opentracing::Tracer::Global()->Extract(reader);
-  auto span = opentracing::Tracer::Global()->StartSpan(
-      "ReadReviews",
-      { opentracing::ChildOf(parent_span->get()) });
-  opentracing::Tracer::Global()->Inject(span->context(), writer);
+  // // Initialize a span
+  // TextMapReader reader(carrier);
+  // std::map<std::string, std::string> writer_text_map;
+  // TextMapWriter writer(writer_text_map);
+  // auto parent_span = opentracing::Tracer::Global()->Extract(reader);
+  // auto span = opentracing::Tracer::Global()->StartSpan(
+      // "ReadReviews",
+      // { opentracing::ChildOf(parent_span->get()) });
+  // opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   if (review_ids.empty()) {
     return;
@@ -172,8 +172,8 @@ void ReviewStorageHandler::ReadReviews(
   char *return_value;
   size_t return_value_length;
   uint32_t flags;
-  auto get_span = opentracing::Tracer::Global()->StartSpan(
-      "MemcachedMget", { opentracing::ChildOf(&span->context()) });
+  // auto get_span = opentracing::Tracer::Global()->StartSpan(
+      // "MemcachedMget", { opentracing::ChildOf(&span->context()) });
 
   while (true) {
     return_value =
@@ -257,8 +257,8 @@ void ReviewStorageHandler::ReadReviews(
     mongoc_cursor_t *cursor = mongoc_collection_find_with_opts(
         collection, query, nullptr, nullptr);
     const bson_t *doc;
-    auto find_span = opentracing::Tracer::Global()->StartSpan(
-        "MongoFindPosts", {opentracing::ChildOf(&span->context())});
+    // auto find_span = opentracing::Tracer::Global()->StartSpan(
+        // "MongoFindPosts", {opentracing::ChildOf(&span->context())});
     while (true) {
       bool found = mongoc_cursor_next(cursor, &doc);
       if (!found) {
@@ -308,8 +308,8 @@ void ReviewStorageHandler::ReadReviews(
         se.message = "Failed to pop a client from memcached pool";
         throw se;
       }
-      auto set_span = opentracing::Tracer::Global()->StartSpan(
-          "MmcSetPost", {opentracing::ChildOf(&span->context())});
+      // auto set_span = opentracing::Tracer::Global()->StartSpan(
+          // "MmcSetPost", {opentracing::ChildOf(&span->context())});
       for (auto & it : review_json_map) {
         std::string id_str = std::to_string(it.first);
         _rc = memcached_set(
