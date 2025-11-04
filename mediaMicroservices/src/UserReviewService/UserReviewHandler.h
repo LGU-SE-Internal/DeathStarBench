@@ -100,7 +100,7 @@ void UserReviewHandler::UploadUserReview(
         // "MongoInsert", {opentracing::ChildOf(&span->context())});
     bool plotinsert = mongoc_collection_insert_one(
         collection, new_doc, nullptr, nullptr, &error);
-    insert_span->Finish();
+    // insert_span->Finish();
     if (!plotinsert) {
       LOG(error) << "Failed to insert user review of user " << user_id
                  << " to MongoDB: " << error.message;
@@ -134,7 +134,7 @@ void UserReviewHandler::UploadUserReview(
     bool plotupdate = mongoc_collection_find_and_modify(
         collection, query, nullptr, update, nullptr, false, false,
         true, &reply, &error);
-    update_span->Finish();
+    // update_span->Finish();
     if (!plotupdate) {
       LOG(error) << "Failed to update user-review for user " << user_id
                  << " to MongoDB: " << error.message;
@@ -178,8 +178,8 @@ void UserReviewHandler::UploadUserReview(
     redis_client->sync_commit();
   }
   _redis_client_pool->Push(redis_client_wrapper);
-  redis_span->Finish();
-  span->Finish();
+  // redis_span->Finish();
+  // span->Finish();
 }
 
 void UserReviewHandler::ReadUserReviews(
@@ -214,7 +214,7 @@ void UserReviewHandler::ReadUserReviews(
   auto review_ids_future = redis_client->zrevrange(
       std::to_string(user_id), start, stop - 1);
   redis_client->commit();
-  redis_span->Finish();
+  // redis_span->Finish();
 
   cpp_redis::reply review_ids_reply;
   try {
@@ -263,7 +263,7 @@ void UserReviewHandler::ReadUserReviews(
         // "MongoFindUserReviews", {opentracing::ChildOf(&span->context())});
     mongoc_cursor_t *cursor = mongoc_collection_find_with_opts(
         collection, query, opts, nullptr);
-    find_span->Finish();
+    // find_span->Finish();
     const bson_t *doc;
     bool found = mongoc_cursor_next(cursor, &doc);
     if (found) {
@@ -294,7 +294,7 @@ void UserReviewHandler::ReadUserReviews(
         idx++;
       }
     }
-    find_span->Finish();
+    // find_span->Finish();
     bson_destroy(opts);
     bson_destroy(query);
     mongoc_cursor_destroy(cursor);
@@ -343,7 +343,7 @@ void UserReviewHandler::ReadUserReviews(
     zadd_reply_future = redis_client->zadd(
         std::to_string(user_id), options, redis_update_map);
     redis_client->commit();
-    redis_update_span->Finish();
+    // redis_update_span->Finish();
   }
 
   try {
@@ -372,7 +372,7 @@ void UserReviewHandler::ReadUserReviews(
     _redis_client_pool->Push(redis_client_wrapper);
   }
 
-  span->Finish();
+  // span->Finish();
 
 }
 

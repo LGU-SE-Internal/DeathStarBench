@@ -61,7 +61,7 @@ void TextHandler::UploadText(
   }
   _compose_client_pool->Push(compose_client_wrapper);
 
-  span->Finish();
+  // span->Finish();
 }
 
 } //namespace media_service

@@ -147,7 +147,7 @@ void UrlShortenHandler::ComposeUrls(
           mongoc_bulk_operation_destroy(bulk);
           mongoc_collection_destroy(collection);
           mongoc_client_pool_push(_mongodb_client_pool, mongodb_client);
-          mongo_span->Finish();
+          // mongo_span->Finish();
         });
 
   }
@@ -162,7 +162,7 @@ void UrlShortenHandler::ComposeUrls(
   }
 
   _return = target_urls;
-  span->Finish();
+  // span->Finish();
 
 }
 

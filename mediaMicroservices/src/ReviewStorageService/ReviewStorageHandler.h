@@ -85,7 +85,7 @@ void ReviewStorageHandler::StoreReview(
       // "MongoInsertReview", { opentracing::ChildOf(&span->context()) });
   bool plotinsert = mongoc_collection_insert_one (
       collection, new_doc, nullptr, nullptr, &error);
-  insert_span->Finish();
+  // insert_span->Finish();
 
   if (!plotinsert) {
     LOG(error) << "Error: Failed to insert review to MongoDB: "
@@ -103,7 +103,7 @@ void ReviewStorageHandler::StoreReview(
   mongoc_collection_destroy(collection);
   mongoc_client_pool_push(_mongodb_client_pool, mongodb_client);
 
-  span->Finish();
+  // span->Finish();
 }
 void ReviewStorageHandler::ReadReviews(
     std::vector<Review> & _return,
@@ -208,7 +208,7 @@ void ReviewStorageHandler::ReadReviews(
     free(return_value);
     LOG(debug) << "Review: " << new_review.review_id << " found in memcached";
   }
-  get_span->Finish();
+  // get_span->Finish();
   memcached_quit(memcached_client);
   memcached_pool_push(_memcached_client_pool, memcached_client);
   for (int i = 0; i < review_ids.size(); ++i) {
@@ -278,7 +278,7 @@ void ReviewStorageHandler::ReadReviews(
       return_map.insert({new_review.review_id, new_review});
       bson_free(review_json_char);
     }
-    find_span->Finish();
+    // find_span->Finish();
     bson_error_t error;
     if (mongoc_cursor_error(cursor, &error)) {
       LOG(warning) << error.message;
@@ -322,7 +322,7 @@ void ReviewStorageHandler::ReadReviews(
             static_cast<uint32_t>(0));
       }
       memcached_pool_push(_memcached_client_pool, _memcached_client);
-      set_span->Finish();
+      // set_span->Finish();
     }));
   }
 

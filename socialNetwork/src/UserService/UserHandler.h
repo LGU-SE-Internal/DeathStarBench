@@ -199,7 +199,7 @@ void UserHandler::RegisterUserWithId(
     } else {
       LOG(debug) << "User: " << username << " registered";
     }
-    user_insert_span->Finish();
+    // user_insert_span->Finish();
     bson_destroy(new_doc);
   }
   bson_destroy(query);
@@ -226,7 +226,7 @@ void UserHandler::RegisterUserWithId(
     _social_graph_client_pool->Keepalive(social_graph_client_wrapper);
   }
 
-  span->Finish();
+  // span->Finish();
 }
 
 void UserHandler::RegisterUser(
@@ -346,7 +346,7 @@ void UserHandler::RegisterUser(
     } else {
       LOG(debug) << "User: " << username << " registered";
     }
-    user_insert_span->Finish();
+    // user_insert_span->Finish();
     bson_destroy(new_doc);
   }
   bson_destroy(query);
@@ -374,7 +374,7 @@ void UserHandler::RegisterUser(
     _social_graph_client_pool->Keepalive(social_graph_client_wrapper);
   }
 
-  span->Finish();
+  // span->Finish();
 }
 
 void UserHandler::ComposeCreatorWithUsername(
@@ -402,7 +402,7 @@ void UserHandler::ComposeCreatorWithUsername(
         memcached_get(memcached_client, (username + ":user_id").c_str(),
                       (username + ":user_id").length(), &user_id_size,
                       &memcached_flags, &memcached_rc);
-    id_get_span->Finish();
+    // id_get_span->Finish();
     if (!user_id_mmc && memcached_rc != MEMCACHED_NOTFOUND) {
       ServiceException se;
       se.errorCode = ErrorCode::SE_MEMCACHED_ERROR;
@@ -452,7 +452,7 @@ void UserHandler::ComposeCreatorWithUsername(
         mongoc_collection_find_with_opts(collection, query, nullptr, nullptr);
     const bson_t *doc;
     bool found = mongoc_cursor_next(cursor, &doc);
-    find_span->Finish();
+    // find_span->Finish();
     if (!found) {
       bson_error_t error;
       if (mongoc_cursor_error(cursor, &error)) {
@@ -521,7 +521,7 @@ void UserHandler::ComposeCreatorWithUsername(
                         (username + ":user_id").length(), user_id_str.c_str(),
                         user_id_str.length(), static_cast<time_t>(0),
                         static_cast<uint32_t>(0));
-      id_set_span->Finish();
+      // id_set_span->Finish();
       if (memcached_rc != MEMCACHED_SUCCESS) {
         LOG(warning) << "Failed to set the user_id of user " << username
                      << " to Memcached: "
@@ -532,7 +532,7 @@ void UserHandler::ComposeCreatorWithUsername(
   } else {
     LOG(warning) << "Failed to pop a client from memcached pool";
   }
-  span->Finish();
+  // span->Finish();
 }
 
 void UserHandler::ComposeCreatorWithUserId(
@@ -553,7 +553,7 @@ void UserHandler::ComposeCreatorWithUserId(
 
   _return = creator;
 
-  span->Finish();
+  // span->Finish();
 }
 
 void UserHandler::Login(std::string &_return, int64_t req_id,
@@ -583,7 +583,7 @@ void UserHandler::Login(std::string &_return, int64_t req_id,
     login_mmc = memcached_get(memcached_client, (username + ":login").c_str(),
                               (username + ":login").length(), &login_size,
                               &memcached_flags, &memcached_rc);
-    get_login_span->Finish();
+    // get_login_span->Finish();
     if (!login_mmc && memcached_rc != MEMCACHED_NOTFOUND) {
       LOG(warning) << "Memcached error: "
                    << memcached_strerror(memcached_client, memcached_rc);
@@ -637,7 +637,7 @@ void UserHandler::Login(std::string &_return, int64_t req_id,
         mongoc_collection_find_with_opts(collection, query, nullptr, nullptr);
     const bson_t *doc;
     bool found = mongoc_cursor_next(cursor, &doc);
-    find_span->Finish();
+    // find_span->Finish();
 
     bson_error_t error;
     if (mongoc_cursor_error(cursor, &error)) {
@@ -735,7 +735,7 @@ void UserHandler::Login(std::string &_return, int64_t req_id,
           memcached_set(memcached_client, (username + ":login").c_str(),
                         (username + ":login").length(), login_str.c_str(),
                         login_str.length(), 0, 0);
-      set_login_span->Finish();
+      // set_login_span->Finish();
       if (memcached_rc != MEMCACHED_SUCCESS) {
         LOG(warning) << "Failed to set the login info of user " << username
                      << " to Memcached: "
@@ -744,7 +744,7 @@ void UserHandler::Login(std::string &_return, int64_t req_id,
       memcached_pool_push(_memcached_client_pool, memcached_client);
     }
   }
-  span->Finish();
+  // span->Finish();
 }
 int64_t UserHandler::GetUserId(
     int64_t req_id, const std::string &username,
@@ -772,7 +772,7 @@ int64_t UserHandler::GetUserId(
         memcached_get(memcached_client, (username + ":user_id").c_str(),
                       (username + ":user_id").length(), &user_id_size,
                       &memcached_flags, &memcached_rc);
-    id_get_span->Finish();
+    // id_get_span->Finish();
     if (!user_id_mmc && memcached_rc != MEMCACHED_NOTFOUND) {
       ServiceException se;
       se.errorCode = ErrorCode::SE_MEMCACHED_ERROR;
@@ -820,7 +820,7 @@ int64_t UserHandler::GetUserId(
         mongoc_collection_find_with_opts(collection, query, nullptr, nullptr);
     const bson_t *doc;
     bool found = mongoc_cursor_next(cursor, &doc);
-    find_span->Finish();
+    // find_span->Finish();
     if (!found) {
       bson_error_t error;
       if (mongoc_cursor_error(cursor, &error)) {
@@ -882,7 +882,7 @@ int64_t UserHandler::GetUserId(
           memcached_set(memcached_client, (username + ":user_id").c_str(),
                         (username + ":user_id").length(), user_id_str.c_str(),
                         user_id_str.length(), 0, 0);
-      set_login_span->Finish();
+      // set_login_span->Finish();
       if (memcached_rc != MEMCACHED_SUCCESS) {
         LOG(warning) << "Failed to set the login info of user " << username
                      << " to Memcached: "
@@ -892,7 +892,7 @@ int64_t UserHandler::GetUserId(
     }
   }
 
-  span->Finish();
+  // span->Finish();
   return user_id;
 }
 

@@ -165,7 +165,7 @@ void TextHandler::ComposeText(
   _return.user_mentions = user_mentions;
   _return.text = updated_text;
   _return.urls = target_urls;
-  span->Finish();
+  // span->Finish();
 }
 
 }  // namespace social_network

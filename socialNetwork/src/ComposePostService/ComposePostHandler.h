@@ -124,7 +124,7 @@ Creator ComposePostHandler::_ComposeCreaterHelper(
     se.errorCode = ErrorCode::SE_THRIFT_CONN_ERROR;
     se.message = "Failed to connect to user-service";
     LOG(error) << se.message;
-    span->Finish();
+    // span->Finish();
     throw se;
   }
 
@@ -136,11 +136,11 @@ Creator ComposePostHandler::_ComposeCreaterHelper(
   } catch (...) {
     LOG(error) << "Failed to send compose-creator to user-service";
     _user_service_client_pool->Remove(user_client_wrapper);
-    span->Finish();
+    // span->Finish();
     throw;
   }
   _user_service_client_pool->Keepalive(user_client_wrapper);
-  span->Finish();
+  // span->Finish();
   return _return_creator;
 }
 
@@ -162,7 +162,7 @@ TextServiceReturn ComposePostHandler::_ComposeTextHelper(
     se.message = "Failed to connect to text-service";
     LOG(error) << se.message;
     ;
-    span->Finish();
+    // span->Finish();
     throw se;
   }
 
@@ -173,11 +173,11 @@ TextServiceReturn ComposePostHandler::_ComposeTextHelper(
   } catch (...) {
     LOG(error) << "Failed to send compose-text to text-service";
     _text_service_client_pool->Remove(text_client_wrapper);
-    span->Finish();
+    // span->Finish();
     throw;
   }
   _text_service_client_pool->Keepalive(text_client_wrapper);
-  span->Finish();
+  // span->Finish();
   return _return_text;
 }
 
@@ -200,7 +200,7 @@ std::vector<Media> ComposePostHandler::_ComposeMediaHelper(
     se.message = "Failed to connect to media-service";
     LOG(error) << se.message;
     ;
-    span->Finish();
+    // span->Finish();
     throw se;
   }
 
@@ -212,11 +212,11 @@ std::vector<Media> ComposePostHandler::_ComposeMediaHelper(
   } catch (...) {
     LOG(error) << "Failed to send compose-media to media-service";
     _media_service_client_pool->Remove(media_client_wrapper);
-    span->Finish();
+    // span->Finish();
     throw;
   }
   _media_service_client_pool->Keepalive(media_client_wrapper);
-  span->Finish();
+  // span->Finish();
   return _return_media;
 }
 
@@ -237,7 +237,7 @@ int64_t ComposePostHandler::_ComposeUniqueIdHelper(
     se.errorCode = ErrorCode::SE_THRIFT_CONN_ERROR;
     se.message = "Failed to connect to unique_id-service";
     LOG(error) << se.message;
-    span->Finish();
+    // span->Finish();
     throw se;
   }
 
@@ -249,11 +249,11 @@ int64_t ComposePostHandler::_ComposeUniqueIdHelper(
   } catch (...) {
     LOG(error) << "Failed to send compose-unique_id to unique_id-service";
     _unique_id_service_client_pool->Remove(unique_id_client_wrapper);
-    span->Finish();
+    // span->Finish();
     throw;
   }
   _unique_id_service_client_pool->Keepalive(unique_id_client_wrapper);
-  span->Finish();
+  // span->Finish();
   return _return_unique_id;
 }
 
@@ -287,7 +287,7 @@ void ComposePostHandler::_UploadPostHelper(
   }
   _post_storage_client_pool->Keepalive(post_storage_client_wrapper);
 
-  span->Finish();
+  // span->Finish();
 }
 
 void ComposePostHandler::_UploadUserTimelineHelper(
@@ -320,7 +320,7 @@ void ComposePostHandler::_UploadUserTimelineHelper(
   }
   _user_timeline_client_pool->Keepalive(user_timeline_client_wrapper);
 
-  span->Finish();
+  // span->Finish();
 }
 
 void ComposePostHandler::_UploadHomeTimelineHelper(
@@ -355,7 +355,7 @@ void ComposePostHandler::_UploadHomeTimelineHelper(
   }
   _home_timeline_client_pool->Keepalive(home_timeline_client_wrapper);
 
-  span->Finish();
+  // span->Finish();
 }
 
 void ComposePostHandler::ComposePost(
@@ -437,7 +437,7 @@ void ComposePostHandler::ComposePost(
   // {
   //   throw;
   // }
-  span->Finish();
+  // span->Finish();
 }
 
 }  // namespace social_network

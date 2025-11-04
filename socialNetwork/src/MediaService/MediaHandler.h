@@ -56,7 +56,7 @@ void MediaHandler::ComposeMedia(
     _return.emplace_back(new_media);
   }
 
-  span->Finish();
+  // span->Finish();
 }
 
 }  // namespace social_network

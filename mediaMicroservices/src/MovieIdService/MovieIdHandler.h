@@ -99,7 +99,7 @@ void MovieIdHandler::UploadMovieId(
     memcached_pool_push(_memcached_client_pool, memcached_client);
     throw se;
   }
-  get_span->Finish();
+  // get_span->Finish();
   memcached_pool_push(_memcached_client_pool, memcached_client);
   std::string movie_id_str;
 
@@ -143,7 +143,7 @@ void MovieIdHandler::UploadMovieId(
         collection, query, nullptr, nullptr);
     const bson_t *doc;
     bool found = mongoc_cursor_next(cursor, &doc);
-    find_span->Finish();
+    // find_span->Finish();
 
     if (found) {
       bson_iter_t iter;
@@ -198,7 +198,7 @@ void MovieIdHandler::UploadMovieId(
         static_cast<time_t>(0),
         static_cast<uint32_t>(0)
     );
-    set_span->Finish();
+    // set_span->Finish();
     if (memcached_rc != MEMCACHED_SUCCESS) {
       LOG(warning) << "Failed to set movie_id to Memcached: "
                    << memcached_strerror(memcached_client, memcached_rc);
@@ -252,7 +252,7 @@ void MovieIdHandler::UploadMovieId(
     throw;
   }
 
-  span->Finish();
+  // span->Finish();
 }
 
 void MovieIdHandler::RegisterMovieId (
@@ -299,7 +299,7 @@ void MovieIdHandler::RegisterMovieId (
       collection, query, nullptr, nullptr);
   const bson_t *doc;
   bool found = mongoc_cursor_next(cursor, &doc);
-  find_span->Finish();
+  // find_span->Finish();
 
   if (found) {
     LOG(warning) << "Movie "<< title << " already existed in MongoDB";
@@ -320,7 +320,7 @@ void MovieIdHandler::RegisterMovieId (
         // "MongoInsertMovie", { opentracing::ChildOf(&span->context()) });
     bool plotinsert = mongoc_collection_insert_one (
         collection, new_doc, nullptr, nullptr, &error);
-    insert_span->Finish();
+    // insert_span->Finish();
 
     if (!plotinsert) {
       LOG(error) << "Failed to insert movie_id of " << title
@@ -340,7 +340,7 @@ void MovieIdHandler::RegisterMovieId (
   mongoc_collection_destroy(collection);
   mongoc_client_pool_push(_mongodb_client_pool, mongodb_client);
 
-  span->Finish();
+  // span->Finish();
 }
 } // namespace media_service
 

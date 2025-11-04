@@ -87,7 +87,7 @@ void PlotHandler::ReadPlot(
     memcached_pool_push(_memcached_client_pool, memcached_client);
     throw se;
   }
-  get_span->Finish();
+  // get_span->Finish();
   memcached_pool_push(_memcached_client_pool, memcached_client);
 
   // If cached in memcached
@@ -127,7 +127,7 @@ void PlotHandler::ReadPlot(
         collection, query, nullptr, nullptr);
     const bson_t *doc;
     bool found = mongoc_cursor_next(cursor, &doc);
-    find_span->Finish();
+    // find_span->Finish();
 
     if (found) {
       bson_iter_t iter;
@@ -155,7 +155,7 @@ void PlotHandler::ReadPlot(
             static_cast<time_t>(0),
             static_cast<uint32_t>(0)
         );
-        set_span->Finish();
+        // set_span->Finish();
 
         if (memcached_rc != MEMCACHED_SUCCESS) {
           LOG(warning) << "Failed to set plot to Memcached: "
@@ -187,7 +187,7 @@ void PlotHandler::ReadPlot(
       throw se;
     }
   }
-  span->Finish();
+  // span->Finish();
 }
 
 void PlotHandler::WritePlot(
@@ -231,7 +231,7 @@ void PlotHandler::WritePlot(
       // "MongoInsertPlot", { opentracing::ChildOf(&span->context()) });
   bool plotinsert = mongoc_collection_insert_one (
       collection, new_doc, nullptr, nullptr, &error);
-  insert_span->Finish();
+  // insert_span->Finish();
   if (!plotinsert) {
     LOG(error) << "Error: Failed to insert plot to MongoDB: "
                << error.message;
@@ -248,7 +248,7 @@ void PlotHandler::WritePlot(
   mongoc_collection_destroy(collection);
   mongoc_client_pool_push(_mongodb_client_pool, mongodb_client);
 
-  span->Finish();
+  // span->Finish();
 }
 
 } // namespace media_service

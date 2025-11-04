@@ -148,7 +148,7 @@ void MovieInfoHandler::WriteMovieInfo(
       // "MongoInsertMovieInfo", { opentracing::ChildOf(&span->context()) });
   bool plotinsert = mongoc_collection_insert_one (
       collection, new_doc, nullptr, nullptr, &error);
-  insert_span->Finish();
+  // insert_span->Finish();
   if (!plotinsert) {
     LOG(error) << "Error: Failed to insert movie-info to MongoDB: "
                << error.message;
@@ -165,7 +165,7 @@ void MovieInfoHandler::WriteMovieInfo(
   mongoc_collection_destroy(collection);
   mongoc_client_pool_push(_mongodb_client_pool, mongodb_client);
 
-  span->Finish();
+  // span->Finish();
 }
 
 void MovieInfoHandler::ReadMovieInfo(
@@ -213,7 +213,7 @@ void MovieInfoHandler::ReadMovieInfo(
     throw se;
   }
   memcached_pool_push(_memcached_client_pool, memcached_client);
-  get_span->Finish();
+  // get_span->Finish();
 
   if (movie_info_mmc) {
     LOG(debug) << "Get movie-info " << movie_id << " cache hit from Memcached";
@@ -269,7 +269,7 @@ void MovieInfoHandler::ReadMovieInfo(
         collection, query, nullptr, nullptr);
     const bson_t *doc;
     bool found = mongoc_cursor_next(cursor, &doc);
-    find_span->Finish();
+    // find_span->Finish();
     if (!found) {
       bson_error_t error;
       if (mongoc_cursor_error (cursor, &error)) {
@@ -347,12 +347,12 @@ void MovieInfoHandler::ReadMovieInfo(
         LOG(warning) << "Failed to set movie_info to Memcached: "
                      << memcached_strerror(memcached_client, memcached_rc);
       }
-      set_span->Finish();
+      // set_span->Finish();
       bson_free(movie_info_json_char);
       memcached_pool_push(_memcached_client_pool, memcached_client);
     }
   }
-  span->Finish();
+  // span->Finish();
 }
 
 void MovieInfoHandler::UpdateRating(
@@ -443,7 +443,7 @@ void MovieInfoHandler::UpdateRating(
         mongoc_client_pool_push(_mongodb_client_pool, mongodb_client);
         throw se;
       }
-      update_span->Finish();
+      // update_span->Finish();
     }
   }
 
@@ -460,9 +460,9 @@ void MovieInfoHandler::UpdateRating(
   }
   memcached_delete(memcached_client, movie_id.c_str(), movie_id.length(), 0);
   memcached_pool_push(_memcached_client_pool, memcached_client);
-  delete_span->Finish();
+  // delete_span->Finish();
 
-  span->Finish();
+  // span->Finish();
 }
 
 } // namespace media_service

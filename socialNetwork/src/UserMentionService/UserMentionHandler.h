@@ -92,7 +92,7 @@ void UserMentionHandler::ComposeUserMentions(
       se.errorCode = ErrorCode::SE_MEMCACHED_ERROR;
       se.message = memcached_strerror(client, rc);
       memcached_pool_push(_memcached_client_pool, client);
-      get_span->Finish();
+      // get_span->Finish();
       throw se;
     }
 
@@ -119,7 +119,7 @@ void UserMentionHandler::ComposeUserMentions(
         se.errorCode = ErrorCode::SE_MEMCACHED_ERROR;
         se.message =
             "Cannot get usernames of request " + std::to_string(req_id);
-        get_span->Finish();
+        // get_span->Finish();
         throw se;
       }
       UserMention new_user_mention;
@@ -135,7 +135,7 @@ void UserMentionHandler::ComposeUserMentions(
     }
     memcached_quit(client);
     memcached_pool_push(_memcached_client_pool, client);
-    get_span->Finish();
+    // get_span->Finish();
     for (int i = 0; i < usernames.size(); ++i) {
       delete keys[i];
     }
@@ -200,7 +200,7 @@ void UserMentionHandler::ComposeUserMentions(
           mongoc_cursor_destroy(cursor);
           mongoc_collection_destroy(collection);
           mongoc_client_pool_push(_mongodb_client_pool, mongodb_client);
-          find_span->Finish();
+          // find_span->Finish();
           throw se;
         }
         if (bson_iter_init_find(&iter, doc, "username")) {
@@ -213,7 +213,7 @@ void UserMentionHandler::ComposeUserMentions(
           mongoc_cursor_destroy(cursor);
           mongoc_collection_destroy(collection);
           mongoc_client_pool_push(_mongodb_client_pool, mongodb_client);
-          find_span->Finish();
+          // find_span->Finish();
           throw se;
         }
         user_mentions.emplace_back(new_user_mention);
@@ -222,12 +222,12 @@ void UserMentionHandler::ComposeUserMentions(
       mongoc_cursor_destroy(cursor);
       mongoc_collection_destroy(collection);
       mongoc_client_pool_push(_mongodb_client_pool, mongodb_client);
-      find_span->Finish();
+      // find_span->Finish();
     }
   }
 
   _return = user_mentions;
-  span->Finish();
+  // span->Finish();
 }
 
 }  // namespace social_network

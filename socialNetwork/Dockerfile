@@ -91,6 +91,7 @@ RUN cd /tmp \
   && cd /tmp && rm -rf grpc
 
 # Install OpenTelemetry C++
+# Build without OTLP to avoid abseil namespace conflicts with gRPC
 RUN cd /tmp \
   && wget -O opentelemetry-cpp-${LIB_OPENTELEMETRY_VERSION}.tar.gz https://github.com/open-telemetry/opentelemetry-cpp/archive/v${LIB_OPENTELEMETRY_VERSION}.tar.gz \
   && tar -zxf opentelemetry-cpp-${LIB_OPENTELEMETRY_VERSION}.tar.gz \
@@ -99,12 +100,9 @@ RUN cd /tmp \
   && cmake -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_CXX_FLAGS="-fPIC" \
     -DBUILD_TESTING=OFF \
-    -DWITH_OTLP=ON \
-    -DWITH_OTLP_GRPC=ON \
-    -DWITH_OTLP_HTTP=ON \
+    -DWITH_OTLP=OFF \
     -DWITH_EXAMPLES=OFF \
     -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-    -DWITH_ABSEIL=ON \
     .. \
   && make -j$(nproc) && make install \
   && cd /tmp && rm -rf opentelemetry-cpp-${LIB_OPENTELEMETRY_VERSION}*

@@ -253,7 +253,7 @@ void HomeTimelineHandler::WriteHomeTimeline(
     LOG(error) << err.what();
     throw err;
   }
-  redis_span->Finish();
+  // redis_span->Finish();
 
   std::vector<int64_t> post_ids;
   for (auto &post_id_str : post_ids_str) {
@@ -276,7 +276,7 @@ void HomeTimelineHandler::WriteHomeTimeline(
     throw;
   }
   _post_client_pool->Keepalive(post_client_wrapper);
-  span->Finish();
+  // span->Finish();
 }
 
 }  // namespace social_network

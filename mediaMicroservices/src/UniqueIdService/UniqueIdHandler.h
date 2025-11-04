@@ -136,7 +136,7 @@ void UniqueIdHandler::UploadUniqueId(
   }
   _compose_client_pool->Push(compose_client_wrapper);
 
-  span->Finish();
+  // span->Finish();
 }
 
 /*

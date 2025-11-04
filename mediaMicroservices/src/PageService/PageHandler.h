@@ -176,7 +176,7 @@ void PageHandler::ReadPage(
   } catch (...) {
     throw;
   }
-  span->Finish();
+  // span->Finish();
 }
 
 } //namespace media_service

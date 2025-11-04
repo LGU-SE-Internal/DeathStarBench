@@ -88,7 +88,7 @@ void RatingHandler::UploadRating(
     redis_client->incrby(movie_id + ":uncommit_sum", rating);
     redis_client->incr(movie_id + ":uncommit_num");
     redis_client->sync_commit();
-    redis_span->Finish();
+    // redis_span->Finish();
     _redis_client_pool->Push(redis_client_wrapper);
   });
 
@@ -105,7 +105,7 @@ void RatingHandler::UploadRating(
     LOG(error) << "Failed to update rating to rating-redis";
     throw;
   }
-  span->Finish();
+  // span->Finish();
 }
 
 

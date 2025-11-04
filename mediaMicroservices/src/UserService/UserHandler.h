@@ -251,14 +251,14 @@ void UserHandler::RegisterUser(
     } else {
       LOG(debug) << "User: " << username << " registered";
     }
-    user_insert_span->Finish();
+    // user_insert_span->Finish();
     bson_destroy(new_doc);
   }
   mongoc_cursor_destroy(cursor);
   mongoc_collection_destroy(collection);
   mongoc_client_pool_push(_mongodb_client_pool, mongodb_client);
 
-  span->Finish();
+  // span->Finish();
 }
 
 void UserHandler::RegisterUserWithId(
@@ -347,14 +347,14 @@ void UserHandler::RegisterUserWithId(
     } else {
       LOG(debug) << "User: " << username << " registered";
     }
-    user_insert_span->Finish();
+    // user_insert_span->Finish();
     bson_destroy(new_doc);
   }
   mongoc_cursor_destroy(cursor);
   mongoc_collection_destroy(collection);
   mongoc_client_pool_push(_mongodb_client_pool, mongodb_client);
 
-  span->Finish();
+  // span->Finish();
 }
 
 void UserHandler::UploadUserWithUsername(
@@ -393,7 +393,7 @@ void UserHandler::UploadUserWithUsername(
       &user_id_size,
       &memcached_flags,
       &memcached_rc);
-  id_get_span->Finish();
+  // id_get_span->Finish();
   if (!user_id_mmc && memcached_rc != MEMCACHED_NOTFOUND) {
     ServiceException se;
     se.errorCode = ErrorCode::SE_MEMCACHED_ERROR;
@@ -440,7 +440,7 @@ void UserHandler::UploadUserWithUsername(
         collection, query, nullptr, nullptr);
     const bson_t *doc;
     bool found = mongoc_cursor_next(cursor, &doc);
-    find_span->Finish();
+    // find_span->Finish();
 
     if (!found) {
       bson_error_t error;
@@ -531,7 +531,7 @@ void UserHandler::UploadUserWithUsername(
         static_cast<time_t>(0),
         static_cast<uint32_t>(0)
     );
-    id_set_span->Finish();
+    // id_set_span->Finish();
     if (memcached_rc != MEMCACHED_SUCCESS) {
       LOG(warning)
         << "Failed to set the user_id of user "
@@ -542,7 +542,7 @@ void UserHandler::UploadUserWithUsername(
   memcached_pool_push(_memcached_client_pool, memcached_client);
 
   free(user_id_mmc);
-  span->Finish();
+  // span->Finish();
 }
 
 void UserHandler::UploadUserWithUserId(
@@ -576,7 +576,7 @@ void UserHandler::UploadUserWithUserId(
   }
   _compose_client_pool->Push(compose_client_wrapper);
 
-  span->Finish();
+  // span->Finish();
 
 }
 
@@ -621,7 +621,7 @@ void UserHandler::Login(
       &password_size,
       &memcached_flags,
       &memcached_rc);
-  pswd_get_span->Finish();
+  // pswd_get_span->Finish();
   if (!password_mmc && memcached_rc != MEMCACHED_NOTFOUND) {
     ServiceException se;
     se.errorCode = ErrorCode::SE_MEMCACHED_ERROR;
@@ -639,7 +639,7 @@ void UserHandler::Login(
       &salt_size,
       &memcached_flags,
       &memcached_rc);
-  salt_get_span->Finish();
+  // salt_get_span->Finish();
   if (!salt_mmc && memcached_rc != MEMCACHED_NOTFOUND) {
     ServiceException se;
     se.errorCode = ErrorCode::SE_MEMCACHED_ERROR;
@@ -658,7 +658,7 @@ void UserHandler::Login(
       &user_id_size,
       &memcached_flags,
       &memcached_rc);
-  id_get_span->Finish();
+  // id_get_span->Finish();
   if (!user_id_mmc && memcached_rc != MEMCACHED_NOTFOUND) {
     ServiceException se;
     se.errorCode = ErrorCode::SE_MEMCACHED_ERROR;
@@ -716,7 +716,7 @@ void UserHandler::Login(
         collection, query, nullptr, nullptr);
     const bson_t *doc;
     bool found = mongoc_cursor_next(cursor, &doc);
-    find_span->Finish();
+    // find_span->Finish();
 
     if (!found) {
       bson_error_t error;
@@ -873,7 +873,7 @@ void UserHandler::Login(
         0,
         0
     );
-    salt_set_span->Finish();
+    // salt_set_span->Finish();
 
     if (memcached_rc != MEMCACHED_SUCCESS) {
       LOG(warning)
@@ -895,7 +895,7 @@ void UserHandler::Login(
         static_cast<time_t>(0),
         static_cast<uint32_t>(0)
     );
-    pswd_set_span->Finish();
+    // pswd_set_span->Finish();
     if (memcached_rc != MEMCACHED_SUCCESS) {
       LOG(warning)
         << "Failed to set the password of user "
@@ -917,7 +917,7 @@ void UserHandler::Login(
         static_cast<time_t>(0),
         static_cast<uint32_t>(0)
     );
-    id_set_span->Finish();
+    // id_set_span->Finish();
     if (memcached_rc != MEMCACHED_SUCCESS) {
       LOG(warning)
         << "Failed to set the user_id of user "
@@ -930,7 +930,7 @@ void UserHandler::Login(
   free(salt_mmc);
   free(password_mmc);
   free(user_id_mmc);
-  span->Finish();
+  // span->Finish();
 }
 
 /*

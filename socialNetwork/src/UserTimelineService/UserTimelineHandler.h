@@ -131,7 +131,7 @@ void UserTimelineHandler::WriteUserTimeline(
   bool updated = mongoc_collection_find_and_modify(collection, query, nullptr,
                                                    update, nullptr, false, true,
                                                    true, &reply, &error);
-  update_span->Finish();
+  // update_span->Finish();
 
   if (!updated) {
     // update the newly inserted document (upsert: false)
@@ -179,8 +179,8 @@ void UserTimelineHandler::WriteUserTimeline(
     LOG(error) << err.what();
     throw err;
   }
-  redis_span->Finish();
-  span->Finish();
+  // redis_span->Finish();
+  // span->Finish();
 }
 
 void UserTimelineHandler::ReadUserTimeline(
@@ -219,7 +219,7 @@ void UserTimelineHandler::ReadUserTimeline(
     LOG(error) << err.what();
     throw err;
   }
-  redis_span->Finish();
+  // redis_span->Finish();
 
   std::vector<int64_t> post_ids;
   for (auto &post_id_str : post_ids_str) {
@@ -257,7 +257,7 @@ void UserTimelineHandler::ReadUserTimeline(
         // {opentracing::ChildOf(&span->context())});
     mongoc_cursor_t *cursor =
         mongoc_collection_find_with_opts(collection, query, opts, nullptr);
-    find_span->Finish();
+    // find_span->Finish();
     const bson_t *doc;
     bool found = mongoc_cursor_next(cursor, &doc);
     if (found) {
@@ -346,7 +346,7 @@ void UserTimelineHandler::ReadUserTimeline(
       LOG(error) << err.what();
       throw err;
     }
-    redis_update_span->Finish();
+    // redis_update_span->Finish();
   }
 
   try {
@@ -355,7 +355,7 @@ void UserTimelineHandler::ReadUserTimeline(
     LOG(error) << "Failed to get post from post-storage-service";
     throw;
   }
-  span->Finish();
+  // span->Finish();
 }
 
 }  // namespace social_network

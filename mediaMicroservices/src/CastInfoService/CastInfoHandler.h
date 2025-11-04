@@ -90,7 +90,7 @@ void CastInfoHandler::WriteCastInfo(
       // "MongoInsertCastInfo", { opentracing::ChildOf(&span->context()) });
   bool plotinsert = mongoc_collection_insert_one (
       collection, new_doc, nullptr, nullptr, &error);
-  insert_span->Finish();
+  // insert_span->Finish();
   if (!plotinsert) {
     LOG(error) << "Error: Failed to insert cast-info to MongoDB: "
                << error.message;
@@ -107,7 +107,7 @@ void CastInfoHandler::WriteCastInfo(
   mongoc_collection_destroy(collection);
   mongoc_client_pool_push(_mongodb_client_pool, mongodb_client);
 
-  span->Finish();
+  // span->Finish();
 }
 
 void CastInfoHandler::ReadCastInfo(
@@ -206,7 +206,7 @@ void CastInfoHandler::ReadCastInfo(
     cast_info_ids_not_cached.erase(new_cast_info.cast_info_id);
     free(return_value);
   }
-  get_span->Finish();
+  // get_span->Finish();
   memcached_quit(memcached_client);
   memcached_pool_push(_memcached_client_pool, memcached_client);
   for (int i = 0; i < cast_info_ids.size(); ++i) {
@@ -279,7 +279,7 @@ void CastInfoHandler::ReadCastInfo(
       return_map.insert({new_cast_info.cast_info_id, new_cast_info});
       bson_free(cast_info_json_char);
     }
-    find_span->Finish();
+    // find_span->Finish();
     bson_error_t error;
     if (mongoc_cursor_error(cursor, &error)) {
       LOG(warning) << error.message;
@@ -323,7 +323,7 @@ void CastInfoHandler::ReadCastInfo(
             static_cast<uint32_t>(0));
       }
       memcached_pool_push(_memcached_client_pool, _memcached_client);
-      set_span->Finish();
+      // set_span->Finish();
     }));
   }
 

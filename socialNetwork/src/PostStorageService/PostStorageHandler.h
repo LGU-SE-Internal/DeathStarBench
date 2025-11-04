@@ -141,7 +141,7 @@ void PostStorageHandler::StorePost(
       // {opentracing::ChildOf(&span->context())});
   bool inserted = mongoc_collection_insert_one(collection, new_doc, nullptr,
                                                nullptr, &error);
-  insert_span->Finish();
+  // insert_span->Finish();
 
   if (!inserted) {
     LOG(error) << "Error: Failed to insert post to MongoDB: " << error.message;
@@ -158,7 +158,7 @@ void PostStorageHandler::StorePost(
   mongoc_collection_destroy(collection);
   mongoc_client_pool_push(_mongodb_client_pool, mongodb_client);
 
-  span->Finish();
+  // span->Finish();
 }
 
 void PostStorageHandler::ReadPost(
@@ -200,7 +200,7 @@ void PostStorageHandler::ReadPost(
     throw se;
   }
   memcached_pool_push(_memcached_client_pool, memcached_client);
-  get_span->Finish();
+  // get_span->Finish();
 
   if (post_mmc) {
     LOG(debug) << "Get post " << post_id << " cache hit from Memcached";
@@ -262,7 +262,7 @@ void PostStorageHandler::ReadPost(
         mongoc_collection_find_with_opts(collection, query, nullptr, nullptr);
     const bson_t *doc;
     bool found = mongoc_cursor_next(cursor, &doc);
-    find_span->Finish();
+    // find_span->Finish();
     if (!found) {
       bson_error_t error;
       if (mongoc_cursor_error(cursor, &error)) {
@@ -342,13 +342,13 @@ void PostStorageHandler::ReadPost(
         LOG(warning) << "Failed to set post to Memcached: "
                      << memcached_strerror(memcached_client, memcached_rc);
       }
-      set_span->Finish();
+      // set_span->Finish();
       bson_free(post_json_char);
       memcached_pool_push(_memcached_client_pool, memcached_client);
     }
   }
 
-  span->Finish();
+  // span->Finish();
 }
 void PostStorageHandler::ReadPosts(
     std::vector<Post> &_return, int64_t req_id,
@@ -469,7 +469,7 @@ void PostStorageHandler::ReadPosts(
     post_ids_not_cached.erase(new_post.post_id);
     free(return_value);
   }
-  get_span->Finish();
+  // get_span->Finish();
   memcached_quit(memcached_client);
   memcached_pool_push(_memcached_client_pool, memcached_client);
   for (int i = 0; i < post_ids.size(); ++i) {
@@ -559,7 +559,7 @@ void PostStorageHandler::ReadPosts(
       return_map.insert({new_post.post_id, new_post});
       bson_free(post_json_char);
     }
-    find_span->Finish();
+    // find_span->Finish();
     bson_error_t error;
     if (mongoc_cursor_error(cursor, &error)) {
       LOG(warning) << error.message;
@@ -598,7 +598,7 @@ void PostStorageHandler::ReadPosts(
                             static_cast<time_t>(0), static_cast<uint32_t>(0));
       }
       memcached_pool_push(_memcached_client_pool, _memcached_client);
-      set_span->Finish();
+      // set_span->Finish();
     }));
   }
 

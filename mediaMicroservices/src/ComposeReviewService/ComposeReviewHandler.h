@@ -355,9 +355,9 @@ void ComposeReviewHandler::UploadMovieId(
   // it is in charge of compose the request and upload to the microservices in
   // the next tier.
   if (counter_value == NUM_COMPONENTS) {
-    _ComposeAndUpload(req_id, writer_text_map);
+    // _ComposeAndUpload(req_id, writer_text_map);
   }
-  span->Finish();
+  // span->Finish();
 }
 
 void ComposeReviewHandler::UploadUserId(
@@ -465,9 +465,9 @@ void ComposeReviewHandler::UploadUserId(
   // it is in charge of compose the request and upload to the microservices in
   // the next tier.
   if (counter_value == NUM_COMPONENTS) {
-    _ComposeAndUpload(req_id, writer_text_map);
+    // _ComposeAndUpload(req_id, writer_text_map);
   }
-  span->Finish();
+  // span->Finish();
 }
 
 void ComposeReviewHandler::UploadUniqueId(
@@ -576,9 +576,9 @@ void ComposeReviewHandler::UploadUniqueId(
   // it is in charge of compose the request and upload to the microservices in
   // the next tier.
   if (counter_value == NUM_COMPONENTS) {
-    _ComposeAndUpload(req_id, writer_text_map);
+    // _ComposeAndUpload(req_id, writer_text_map);
   }
-  span->Finish();
+  // span->Finish();
 }
 
 void ComposeReviewHandler::UploadText(
@@ -684,9 +684,9 @@ void ComposeReviewHandler::UploadText(
   // it is in charge of compose the request and upload to the microservices in
   // the next tier.
   if (counter_value == NUM_COMPONENTS) {
-    _ComposeAndUpload(req_id, writer_text_map);
+    // _ComposeAndUpload(req_id, writer_text_map);
   }
-  span->Finish();
+  // span->Finish();
 }
 
 void ComposeReviewHandler::UploadRating(
@@ -790,9 +790,9 @@ void ComposeReviewHandler::UploadRating(
   // it is in charge of compose the request and upload to the microservices in
   // the next tier.
   if (counter_value == NUM_COMPONENTS) {
-    _ComposeAndUpload(req_id, writer_text_map);
+    // _ComposeAndUpload(req_id, writer_text_map);
   }
-  span->Finish();
+  // span->Finish();
 }
 
 } // namespace media_service
