@@ -25,7 +25,6 @@ target_link_libraries(
     Boost::log_setup
     Boost::program_options
     opentelemetry_trace
-    opentelemetry_exporter_otlp_http
     opentelemetry_resources
     opentelemetry_common
     /usr/local/lib/libhiredis.a

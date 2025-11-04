@@ -24,8 +24,6 @@ target_link_libraries(
     Boost::log
     Boost::log_setup
     opentelemetry_trace
-    opentelemetry_exporter_otlp_http
-    opentelemetry_exporter_otlp_grpc
     opentelemetry_resources
     opentelemetry_common
 )
