@@ -3,7 +3,7 @@ global:
   imagePullPolicy: "IfNotPresent"
   restartPolicy: Always
   serviceType: ClusterIP
-  dockerRegistry: docker.io
+  dockerRegistry: 10.10.10.240/library
   defaultImageVersion: latest
   nginx:
     resolverName: kube-dns.kube-system.svc.cluster.local
