@@ -46,7 +46,7 @@ This structure ensures fast rebuilds when only application code changes.
 - OpenTelemetry WebServer SDK v1.0.3
 - OpenSSL 1.1.0j
 - PCRE 8.42
-- LuaRocks 3.5.0
+- LuaRocks 3.9.2
 - Lua libraries: lua-resty-jwt
 - Built from source: liblualongnumber, libluabitwise, libluabpack (from lua-thrift)
 
