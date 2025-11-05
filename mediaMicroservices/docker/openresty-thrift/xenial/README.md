@@ -42,9 +42,9 @@ This structure ensures fast rebuilds when only application code changes.
 
 ## Features
 
-- OpenResty 1.21.4.1 (nginx 1.21.4)
+- OpenResty 1.25.3.1 (nginx 1.25.3)
 - OpenTelemetry WebServer SDK v1.0.3
-- OpenSSL 1.1.1k
+- OpenSSL 1.1.1w
 - PCRE 8.45
 - LuaRocks 3.9.2
 - Lua libraries: lua-resty-jwt (installed from GitHub source)
