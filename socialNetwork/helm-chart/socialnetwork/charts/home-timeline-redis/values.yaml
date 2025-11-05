@@ -7,7 +7,7 @@ ports:
 container:
   args: 
   - /social-network-microservices/config/redis.conf
-  image: library/redis
+  image: redis
   imageVersion: 6.2.4
   name: home-timeline-redis
   ports: 

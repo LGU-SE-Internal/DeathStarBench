@@ -13,7 +13,7 @@ global:
     disabled: false
   # Jaeger config for nginx (uses Jaeger client, not OpenTelemetry)
   jaeger:
-    disabled: false
+    disabled: true
     logSpans: false
     localAgentHostPort: "jaeger-agent.observability.svc.cluster.local:6831"
     queueSize: 1000
