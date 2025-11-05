@@ -1,6 +1,6 @@
 {{- define "mediamicroservices.templates.nginx.nginx.conf"  }}
-# Load the OpenTracing dynamic module.
-load_module modules/ngx_http_opentracing_module.so;
+# Load the OpenTelemetry dynamic module.
+load_module /opt/opentelemetry-webserver-sdk/WebServerModule/Nginx/1.15.8/ngx_http_opentelemetry_module.so;
 
 # Checklist: Make sure that worker_processes == #cores you gave to
 # nginx process
@@ -18,9 +18,15 @@ events {
 env fqdn_suffix;
 
 http {
-  # Load a vendor tracer
-  opentracing on;
-  opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /usr/local/openresty/nginx/jaeger-config.json;
+  # OpenTelemetry configuration
+  NginxModuleEnabled ON;
+  NginxModuleOtelSpanExporter otlp;
+  NginxModuleOtelExporterEndpoint {{ .Values.global.otel.endpoint }};
+  NginxModuleServiceName nginx-web-server;
+  NginxModuleServiceNamespace {{ .Release.Namespace }};
+  NginxModuleServiceInstanceId {{ .Release.Name }};
+  NginxModuleResolveBackends ON;
+  NginxModuleTraceAsError OFF;
 
   include       mime.types;
   default_type  application/octet-stream;

@@ -10,9 +10,7 @@ ARG RESTY_VERSION="1.15.8.1rc1"
 ARG RESTY_LUAROCKS_VERSION="3.5.0"
 ARG RESTY_OPENSSL_VERSION="1.1.0j"
 ARG RESTY_PCRE_VERSION="8.42"
-ARG JAEGER_TRACING_VERSION="0.4.2"
-ARG NGINX_OPENTRACING_VERSION="0.8.0"
-ARG OPENTRACING_CPP_VERSION="1.5.1"
+ARG OTEL_WEBSERVER_VERSION="1.0.3"
 ARG RESTY_J="1"
 ARG RESTY_CONFIG_OPTIONS="\
     --with-file-aio \
@@ -43,7 +41,6 @@ ARG RESTY_CONFIG_OPTIONS="\
     --with-stream \
     --with-stream_ssl_module \
     --with-threads \
-    --add-dynamic-module=/usr/local/nginx-opentracing-${NGINX_OPENTRACING_VERSION}/opentracing \
     "
 ARG RESTY_CONFIG_OPTIONS_MORE=""
 ARG RESTY_ADD_PACKAGE_BUILDDEPS=""
@@ -97,23 +94,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && tar xzf openssl-${RESTY_OPENSSL_VERSION}.tar.gz \
     && curl -fSL http://ftp.cs.stanford.edu/pub/exim/pcre/pcre-${RESTY_PCRE_VERSION}.tar.gz -o pcre-${RESTY_PCRE_VERSION}.tar.gz \
     && tar xzf pcre-${RESTY_PCRE_VERSION}.tar.gz \
-  ### Build opentracing-cpp
-    && cd /tmp \
-    && curl -fSL https://github.com/opentracing/opentracing-cpp/archive/v${OPENTRACING_CPP_VERSION}.tar.gz -o opentracing-cpp-${OPENTRACING_CPP_VERSION}.tar.gz\
-    && tar -zxf opentracing-cpp-${OPENTRACING_CPP_VERSION}.tar.gz \
-    && cd opentracing-cpp-${OPENTRACING_CPP_VERSION} \
-    && mkdir -p cmake-build \
-    && cd cmake-build \
-    && cmake -DCMAKE_BUILD_TYPE=Release \
-             -DBUILD_MOCKTRACER=OFF \
-             -DBUILD_STATIC_LIBS=OFF \
-             -DBUILD_TESTING=OFF \
-       .. \
-    && make -j$(nproc) \
-    && make -j$(nproc) install \
-    && cd /tmp \
-    && rm -rf opentracing-cpp-${OPENTRACING_CPP_VERSION}.tar.gz \
-              opentracing-cpp-${OPENTRACING_CPP_VERSION} \
   ### Build lua-resty-hmac
     && cd /tmp \
     && git clone https://github.com/jkeys089/lua-resty-hmac.git \
@@ -122,23 +102,16 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && make install \
     && cd /tmp \
     && rm -rf lua-resty-hmac \
-
-  ### Add Jaeger plugin
-    && curl -fSL https://github.com/jaegertracing/jaeger-client-cpp/archive/refs/tags/v${JAEGER_TRACING_VERSION}.tar.gz -o v${JAEGER_TRACING_VERSION}.tar.gz \
-    && tar xf v${JAEGER_TRACING_VERSION}.tar.gz \
-    && cd jaeger-client-cpp-${JAEGER_TRACING_VERSION} \
-    && mkdir build && cd build \
-    && cmake CXXFLAGS="-Wno-error=deprecated-copy" -DCMAKE_INSTALL_PREFIX=/opt -DJAEGERTRACING_PLUGIN=ON -DHUNTER_CONFIGURATION_TYPES=Release -DHUNTER_BUILD_SHARED_LIBS=OFF .. \
-    && make && make install \
-    && cp libjaegertracing_plugin.so /usr/local/lib/ \
-    && cd ../.. && rm -rf v${JAEGER_TRACING_VERSION}.tar.gz \
-    && rm -rf jaeger-client-cpp-${JAEGER_TRACING_VERSION} && rm -rf /root/.hunter
-
-RUN cd /usr/local \
-    && curl -fSL https://github.com/opentracing-contrib/nginx-opentracing/archive/v${NGINX_OPENTRACING_VERSION}.tar.gz -o nginx-opentracing-${NGINX_OPENTRACING_VERSION}.tar.gz \
-    && tar -zxf nginx-opentracing-${NGINX_OPENTRACING_VERSION}.tar.gz \
-    && rm nginx-opentracing-${NGINX_OPENTRACING_VERSION}.tar.gz \
+  ### Install OpenTelemetry WebServer Module
+    && cd /opt \
+    && curl -fSL https://github.com/open-telemetry/opentelemetry-cpp-contrib/releases/download/webserver%2Fv${OTEL_WEBSERVER_VERSION}/opentelemetry-webserver-sdk-x64-linux.tgz -o opentelemetry-webserver-sdk-x64-linux.tgz \
+    && tar xzf opentelemetry-webserver-sdk-x64-linux.tgz \
+    && cd opentelemetry-webserver-sdk \
+    && ./install.sh \
     && cd /tmp \
+    && rm -rf /opt/opentelemetry-webserver-sdk-x64-linux.tgz
+
+RUN cd /tmp \
     && curl -fSL https://openresty.org/download/openresty-${RESTY_VERSION}.tar.gz -o openresty-${RESTY_VERSION}.tar.gz \
     && tar xzf openresty-${RESTY_VERSION}.tar.gz \
     && cd /tmp/openresty-${RESTY_VERSION} \
@@ -173,6 +146,9 @@ RUN cd /tmp \
 
 # Add additional binaries into PATH for convenience
 ENV PATH=$PATH:/usr/local/openresty/luajit/bin:/usr/local/openresty/nginx/sbin:/usr/local/openresty/bin
+
+# Set OpenTelemetry library path
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/opentelemetry-webserver-sdk/sdk_lib/lib
 
 # Add LuaRocks paths
 # If OpenResty changes, these may need updating:

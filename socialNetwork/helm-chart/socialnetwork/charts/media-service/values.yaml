@@ -12,10 +12,6 @@ container:
   - containerPort: 9090
 
 configMaps:
-  - name: jaeger-config.yml
-    mountPath: /social-network-microservices/config/jaeger-config.yml
-    value: jaeger-config
-
   - name: service-config.json
     mountPath: /social-network-microservices/config/service-config.json
     value: service-config

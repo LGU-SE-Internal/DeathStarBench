@@ -41,10 +41,6 @@ volumes:
   - name: gen-lua
 
 configMaps:
-  - name: jaeger-config.json
-    mountPath: /usr/local/openresty/nginx/jaeger-config.json
-    value: jaeger-config
-
   - name: nginx.conf
     mountPath: /usr/local/openresty/nginx/conf/nginx.conf
     value: nginx
