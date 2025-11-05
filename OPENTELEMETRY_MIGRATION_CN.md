@@ -32,14 +32,54 @@ DeathStarBench 项目已从 OpenTracing/Jaeger 追踪迁移到 OpenTelemetry。�
 - 更新 `docker/thrift-microservice-deps/cpp/Dockerfile` 以安装 OpenTelemetry C++ v1.8.1
 - 移除 Jaeger 客户端和 OpenTracing 依赖
 
-### 2. Go 服务 (hotelReservation)
+### 2. Nginx/OpenResty 服务 (mediaMicroservices, socialNetwork)
+
+#### Docker 变更
+- 用 OpenTelemetry WebServer SDK v1.0.3 替换 Jaeger 客户端和 OpenTracing 依赖
+- 移除 `opentracing-cpp`、`nginx-opentracing` 和 `jaeger-client-cpp` 的安装
+- 添加 OpenTelemetry WebServer SDK 的安装和配置
+- 更新 `docker/openresty-thrift/xenial/Dockerfile` 以：
+  - 下载并安装 `opentelemetry-webserver-sdk-x64-linux.tgz`
+  - 设置 `LD_LIBRARY_PATH` 包含 OpenTelemetry SDK 库
+  - 从构建配置中移除 nginx OpenTracing 模块
+
+#### Nginx 配置变更
+- 用 `ngx_http_opentelemetry_module.so` 替换 `ngx_http_opentracing_module.so`
+- 移除 Jaeger 追踪器配置：
+  ```nginx
+  # 旧配置（已移除）
+  opentracing on;
+  opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /usr/local/openresty/nginx/jaeger-config.json;
+  ```
+- 添加 OpenTelemetry 指令：
+  ```nginx
+  # 新配置
+  load_module /opt/opentelemetry-webserver-sdk/WebServerModule/Nginx/1.15.8/ngx_http_opentelemetry_module.so;
+  
+  NginxModuleEnabled ON;
+  NginxModuleOtelSpanExporter otlp;
+  NginxModuleOtelExporterEndpoint {{ .Values.global.otel.endpoint }};
+  NginxModuleServiceName nginx-web-server;
+  NginxModuleServiceNamespace {{ .Release.Namespace }};
+  NginxModuleServiceInstanceId {{ .Release.Name }};
+  NginxModuleResolveBackends ON;
+  NginxModuleTraceAsError OFF;
+  ```
+- 从 init_by_lua_block 中移除 `opentracing_bridge_tracer` Lua 依赖
+
+#### Helm Chart 变更
+- 从 values.yaml 文件中移除 `global.jaeger` 配置部分
+- 从 nginx 服务 chart 中移除 `jaeger-config.json` ConfigMap
+- 所有 nginx 服务现在使用 `global.otel.endpoint` 进行追踪导出
+
+### 3. Go 服务 (hotelReservation)
 
 #### 代码变更
 - 更新 `tracing/tracer.go` 以使用 OpenTelemetry Go SDK
 - 用 OTLP HTTP 导出器替换 Jaeger 客户端
 - 将环境变量从 `JAEGER_*` 改为 `OTEL_*`
 
-### 3. Helm Chart 配置
+### 4. Helm Chart 配置
 
 #### 全局配置
 所有 Helm chart 现在使用统一的 OpenTelemetry 配置结构：
@@ -173,6 +213,22 @@ docker build -t your-registry/media-microservices-deps:latest .
 cd ../../..
 docker build -t your-registry/media-microservices:latest .
 ```
+
+### 对于 nginx/OpenResty 镜像：
+
+带有 OpenTelemetry 支持的 nginx 镜像从 `docker/openresty-thrift/xenial` 目录构建：
+
+```bash
+# 对于 socialNetwork
+cd socialNetwork/docker/openresty-thrift
+docker build -f xenial/Dockerfile -t your-registry/openresty-thrift:xenial .
+
+# 对于 mediaMicroservices  
+cd mediaMicroservices/docker/openresty-thrift
+docker build -f xenial/Dockerfile -t your-registry/openresty-thrift:xenial .
+```
+
+**注意：** OpenTelemetry WebServer SDK 将在 Docker 构建过程中自动下载和安装。
 
 ### 对于 hotelReservation (Go)：
 
