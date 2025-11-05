@@ -159,8 +159,7 @@ ENV LUA_CPATH="/usr/local/openresty/site/lualib/?.so;/usr/local/openresty/lualib
 ENV LUA_PATH=$LUA_PATH;/gen-lua/?.lua
 
 # Install Lua dependencies (cached layer)
-RUN luarocks install long \
-    && luarocks install lua-resty-jwt \
+RUN luarocks install lua-resty-jwt \
     && ldconfig
 
 # Copy application files (these change more frequently)
