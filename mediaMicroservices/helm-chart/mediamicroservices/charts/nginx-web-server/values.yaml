@@ -6,7 +6,7 @@ ports:
 
 container:
   image: openresty-thrift
-  imageVersion: xenial
+  imageVersion: 1.25.3
   name: nginx-web-server
   ports:
     - containerPort: 8080
