@@ -169,20 +169,12 @@ RUN cd /tmp \
 
 # Copy application files (these change more frequently)
 COPY ../lua-thrift /usr/local/openresty/lualib/thrift
-COPY ../lua-bridge-tracer /tmp/lua-bridge-tracer
 COPY ../lua-json/json.lua /usr/local/openresty/lualib/json/json.lua
 
-# Build lua-thrift and bridge tracer
+# Build lua-thrift
 RUN cd /usr/local/openresty/lualib/thrift/src \
     && make \
-    && make install \
-    && cd /tmp/lua-bridge-tracer \
-    && mkdir -p cmake-build \
-    && cd cmake-build \
-    && cmake -DCMAKE_BUILD_TYPE=Release .. \
-    && make -j$(nproc) \
-    && make -j$(nproc) install \
-    && rm -rf /tmp/lua-bridge-tracer
+    && make install
 
 # Copy nginx configuration files
 COPY ../nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
