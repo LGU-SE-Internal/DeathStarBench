@@ -32,14 +32,54 @@ The DeathStarBench project has been migrated from OpenTracing/Jaeger tracing to 
 - Updated `docker/thrift-microservice-deps/cpp/Dockerfile` to install OpenTelemetry C++ v1.8.1
 - Removed Jaeger client and OpenTracing dependencies
 
-### 2. Go Services (hotelReservation)
+### 2. Nginx/OpenResty Services (mediaMicroservices, socialNetwork)
+
+#### Docker Changes
+- Replaced Jaeger client and OpenTracing dependencies with OpenTelemetry WebServer SDK v1.0.3
+- Removed `opentracing-cpp`, `nginx-opentracing`, and `jaeger-client-cpp` installations
+- Added OpenTelemetry WebServer SDK installation and configuration
+- Updated `docker/openresty-thrift/xenial/Dockerfile` to:
+  - Download and install `opentelemetry-webserver-sdk-x64-linux.tgz`
+  - Set `LD_LIBRARY_PATH` to include OpenTelemetry SDK libraries
+  - Remove nginx OpenTracing module from build configuration
+
+#### Nginx Configuration Changes
+- Replaced `ngx_http_opentracing_module.so` with `ngx_http_opentelemetry_module.so`
+- Removed Jaeger tracer configuration:
+  ```nginx
+  # OLD (removed)
+  opentracing on;
+  opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /usr/local/openresty/nginx/jaeger-config.json;
+  ```
+- Added OpenTelemetry directives:
+  ```nginx
+  # NEW
+  load_module /opt/opentelemetry-webserver-sdk/WebServerModule/Nginx/1.15.8/ngx_http_opentelemetry_module.so;
+  
+  NginxModuleEnabled ON;
+  NginxModuleOtelSpanExporter otlp;
+  NginxModuleOtelExporterEndpoint {{ .Values.global.otel.endpoint }};
+  NginxModuleServiceName nginx-web-server;
+  NginxModuleServiceNamespace {{ .Release.Namespace }};
+  NginxModuleServiceInstanceId {{ .Release.Name }};
+  NginxModuleResolveBackends ON;
+  NginxModuleTraceAsError OFF;
+  ```
+- Removed `opentracing_bridge_tracer` Lua dependency from init_by_lua_block
+
+#### Helm Chart Changes
+- Removed `global.jaeger` configuration section from values.yaml
+- Removed `jaeger-config.json` ConfigMap from nginx service charts
+- All nginx services now use `global.otel.endpoint` for trace export
+
+### 3. Go Services (hotelReservation)
 
 #### Code Changes
 - Updated `tracing/tracer.go` to use OpenTelemetry Go SDK
 - Replaced Jaeger client with OTLP HTTP exporter
 - Changed environment variables from `JAEGER_*` to `OTEL_*`
 
-### 3. Helm Chart Configuration
+### 4. Helm Chart Configuration
 
 #### Global Values
 All Helm charts now use a unified OpenTelemetry configuration structure:
@@ -173,6 +213,22 @@ docker build -t your-registry/media-microservices-deps:latest .
 cd ../../..
 docker build -t your-registry/media-microservices:latest .
 ```
+
+### For nginx/OpenResty images:
+
+The nginx images with OpenTelemetry support are built from the `docker/openresty-thrift/xenial` directory:
+
+```bash
+# For socialNetwork
+cd socialNetwork/docker/openresty-thrift
+docker build -f xenial/Dockerfile -t your-registry/openresty-thrift:xenial .
+
+# For mediaMicroservices  
+cd mediaMicroservices/docker/openresty-thrift
+docker build -f xenial/Dockerfile -t your-registry/openresty-thrift:xenial .
+```
+
+**Note:** The OpenTelemetry WebServer SDK will be automatically downloaded and installed during the Docker build process.
 
 ### For hotelReservation (Go):
 
