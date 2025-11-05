@@ -62,12 +62,7 @@ LABEL resty_eval_post_make="${RESTY_EVAL_POST_MAKE}"
 # These are not intended to be user-specified
 ARG _RESTY_CONFIG_DEPS="--with-openssl=/tmp/openssl-${RESTY_OPENSSL_VERSION} --with-pcre=/tmp/pcre-${RESTY_PCRE_VERSION}"
 
-
-# 1) Install apt dependencies
-# 2) Download and untar OpenSSL, PCRE, and OpenResty
-# 3) Build OpenResty
-# 4) Cleanup
-
+# Install system dependencies (cached layer)
 RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         build-essential \
@@ -88,29 +83,34 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
         cmake \
         ${RESTY_ADD_PACKAGE_BUILDDEPS} \
         ${RESTY_ADD_PACKAGE_RUNDEPS} \
-    && cd /tmp \
+    && rm -rf /var/lib/apt/lists/*
+
+# Download and extract OpenSSL and PCRE (cached layer)
+RUN cd /tmp \
     && if [ -n "${RESTY_EVAL_PRE_CONFIGURE}" ]; then eval $(echo ${RESTY_EVAL_PRE_CONFIGURE}); fi \
     && curl -fSL https://www.openssl.org/source/openssl-${RESTY_OPENSSL_VERSION}.tar.gz -o openssl-${RESTY_OPENSSL_VERSION}.tar.gz \
     && tar xzf openssl-${RESTY_OPENSSL_VERSION}.tar.gz \
     && curl -fSL http://ftp.cs.stanford.edu/pub/exim/pcre/pcre-${RESTY_PCRE_VERSION}.tar.gz -o pcre-${RESTY_PCRE_VERSION}.tar.gz \
-    && tar xzf pcre-${RESTY_PCRE_VERSION}.tar.gz \
-  ### Build lua-resty-hmac
-    && cd /tmp \
+    && tar xzf pcre-${RESTY_PCRE_VERSION}.tar.gz
+
+# Build and install lua-resty-hmac (cached layer)
+RUN cd /tmp \
     && git clone https://github.com/jkeys089/lua-resty-hmac.git \
     && cd lua-resty-hmac \
     && make \
     && make install \
     && cd /tmp \
-    && rm -rf lua-resty-hmac \
-  ### Install OpenTelemetry WebServer Module
-    && cd /opt \
+    && rm -rf lua-resty-hmac
+
+# Install OpenTelemetry WebServer Module (cached layer)
+RUN cd /opt \
     && curl -fSL https://github.com/open-telemetry/opentelemetry-cpp-contrib/releases/download/webserver%2Fv${OTEL_WEBSERVER_VERSION}/opentelemetry-webserver-sdk-x64-linux.tgz -o opentelemetry-webserver-sdk-x64-linux.tgz \
     && tar xzf opentelemetry-webserver-sdk-x64-linux.tgz \
     && cd opentelemetry-webserver-sdk \
     && ./install.sh \
-    && cd /tmp \
     && rm -rf /opt/opentelemetry-webserver-sdk-x64-linux.tgz
 
+# Download, build and install OpenResty (cached layer)
 RUN cd /tmp \
     && curl -fSL https://openresty.org/download/openresty-${RESTY_VERSION}.tar.gz -o openresty-${RESTY_VERSION}.tar.gz \
     && tar xzf openresty-${RESTY_VERSION}.tar.gz \
@@ -125,8 +125,9 @@ RUN cd /tmp \
         openresty-${RESTY_VERSION}.tar.gz openresty-${RESTY_VERSION} \
         pcre-${RESTY_PCRE_VERSION}.tar.gz pcre-${RESTY_PCRE_VERSION}
 
+# Install LuaRocks (cached layer)
 RUN cd /tmp \
-    && curl -fSL  https://luarocks.github.io/luarocks/releases/luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz -o luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz \
+    && curl -fSL https://luarocks.github.io/luarocks/releases/luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz -o luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz \
     && tar xzf luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz \
     && cd luarocks-${RESTY_LUAROCKS_VERSION} \
     && ./configure \
@@ -138,8 +139,10 @@ RUN cd /tmp \
     && make install \
     && cd /tmp \
     && if [ -n "${RESTY_EVAL_POST_MAKE}" ]; then eval $(echo ${RESTY_EVAL_POST_MAKE}); fi \
-    && rm -rf luarocks-${RESTY_LUAROCKS_VERSION} luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz \
-    && if [ -n "${RESTY_ADD_PACKAGE_BUILDDEPS}" ]; then DEBIAN_FRONTEND=noninteractive apt-get remove --purge "${RESTY_ADD_PACKAGE_BUILDDEPS}" ; fi \
+    && rm -rf luarocks-${RESTY_LUAROCKS_VERSION} luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz
+
+# Clean up build dependencies (cached layer)
+RUN if [ -n "${RESTY_ADD_PACKAGE_BUILDDEPS}" ]; then DEBIAN_FRONTEND=noninteractive apt-get remove --purge "${RESTY_ADD_PACKAGE_BUILDDEPS}" ; fi \
     && DEBIAN_FRONTEND=noninteractive apt-get autoremove -y \
     && ln -sf /dev/stdout /usr/local/openresty/nginx/logs/access.log \
     && ln -sf /dev/stderr /usr/local/openresty/nginx/logs/error.log
@@ -151,41 +154,35 @@ ENV PATH=$PATH:/usr/local/openresty/luajit/bin:/usr/local/openresty/nginx/sbin:/
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/opentelemetry-webserver-sdk/sdk_lib/lib
 
 # Add LuaRocks paths
-# If OpenResty changes, these may need updating:
-#    /usr/local/openresty/bin/resty -e 'print(package.path)'
-#    /usr/local/openresty/bin/resty -e 'print(package.cpath)'
 ENV LUA_PATH="/usr/local/openresty/site/lualib/?.ljbc;/usr/local/openresty/site/lualib/?/init.ljbc;/usr/local/openresty/lualib/?.ljbc;/usr/local/openresty/lualib/?/init.ljbc;/usr/local/openresty/site/lualib/?.lua;/usr/local/openresty/site/lualib/?/init.lua;/usr/local/openresty/lualib/?.lua;/usr/local/openresty/lualib/?/init.lua;./?.lua;/usr/local/openresty/luajit/share/luajit-2.1.0-beta3/?.lua;/usr/local/share/lua/5.1/?.lua;/usr/local/share/lua/5.1/?/init.lua;/usr/local/openresty/luajit/share/lua/5.1/?.lua;/usr/local/openresty/luajit/share/lua/5.1/?/init.lua;/usr/local/openresty/lualib/?/?.lua;/usr/local/openresty/lualib/thrift/?.lua"
 ENV LUA_CPATH="/usr/local/openresty/site/lualib/?.so;/usr/local/openresty/lualib/?.so;./?.so;/usr/local/lib/lua/5.1/?.so;/usr/local/openresty/luajit/lib/lua/5.1/?.so;/usr/local/lib/lua/5.1/loadall.so;/usr/local/openresty/luajit/lib/lua/5.1/?.so;/usr/local/openresty/lualib/?/?.so"
-
-
-COPY lua-thrift /usr/local/openresty/lualib/thrift
-COPY lua-bridge-tracer /tmp/lua-bridge-tracer
-COPY lua-json/json.lua /usr/local/openresty/lualib/json/json.lua
-
-RUN cd /usr/local/openresty/lualib/thrift/src \
-    && make \
-    && make install \
-  ### Build bridge tracer
-    && cd /tmp/lua-bridge-tracer \
-    && mkdir -p cmake-build \
-    && cd cmake-build \
-    && cmake -DCMAKE_BUILD_TYPE=Release \
-       .. \
-    && make -j$(nproc) \
-    && make -j$(nproc) install
-#    && cd /tmp
-#    && rm -rf lua-bridge-tracer
-
 ENV LUA_PATH=$LUA_PATH;/gen-lua/?.lua
 
+# Install Lua dependencies (cached layer)
 RUN luarocks install long \
     && luarocks install lua-resty-jwt \
     && ldconfig
 
+# Copy application files (these change more frequently)
+COPY ../lua-thrift /usr/local/openresty/lualib/thrift
+COPY ../lua-bridge-tracer /tmp/lua-bridge-tracer
+COPY ../lua-json/json.lua /usr/local/openresty/lualib/json/json.lua
+
+# Build lua-thrift and bridge tracer
+RUN cd /usr/local/openresty/lualib/thrift/src \
+    && make \
+    && make install \
+    && cd /tmp/lua-bridge-tracer \
+    && mkdir -p cmake-build \
+    && cd cmake-build \
+    && cmake -DCMAKE_BUILD_TYPE=Release .. \
+    && make -j$(nproc) \
+    && make -j$(nproc) install \
+    && rm -rf /tmp/lua-bridge-tracer
 
 # Copy nginx configuration files
-COPY nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
-COPY nginx.vh.default.conf /etc/nginx/conf.d/default.conf
+COPY ../nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
+COPY ../nginx.vh.default.conf /etc/nginx/conf.d/default.conf
 
 CMD ["/usr/local/openresty/bin/openresty", "-g", "daemon off;"]
 
