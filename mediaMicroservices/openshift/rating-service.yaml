@@ -39,6 +39,6 @@ spec:
     spec:
       containers:
       - name: rating-service
-        image: yg397/media-microservices
+        image: media-microservices
         command: ["RatingService"]
       restartPolicy: Always

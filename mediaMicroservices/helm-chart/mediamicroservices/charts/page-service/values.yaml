@@ -6,7 +6,7 @@ ports:
 
 container:
   command: PageService
-  image: yg397/media-microservices
+  image: media-microservices
   name: page-service
   ports:
     - containerPort: 9090

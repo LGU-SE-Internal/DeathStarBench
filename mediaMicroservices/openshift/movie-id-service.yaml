@@ -39,6 +39,6 @@ spec:
     spec:
       containers:
       - name: movie-id-service
-        image: yg397/media-microservices
+        image: media-microservices
         command: ["MovieIdService"]
       restartPolicy: Always

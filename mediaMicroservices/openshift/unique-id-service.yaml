@@ -39,6 +39,6 @@ spec:
     spec:
       containers:
       - name: unique-id-service
-        image: yg397/media-microservices
+        image: media-microservices
         command: ["UniqueIdService"]
       restartPolicy: Always

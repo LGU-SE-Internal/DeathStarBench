@@ -39,6 +39,6 @@ spec:
     spec:
       containers:
       - name: user-service
-        image: yg397/media-microservices
+        image: media-microservices
         command: ["UserService"]
       restartPolicy: Always
