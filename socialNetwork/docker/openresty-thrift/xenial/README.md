@@ -47,7 +47,7 @@ This structure ensures fast rebuilds when only application code changes.
 - OpenSSL 1.1.0j
 - PCRE 8.42
 - LuaRocks 3.9.2
-- Lua libraries: lua-resty-jwt
+- Lua libraries: lua-resty-jwt (installed from GitHub source)
 - Built from source: liblualongnumber, libluabitwise, libluabpack (from lua-thrift)
 
 ## Environment Variables

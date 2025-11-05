@@ -158,8 +158,13 @@ ENV LUA_PATH="/usr/local/openresty/site/lualib/?.ljbc;/usr/local/openresty/site/
 ENV LUA_CPATH="/usr/local/openresty/site/lualib/?.so;/usr/local/openresty/lualib/?.so;./?.so;/usr/local/lib/lua/5.1/?.so;/usr/local/openresty/luajit/lib/lua/5.1/?.so;/usr/local/lib/lua/5.1/loadall.so;/usr/local/openresty/luajit/lib/lua/5.1/?.so;/usr/local/openresty/lualib/?/?.so"
 ENV LUA_PATH=$LUA_PATH;/gen-lua/?.lua
 
-# Install Lua dependencies (cached layer)
-RUN luarocks install lua-resty-jwt \
+# Install Lua dependencies from source (bypassing LuaRocks repository issues)
+RUN cd /tmp \
+    && git clone https://github.com/cdbattags/lua-resty-jwt.git \
+    && cd lua-resty-jwt \
+    && cp -r lib/resty /usr/local/openresty/lualib/ \
+    && cd /tmp \
+    && rm -rf lua-resty-jwt \
     && ldconfig
 
 # Copy application files (these change more frequently)
