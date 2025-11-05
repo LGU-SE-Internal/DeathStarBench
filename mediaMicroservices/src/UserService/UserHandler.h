@@ -367,7 +367,7 @@ void UserHandler::UploadUserWithUsername(
   // TextMapWriter writer(writer_text_map);
   // auto parent_span = opentracing::Tracer::Global()->Extract(reader);
   // auto span = opentracing::Tracer::Global()->StartSpan(
-      "UploadUserWithUsername",
+      // "UploadUserWithUsername",
       // { opentracing::ChildOf(parent_span->get()) });
   // opentracing::Tracer::Global()->Inject(span->context(), writer);
 
@@ -555,7 +555,7 @@ void UserHandler::UploadUserWithUserId(
   // TextMapWriter writer(writer_text_map);
   // auto parent_span = opentracing::Tracer::Global()->Extract(reader);
   // auto span = opentracing::Tracer::Global()->StartSpan(
-      "UploadUserWithUserId",
+      // "UploadUserWithUserId",
       // { opentracing::ChildOf(parent_span->get()) });
   // opentracing::Tracer::Global()->Inject(span->context(), writer);
 
@@ -593,7 +593,7 @@ void UserHandler::Login(
   // TextMapWriter writer(writer_text_map);
   // auto parent_span = opentracing::Tracer::Global()->Extract(reader);
   // auto span = opentracing::Tracer::Global()->StartSpan(
-      "Login",
+      // "Login",
       // { opentracing::ChildOf(parent_span->get()) });
   // opentracing::Tracer::Global()->Inject(span->context(), writer);
 
