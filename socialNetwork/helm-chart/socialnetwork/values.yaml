@@ -16,7 +16,7 @@ global:
   imagePullPolicy: "IfNotPresent"
   restartPolicy: Always
   serviceType: ClusterIP
-  dockerRegistry: docker.io
+  dockerRegistry: 10.10.10.240/library
   defaultImageVersion: latest
   redis:
     cluster:
@@ -49,6 +49,15 @@ global:
     endpoint: http://otel-collector.observability.svc.cluster.local:4318
     samplerParam: 0.1
     disabled: false
+  # Jaeger config for nginx (uses Jaeger client, not OpenTelemetry)
+  jaeger:
+    disabled: false
+    logSpans: false
+    localAgentHostPort: "jaeger-agent.observability.svc.cluster.local:6831"
+    queueSize: 1000
+    bufferFlushInterval: 10
+    samplerType: "probabilistic"
+    samplerParam: 0.01
 
 mongodb-sharded:
   fullnameOverride: mongodb-sharded

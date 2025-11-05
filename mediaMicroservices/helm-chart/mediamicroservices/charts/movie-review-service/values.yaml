@@ -6,7 +6,7 @@ ports:
 
 container:
   command: MovieReviewService
-  image: yg397/media-microservices
+  image: media-microservices
   name: movie-review-service
   ports:
     - containerPort: 9090

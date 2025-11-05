@@ -22,9 +22,11 @@ target_link_libraries(
     ${Boost_LIBRARIES}
     Boost::log
     Boost::log_setup
+    yaml-cpp
     opentelemetry_trace
     opentelemetry_resources
     opentelemetry_common
+    opentelemetry_exporter_ostream_span
 )
 
 install(TARGETS UrlShortenService DESTINATION ./)

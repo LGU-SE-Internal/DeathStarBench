@@ -39,6 +39,6 @@ spec:
     spec:
       containers:
       - name: compose-review-service
-        image: yg397/media-microservices
+        image: media-microservices
         command: ["ComposeReviewService"]
       restartPolicy: Always

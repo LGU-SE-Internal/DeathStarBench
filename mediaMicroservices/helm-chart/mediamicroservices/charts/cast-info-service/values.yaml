@@ -6,7 +6,7 @@ ports:
 
 container:
   command: CastInfoService
-  image: yg397/media-microservices
+  image: media-microservices
   name: cast-info-service
   ports:
     - containerPort: 9090

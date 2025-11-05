@@ -162,8 +162,8 @@ RUN cd /tmp \
   && make -j$(nproc) && make install \
   && cd /tmp && rm -rf redis-plus-plus
 
-# Install pyyaml
-RUN pip3 install PyYAML
+# Install pyyaml (use older version compatible with Python 3.5)
+RUN pip3 install 'PyYAML<6.0'
 
 ENV LD_LIBRARY_PATH="/usr/local/lib:${LD_LIBRARY_PATH:-}"
 RUN ldconfig
