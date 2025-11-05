@@ -42,10 +42,10 @@ This structure ensures fast rebuilds when only application code changes.
 
 ## Features
 
-- OpenResty 1.15.8.1rc1
+- OpenResty 1.21.4.1 (nginx 1.21.4)
 - OpenTelemetry WebServer SDK v1.0.3
-- OpenSSL 1.1.0j
-- PCRE 8.42
+- OpenSSL 1.1.1k
+- PCRE 8.45
 - LuaRocks 3.9.2
 - Lua libraries: lua-resty-jwt (installed from GitHub source)
 - Built from source: liblualongnumber, libluabitwise, libluabpack (from lua-thrift)
