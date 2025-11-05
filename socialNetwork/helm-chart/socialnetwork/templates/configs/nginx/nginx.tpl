@@ -1,5 +1,7 @@
 {{- define "socialnetwork.templates.nginx.nginx.conf"  }}
 # Load the OpenTelemetry dynamic module.
+# Note: The module version (1.15.8) must match the nginx/OpenResty version
+# The OpenTelemetry WebServer SDK provides prebuilt modules for specific versions
 load_module /opt/opentelemetry-webserver-sdk/WebServerModule/Nginx/1.15.8/ngx_http_opentelemetry_module.so;
 
 # Checklist: Make sure that worker_processes == #cores you gave to
