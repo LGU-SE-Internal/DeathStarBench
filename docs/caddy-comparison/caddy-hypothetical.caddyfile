@@ -1,0 +1,169 @@
+# Hypothetical Caddy Configuration
+# This shows what Caddy CAN do and CANNOT do
+
+{
+  # Global options
+  admin :2020
+  # Enable OpenTelemetry (native support)
+  servers {
+    metrics
+  }
+}
+
+# Main server block
+:8080 {
+  # JSON logging (Caddy native feature)
+  log {
+    output stdout
+    format json
+  }
+
+  # ❌ CANNOT: Initialize Lua environment
+  # ❌ CANNOT: Load Thrift client libraries
+  # ❌ CANNOT: Set up connection pools for Thrift
+  # ❌ CANNOT: Configure JWT secrets in shared memory
+  # ❌ CANNOT: Load custom business logic modules
+
+  # API routes with tracing
+  handle /api* {
+    # ✅ CAN: Enable tracing per route
+    tracing {
+      span "{http.request.method} {http.request.uri.path}"
+    }
+
+    # User registration endpoint
+    handle /api/user/register {
+      # ❌ CANNOT: Execute Lua scripts
+      # ❌ CANNOT: Validate input with custom logic
+      # ❌ CANNOT: Call Thrift backend services directly
+      # ❌ CANNOT: Manage connection pools
+      
+      # ⚠️ WORKAROUND: Must proxy to a new API Gateway service
+      # that implements all the Lua business logic
+      reverse_proxy api-gateway-service:8080
+    }
+
+    # User login endpoint
+    handle /api/user/login {
+      # ❌ CANNOT: Read and parse POST body with custom logic
+      # ❌ CANNOT: Connect to UserService via Thrift
+      # ❌ CANNOT: Generate JWT tokens with custom payload
+      # ❌ CANNOT: Set cookies with calculated expiration
+      # ❌ CANNOT: Handle Thrift errors and retry logic
+      
+      # ⚠️ WORKAROUND: Must proxy to API Gateway
+      reverse_proxy api-gateway-service:8080
+    }
+
+    # Compose post endpoint
+    handle /api/post/compose {
+      # ❌ CANNOT: Verify JWT from cookie with custom secret
+      # ❌ CANNOT: Extract user info from JWT payload
+      # ❌ CANNOT: Validate token expiration with custom TTL
+      # ❌ CANNOT: Get Thrift client from connection pool
+      # ❌ CANNOT: Create child span for Thrift call
+      # ❌ CANNOT: Inject tracing context into Thrift carrier
+      # ❌ CANNOT: Make Thrift RPC call with multiple parameters
+      # ❌ CANNOT: Return connection to pool
+      # ❌ CANNOT: Handle Thrift-specific errors
+      
+      # ⚠️ LIMITED: Can do basic JWT validation with plugin
+      # But cannot implement the complex authentication flow
+      # jwt {
+      #   secret_key "secret"
+      #   # But this doesn't support custom TTL checking
+      #   # or Thrift service calls
+      # }
+      
+      # ⚠️ WORKAROUND: Must proxy to API Gateway
+      reverse_proxy api-gateway-service:8080
+    }
+
+    # Read home timeline endpoint
+    handle /api/home-timeline/read {
+      # ❌ CANNOT: Verify JWT and extract user ID
+      # ❌ CANNOT: Call HomeTimelineService via Thrift
+      # ❌ CANNOT: Aggregate results from multiple services
+      # ❌ CANNOT: Transform Thrift response to JSON
+      
+      # ⚠️ WORKAROUND: Must proxy to API Gateway
+      reverse_proxy api-gateway-service:8080
+    }
+
+    # Generic fallback for other API routes
+    handle {
+      reverse_proxy api-gateway-service:8080
+    }
+  }
+
+  # Static file serving
+  handle {
+    # ✅ CAN: Serve static files with tracing
+    tracing {
+      span "static_content"
+    }
+    root * /usr/share/nginx/html
+    file_server
+    try_files {path} /index.html
+  }
+}
+
+# Summary of what's MISSING:
+#
+# 1. Lua Scripting Engine
+#    - Cannot execute custom business logic
+#    - Cannot validate inputs with complex rules
+#    - Cannot aggregate multiple backend calls
+#
+# 2. Thrift Protocol Support
+#    - Cannot communicate with Thrift backend services
+#    - Must use HTTP/gRPC backends only
+#    - Or proxy to a service that speaks Thrift
+#
+# 3. Connection Pooling for Non-HTTP
+#    - Built-in pooling is HTTP-only
+#    - Cannot pool Thrift connections efficiently
+#
+# 4. JWT Custom Logic
+#    - Basic JWT validation possible via plugins
+#    - Cannot implement complex authentication flows
+#    - Cannot check custom TTL or session management
+#    - Cannot set cookies with calculated expiration
+#
+# 5. Distributed Tracing for Thrift
+#    - OTEL module traces HTTP requests
+#    - Cannot inject trace context into Thrift calls
+#    - Cannot create child spans for RPC operations
+#
+# 6. Custom Error Handling
+#    - Limited error response customization
+#    - Cannot implement retry logic
+#    - Cannot handle protocol-specific errors
+#
+# REQUIRED CHANGES to use Caddy:
+#
+# Option A: Create API Gateway Service
+#   - Build new microservice (Go/Java/Node.js)
+#   - Implement all Lua business logic
+#   - Implement Thrift client connections
+#   - Implement connection pooling
+#   - Implement JWT handling
+#   - Deploy and manage additional service
+#   - Increased latency (+1 network hop)
+#   - Estimated effort: 4-6 weeks
+#
+# Option B: Migrate to HTTP/gRPC
+#   - Replace all Thrift services with HTTP/gRPC
+#   - Update all 15+ backend microservices
+#   - Reimplement protocol serialization
+#   - Update all clients
+#   - Extensive testing required
+#   - Estimated effort: 8-12 weeks
+#
+# Option C: Keep OpenResty
+#   - No changes needed ✅
+#   - OpenTelemetry already working ✅
+#   - All features preserved ✅
+#   - Estimated effort: 0 days ✅
+#
+# RECOMMENDATION: Keep OpenResty (Option C)
