@@ -46,7 +46,7 @@ global:
   nginx:
     resolverName: kube-dns.kube-system.svc.cluster.local
   otel:
-    endpoint: http://otel-collector.observability.svc.cluster.local:4318
+    endpoint: http://otel-collector.observability.svc.cluster.local:4317
     samplerParam: 0.1
     disabled: false
 
