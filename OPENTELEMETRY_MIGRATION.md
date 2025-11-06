@@ -38,7 +38,7 @@ The DeathStarBench project has been migrated from OpenTracing/Jaeger tracing to 
 - Migrated from OpenTelemetry WebServer SDK to native ngx_otel_module for better compatibility
 - Removed `opentracing-cpp`, `nginx-opentracing`, and `jaeger-client-cpp` installations
 - Updated `docker/openresty-thrift/xenial/Dockerfile` to:
-  - Compile ngx_otel_module v0.2.0 from source
+  - Compile ngx_otel_module v0.1.2 from source
   - Install module to `/usr/local/openresty/nginx/modules/ngx_otel_module.so`
   - Add required dependencies: `pkg-config`, `libc-ares-dev`, `libre2-dev` for gRPC support
   - Build OpenResty with `--with-compat` flag for dynamic module support
@@ -241,7 +241,7 @@ The Dockerfile automatically:
 1. Downloads and builds OpenResty 1.25.3.2 with `--with-compat` flag
 2. Downloads nginx source (release-1.25.3) matching the OpenResty version
 3. Configures nginx with the same parameters as OpenResty
-4. Clones and compiles ngx_otel_module v0.2.0 from source
+4. Clones and compiles ngx_otel_module v0.1.2 from source
 5. Installs the compiled module to `/usr/local/openresty/nginx/modules/ngx_otel_module.so`
 
 **Important Notes:**

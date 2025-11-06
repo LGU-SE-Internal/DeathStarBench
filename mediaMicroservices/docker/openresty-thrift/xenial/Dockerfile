@@ -11,7 +11,7 @@ ARG RESTY_LUAROCKS_VERSION="3.9.2"
 ARG RESTY_OPENSSL_VERSION="1.1.1w"
 ARG RESTY_PCRE_VERSION="8.45"
 ARG NGINX_VERSION="release-1.25.3"
-ARG NGX_OTEL_VERSION="v0.2.0"
+ARG NGX_OTEL_VERSION="v0.1.2"
 ARG RESTY_J="1"
 ARG RESTY_CONFIG_OPTIONS="\
     --with-file-aio \
@@ -83,13 +83,33 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
         perl \
         unzip \
         zlib1g-dev \
-        cmake \
         pkg-config \
-        libc-ares-dev \
         libre2-dev \
         ${RESTY_ADD_PACKAGE_BUILDDEPS} \
         ${RESTY_ADD_PACKAGE_RUNDEPS} \
     && rm -rf /var/lib/apt/lists/*
+
+# Install newer CMake (required for ngx_otel_module which needs CMake >= 3.16.3)
+RUN cd /tmp \
+    && curl -fSL https://github.com/Kitware/CMake/releases/download/v3.20.0/cmake-3.20.0-linux-x86_64.tar.gz -o cmake.tar.gz \
+    && tar xzf cmake.tar.gz \
+    && cd cmake-3.20.0-linux-x86_64 \
+    && cp -r bin/* /usr/local/bin/ \
+    && cp -r share/* /usr/local/share/ \
+    && cd /tmp \
+    && rm -rf cmake.tar.gz cmake-3.20.0-linux-x86_64
+
+# Install newer c-ares (required for ngx_otel_module which needs c-ares >= 1.13.0)
+RUN cd /tmp \
+    && curl -fSL https://github.com/c-ares/c-ares/releases/download/cares-1_19_0/c-ares-1.19.0.tar.gz -o c-ares.tar.gz \
+    && tar xzf c-ares.tar.gz \
+    && cd c-ares-1.19.0 \
+    && ./configure --prefix=/usr/local \
+    && make \
+    && make install \
+    && cd /tmp \
+    && rm -rf c-ares.tar.gz c-ares-1.19.0 \
+    && ldconfig
 
 # Download and extract OpenSSL and PCRE (cached layer)
 RUN cd /tmp \

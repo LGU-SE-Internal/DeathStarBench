@@ -38,7 +38,7 @@ DeathStarBench 项目已从 OpenTracing/Jaeger 追踪迁移到 OpenTelemetry。�
 - 从 OpenTelemetry WebServer SDK 迁移到原生 ngx_otel_module 以获得更好的兼容性
 - 移除 `opentracing-cpp`、`nginx-opentracing` 和 `jaeger-client-cpp` 的安装
 - 更新 `docker/openresty-thrift/xenial/Dockerfile` 以：
-  - 从源代码编译 ngx_otel_module v0.2.0
+  - 从源代码编译 ngx_otel_module v0.1.2
   - 将模块安装到 `/usr/local/openresty/nginx/modules/ngx_otel_module.so`
   - 添加所需依赖：`pkg-config`、`libc-ares-dev`、`libre2-dev` 以支持 gRPC
   - 使用 `--with-compat` 标志构建 OpenResty 以支持动态模块
@@ -241,7 +241,7 @@ Dockerfile 会自动：
 1. 下载并使用 `--with-compat` 标志构建 OpenResty 1.25.3.2
 2. 下载与 OpenResty 版本匹配的 nginx 源码（release-1.25.3）
 3. 使用与 OpenResty 相同的参数配置 nginx
-4. 克隆并从源代码编译 ngx_otel_module v0.2.0
+4. 克隆并从源代码编译 ngx_otel_module v0.1.2
 5. 将编译好的模块安装到 `/usr/local/openresty/nginx/modules/ngx_otel_module.so`
 
 **重要说明：**

@@ -48,7 +48,7 @@ This structure ensures fast rebuilds when only application code changes.
 ## Features
 
 - OpenResty 1.25.3.2 (nginx 1.25.3)
-- ngx_otel_module v0.2.0 (compiled from source)
+- ngx_otel_module v0.1.2 (compiled from source)
 - OpenSSL 1.1.1w
 - PCRE 8.45
 - LuaRocks 3.9.2
