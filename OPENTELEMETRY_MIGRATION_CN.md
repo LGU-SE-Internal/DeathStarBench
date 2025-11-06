@@ -229,25 +229,33 @@ docker build -t your-registry/media-microservices:latest .
 ```bash
 # 对于 socialNetwork
 cd socialNetwork/docker/openresty-thrift
-docker build -f xenial/Dockerfile -t your-registry/openresty-thrift:xenial .
+docker build -f xenial/Dockerfile -t your-registry/openresty-thrift:focal .
 
 # 对于 mediaMicroservices  
 cd mediaMicroservices/docker/openresty-thrift
-docker build -f xenial/Dockerfile -t your-registry/openresty-thrift:xenial .
+docker build -f xenial/Dockerfile -t your-registry/openresty-thrift:focal .
 ```
 
 **构建流程：**
 Dockerfile 会自动：
-1. 下载并使用 `--with-compat` 标志构建 OpenResty 1.25.3.2
-2. 下载与 OpenResty 版本匹配的 nginx 源码（release-1.25.3）
-3. 使用与 OpenResty 相同的参数配置 nginx
-4. 克隆并从源代码编译 ngx_otel_module v0.1.2
-5. 将编译好的模块安装到 `/usr/local/openresty/nginx/modules/ngx_otel_module.so`
+1. 使用 Ubuntu 20.04 (Focal) 作为基础镜像以获得现代依赖
+2. 从 Ubuntu 仓库安装 CMake 3.16.3 和 c-ares 1.15.0
+3. 下载并使用 `--with-compat` 标志构建 OpenResty 1.25.3.2
+4. 下载与 OpenResty 版本匹配的 nginx 源码（release-1.25.3）
+5. 使用与 OpenResty 相同的参数配置 nginx
+6. 克隆并使用 OpenSSL 路径从源代码编译 ngx_otel_module v0.1.2
+7. 将编译好的模块安装到 `/usr/local/openresty/nginx/modules/ngx_otel_module.so`
+
+**基础镜像升级：**
+- 从 Ubuntu 16.04 (Xenial) 升级到 Ubuntu 20.04 (Focal)
+- Xenial 的 CMake (3.5.1) 和 c-ares (1.10.0) 对于 ngx_otel_module 来说太旧了
+- Focal 提供的 CMake 3.16.3 和 c-ares 1.15.0 满足所有要求
+- 不需要手动编译 CMake 或 c-ares！
 
 **重要说明：**
 - ngx_otel_module 在 Docker 构建过程中编译
 - 可以通过修改 `NGX_OTEL_VERSION` 构建参数来更改模块版本
-- 该模块需要 gRPC 依赖（pkg-config、libc-ares-dev、libre2-dev），这些依赖已包含在内
+- 该模块所需的 gRPC 依赖现在由 Ubuntu Focal 提供
 - 该模块仅支持 gRPC 导出（端口 4317），不支持 HTTP（端口 4318）
 
 ### 对于 hotelReservation (Go)：

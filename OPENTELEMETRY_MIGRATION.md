@@ -229,25 +229,33 @@ The nginx images with ngx_otel_module support are built from the `docker/openres
 ```bash
 # For socialNetwork
 cd socialNetwork/docker/openresty-thrift
-docker build -f xenial/Dockerfile -t your-registry/openresty-thrift:xenial .
+docker build -f xenial/Dockerfile -t your-registry/openresty-thrift:focal .
 
 # For mediaMicroservices  
 cd mediaMicroservices/docker/openresty-thrift
-docker build -f xenial/Dockerfile -t your-registry/openresty-thrift:xenial .
+docker build -f xenial/Dockerfile -t your-registry/openresty-thrift:focal .
 ```
 
 **Build Process:**
 The Dockerfile automatically:
-1. Downloads and builds OpenResty 1.25.3.2 with `--with-compat` flag
-2. Downloads nginx source (release-1.25.3) matching the OpenResty version
-3. Configures nginx with the same parameters as OpenResty
-4. Clones and compiles ngx_otel_module v0.1.2 from source
-5. Installs the compiled module to `/usr/local/openresty/nginx/modules/ngx_otel_module.so`
+1. Uses Ubuntu 20.04 (Focal) as base image for modern dependencies
+2. Installs CMake 3.16.3 and c-ares 1.15.0 from Ubuntu repositories
+3. Downloads and builds OpenResty 1.25.3.2 with `--with-compat` flag
+4. Downloads nginx source (release-1.25.3) matching the OpenResty version
+5. Configures nginx with the same parameters as OpenResty
+6. Clones and compiles ngx_otel_module v0.1.2 from source with OpenSSL paths
+7. Installs the compiled module to `/usr/local/openresty/nginx/modules/ngx_otel_module.so`
+
+**Base Image Upgrade:**
+- Upgraded from Ubuntu 16.04 (Xenial) to Ubuntu 20.04 (Focal)
+- Xenial's CMake (3.5.1) and c-ares (1.10.0) were too old for ngx_otel_module
+- Focal provides CMake 3.16.3 and c-ares 1.15.0 meeting all requirements
+- No manual compilation of CMake or c-ares needed!
 
 **Important Notes:**
 - The ngx_otel_module is compiled during the Docker build process
 - Module version can be changed by modifying the `NGX_OTEL_VERSION` build arg
-- The module requires gRPC dependencies (pkg-config, libc-ares-dev, libre2-dev) which are included
+- The module requires gRPC dependencies which are now provided by Ubuntu Focal
 - The module only supports gRPC export (port 4317), not HTTP (port 4318)
 
 ### For hotelReservation (Go):

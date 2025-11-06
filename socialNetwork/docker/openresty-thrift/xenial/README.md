@@ -6,18 +6,20 @@ This directory contains the Dockerfile for building an OpenResty image with Open
 
 This build migrates from the OpenTelemetry WebServer SDK to the native ngx_otel_module, which provides better compatibility with OpenResty. The module is built from source following the official nginx-otel compilation guide.
 
+**Base Image**: Ubuntu 20.04 (Focal) - upgraded from Ubuntu 16.04 (Xenial) to provide modern system dependencies (CMake 3.16.3, c-ares 1.15.0) required by ngx_otel_module.
+
 ## Build Command
 
 To build the image, run the following command from this directory:
 
 ```bash
-docker build -f Dockerfile -t openresty-thrift:xenial .
+docker build -f Dockerfile -t openresty-thrift:focal .
 ```
 
 Or with a custom registry:
 
 ```bash
-docker build -f Dockerfile -t your-registry/openresty-thrift:xenial .
+docker build -f Dockerfile -t your-registry/openresty-thrift:focal .
 ```
 
 ## Build Context
@@ -33,7 +35,8 @@ The Dockerfile uses `../` relative paths to access files in the parent directory
 
 The Dockerfile is structured to optimize Docker layer caching:
 
-1. **System dependencies** - Cached until base image or package list changes (includes pkg-config, libc-ares-dev, libre2-dev for gRPC)
+1. **System dependencies** - Cached until base image or package list changes
+   - Ubuntu 20.04 (Focal) provides CMake 3.16.3, c-ares 1.15.0, pkg-config, libre2-dev
 2. **OpenSSL & PCRE** - Cached until versions change
 3. **lua-resty-hmac** - Cached until git repo changes
 4. **OpenResty** - Cached until version changes (built with --with-compat flag)
@@ -47,8 +50,11 @@ This structure ensures fast rebuilds when only application code changes.
 
 ## Features
 
+- **Base Image**: Ubuntu 20.04 LTS (Focal)
 - OpenResty 1.25.3.2 (nginx 1.25.3)
 - ngx_otel_module v0.1.2 (compiled from source)
+- CMake 3.16.3 (from Ubuntu Focal)
+- c-ares 1.15.0 (from Ubuntu Focal)
 - OpenSSL 1.1.1w
 - PCRE 8.45
 - LuaRocks 3.9.2
