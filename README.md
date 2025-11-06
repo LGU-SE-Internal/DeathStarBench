@@ -24,6 +24,22 @@ More details on the applications and a characterization of their behavior can be
 If you use this benchmark suite in your work, we ask that you please cite the paper above. 
 
 
+## Documentation
+
+### OpenTelemetry Migration
+DeathStarBench has been migrated from Jaeger/OpenTracing to OpenTelemetry for modern observability. See:
+- [OpenTelemetry Migration Guide](OPENTELEMETRY_MIGRATION.md) (English)
+- [OpenTelemetry 迁移指南](OPENTELEMETRY_MIGRATION_CN.md) (中文)
+- [Migration Summary](MIGRATION_SUMMARY.md)
+
+### Architecture Evaluations
+- **Caddy vs OpenResty**: Evaluation of replacing OpenResty with Caddy
+  - [Summary](SUMMARY.md) (English) - Quick answer to "Why OpenResty?"
+  - [总结](SUMMARY_CN.md) (中文) - "为什么用 OpenResty？"
+  - [Detailed Evaluation](CADDY_EVALUATION.md) - Comprehensive analysis
+  - [详细评估](CADDY_EVALUATION_CN.md) - 完整分析
+  - [Configuration Comparisons](docs/caddy-comparison/) - Side-by-side examples
+
 ## Beta-testing
 
 If you are interested in joining the beta-testing group for DeathStarBench, send us an email at: <microservices-bench-L@list.cornell.edu>
