@@ -198,6 +198,10 @@ RUN cd /usr/local/openresty/lualib/thrift/src \
     && make \
     && make install
 
+# Copy application-specific Lua scripts and generated code
+COPY ../../nginx-web-server/lua-scripts /usr/local/openresty/nginx/lua-scripts
+COPY ../../gen-lua /gen-lua
+
 # Copy nginx configuration files
 COPY ../nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
 COPY ../nginx.vh.default.conf /etc/nginx/conf.d/default.conf

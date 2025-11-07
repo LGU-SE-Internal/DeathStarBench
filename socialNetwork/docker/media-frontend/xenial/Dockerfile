@@ -130,6 +130,9 @@ RUN cd /tmp/lualongnumber \
     && make \
     && make install
 
+# Copy application-specific Lua scripts
+COPY ../media-frontend/lua-scripts /usr/local/openresty/nginx/lua-scripts
+
 
 
 # RUN apt-get install -y libboost-all-dev libbson-1.0 libmongoc-1.0-0 \
