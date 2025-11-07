@@ -56,8 +56,6 @@ function _M.ReadUserTimeline()
 
   local req_id = tonumber(string.sub(ngx.var.request_id, 0, 15), 16)
   local carrier = {}
-  local carrier = {}
-  tracer:text_map_inject(span:context(), carrier)
 
   ngx.req.read_body()
   local args = ngx.req.get_uri_args()

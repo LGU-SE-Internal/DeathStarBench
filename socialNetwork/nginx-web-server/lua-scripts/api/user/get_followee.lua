@@ -32,8 +32,6 @@ function _M.GetFollowee()
 
   local req_id = tonumber(string.sub(ngx.var.request_id, 0, 15), 16)
   local carrier = {}
-  local carrier = {}
-  tracer:text_map_inject(span:context(), carrier)
 
   if (_StrIsEmpty(ngx.var.cookie_login_token)) then
     ngx.status = ngx.HTTP_UNAUTHORIZED
