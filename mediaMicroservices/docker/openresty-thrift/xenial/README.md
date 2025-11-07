@@ -10,26 +10,29 @@ This build migrates from the OpenTelemetry WebServer SDK to the native ngx_otel_
 
 ## Build Command
 
-To build the image, run the following command from this directory:
+To build the image, run the following command from the **mediaMicroservices** directory:
 
 ```bash
-docker build -f Dockerfile -t openresty-thrift:focal .
+cd mediaMicroservices
+docker build -f docker/openresty-thrift/xenial/Dockerfile -t openresty-thrift:focal .
 ```
 
 Or with a custom registry:
 
 ```bash
-docker build -f Dockerfile -t your-registry/openresty-thrift:focal .
+cd mediaMicroservices
+docker build -f docker/openresty-thrift/xenial/Dockerfile -t your-registry/openresty-thrift:focal .
 ```
 
 ## Build Context
 
-The Dockerfile uses `../` relative paths to access files in the parent directory:
-- `../lua-thrift` - Lua Thrift libraries
-- `../lua-bridge-tracer` - OpenTracing bridge tracer for Lua
-- `../lua-json` - JSON library for Lua
-- `../nginx.conf` - Nginx configuration file
-- `../nginx.vh.default.conf` - Default virtual host configuration
+The build context is the `mediaMicroservices` directory, allowing the Dockerfile to access:
+- `docker/openresty-thrift/lua-thrift` - Lua Thrift libraries
+- `docker/openresty-thrift/lua-json` - JSON library for Lua
+- `docker/openresty-thrift/nginx.conf` - Nginx configuration file
+- `docker/openresty-thrift/nginx.vh.default.conf` - Default virtual host configuration
+- `nginx-web-server/lua-scripts` - Application Lua scripts (embedded in image)
+- `gen-lua` - Generated Thrift client code (embedded in image)
 
 ## Layer Caching
 

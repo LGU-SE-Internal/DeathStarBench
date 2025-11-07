@@ -190,8 +190,8 @@ RUN cd /tmp \
     && ldconfig
 
 # Copy application files (these change more frequently)
-COPY ../lua-thrift /usr/local/openresty/lualib/thrift
-COPY ../lua-json/json.lua /usr/local/openresty/lualib/json/json.lua
+COPY docker/openresty-thrift/lua-thrift /usr/local/openresty/lualib/thrift
+COPY docker/openresty-thrift/lua-json/json.lua /usr/local/openresty/lualib/json/json.lua
 
 # Build lua-thrift
 RUN cd /usr/local/openresty/lualib/thrift/src \
@@ -199,12 +199,12 @@ RUN cd /usr/local/openresty/lualib/thrift/src \
     && make install
 
 # Copy application-specific Lua scripts and generated code
-COPY ../../nginx-web-server/lua-scripts /usr/local/openresty/nginx/lua-scripts
-COPY ../../gen-lua /gen-lua
+COPY nginx-web-server/lua-scripts /usr/local/openresty/nginx/lua-scripts
+COPY gen-lua /gen-lua
 
 # Copy nginx configuration files
-COPY ../nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
-COPY ../nginx.vh.default.conf /etc/nginx/conf.d/default.conf
+COPY docker/openresty-thrift/nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
+COPY docker/openresty-thrift/nginx.vh.default.conf /etc/nginx/conf.d/default.conf
 
 CMD ["/usr/local/openresty/bin/openresty", "-g", "daemon off;"]
 
