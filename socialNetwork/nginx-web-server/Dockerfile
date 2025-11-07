@@ -201,8 +201,8 @@ RUN cd /usr/local/openresty/lualib/thrift/src \
 # Copy application-specific Lua scripts, generated code, pages, and keys
 COPY lua-scripts /usr/local/openresty/nginx/lua-scripts
 COPY pages /usr/local/openresty/nginx/pages
-COPY ../gen-lua /gen-lua
-COPY ../keys /keys
+COPY gen-lua /gen-lua
+COPY keys /keys
 
 # Copy nginx configuration files
 COPY nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
