@@ -68,7 +68,8 @@ async def write_movie_info(addr, raw_movies):
         except:
           print("Warning: cast info missing!")
       movie["casts"] = casts
-      movie["thumbnail_ids"] = [raw_movie["poster_path"]]
+      # Filter out None/null values from thumbnail_ids to prevent cjson.null errors in Lua
+      movie["thumbnail_ids"] = [raw_movie["poster_path"]] if raw_movie["poster_path"] is not None else []
       movie["photo_ids"] = []
       movie["video_ids"] = []
       movie["avg_rating"] = raw_movie["vote_average"]

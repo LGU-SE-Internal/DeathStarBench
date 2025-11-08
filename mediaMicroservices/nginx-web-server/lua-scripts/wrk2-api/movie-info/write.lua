@@ -4,6 +4,21 @@ if (k8s_suffix == nil) then
   k8s_suffix = ""
 end
 
+-- Helper function to filter out cjson.null values from arrays
+-- cjson.null is userdata, not a string, which causes writeString to fail
+local function _FilterNulls(arr)
+  local cjson = require("cjson")
+  local filtered = {}
+  if type(arr) == "table" then
+    for _, v in ipairs(arr) do
+      if v ~= cjson.null and type(v) == "string" then
+        table.insert(filtered, v)
+      end
+    end
+  end
+  return filtered
+end
+
 function _M.WriteMovieInfo()
   local GenericObjectPool = require "GenericObjectPool"
   local MovieInfoServiceClient = require 'media_service_MovieInfoService'
@@ -46,11 +61,15 @@ function _M.WriteMovieInfo()
     table.insert(casts, new_cast)
   end
 
+  -- Filter out cjson.null values from string arrays to prevent Thrift writeString errors
+  local thumbnail_ids = _FilterNulls(movie_info["thumbnail_ids"])
+  local photo_ids = _FilterNulls(movie_info["photo_ids"])
+  local video_ids = _FilterNulls(movie_info["video_ids"])
 
   local client = GenericObjectPool:connection(MovieInfoServiceClient, "movie-info-service" .. k8s_suffix , 9090)
   client:WriteMovieInfo(req_id, movie_info["movie_id"], movie_info["title"],
-      casts, movie_info["plot_id"], movie_info["thumbnail_ids"],
-      movie_info["photo_ids"], movie_info["video_ids"], tostring(movie_info["avg_rating"]),
+      casts, movie_info["plot_id"], thumbnail_ids,
+      photo_ids, video_ids, tostring(movie_info["avg_rating"]),
       movie_info["num_rating"], carrier)
   ngx.say(movie_info["avg_rating"])
   GenericObjectPool:returnConnection(client)
