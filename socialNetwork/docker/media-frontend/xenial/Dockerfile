@@ -108,8 +108,8 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
 ENV PATH=$PATH:/usr/local/openresty/luajit/bin:/usr/local/openresty/nginx/sbin:/usr/local/openresty/bin
 
 # Copy nginx configuration files
-COPY nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
-COPY nginx.vh.default.conf /etc/nginx/conf.d/default.conf
+COPY docker/media-frontend/nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
+COPY docker/media-frontend/nginx.vh.default.conf /etc/nginx/conf.d/default.conf
 
 RUN apt-get install -y wget libssl-dev \
     && wget https://github.com/mongodb/mongo-c-driver/releases/download/1.9.3/mongo-c-driver-1.9.3.tar.gz \
@@ -124,11 +124,14 @@ RUN luarocks install resty-mongol --server=http://rocks.moonscript.org \
     && luarocks install chronos \
     && luarocks install magick
 
-COPY lualongnumber /tmp/lualongnumber
+COPY docker/media-frontend/lualongnumber /tmp/lualongnumber
 
 RUN cd /tmp/lualongnumber \
     && make \
     && make install
+
+# Copy application-specific Lua scripts
+COPY media-frontend/lua-scripts /usr/local/openresty/nginx/lua-scripts
 
 
 

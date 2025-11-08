@@ -39,6 +39,6 @@ spec:
     spec:
       containers:
       - name: user-review-service
-        image: yg397/media-microservices
+        image: media-microservices
         command: ["UserReviewService"]
       restartPolicy: Always

@@ -365,7 +365,7 @@ services:
       - ./keys:/keys
 
   nginx-thrift:
-    image: yg397/openresty-thrift:xenial
+    image: openresty-thrift:xenial
     hostname: nginx-thrift
     ports:
       - 8080:8080
@@ -385,7 +385,7 @@ services:
       - ./keys:/keys
 
   media-frontend:
-    image: yg397/media-frontend:xenial
+    image: media-frontend:xenial
     hostname: media-frontend
     ports:
       - 8081:8080

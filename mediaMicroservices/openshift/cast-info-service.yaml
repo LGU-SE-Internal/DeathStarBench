@@ -39,6 +39,6 @@ spec:
     spec:
       containers:
       - name: cast-info-service
-        image: yg397/media-microservices
+        image: media-microservices
         command: ["CastInfoService"]
       restartPolicy: Always

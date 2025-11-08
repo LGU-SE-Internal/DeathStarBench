@@ -55,15 +55,15 @@ void PageHandler::ReadPage(
     int32_t review_stop,
     const std::map<std::string, std::string> &carrier) {
 
-  // Initialize a span
-  TextMapReader reader(carrier);
+  // // Initialize a span
+  // TextMapReader reader(carrier);
   std::map<std::string, std::string> writer_text_map;
-  TextMapWriter writer(writer_text_map);
-  auto parent_span = opentracing::Tracer::Global()->Extract(reader);
-  auto span = opentracing::Tracer::Global()->StartSpan(
-      "ReadPage",
-      { opentracing::ChildOf(parent_span->get()) });
-  opentracing::Tracer::Global()->Inject(span->context(), writer);
+  // TextMapWriter writer(writer_text_map);
+  // auto parent_span = opentracing::Tracer::Global()->Extract(reader);
+  // auto span = opentracing::Tracer::Global()->StartSpan(
+      // "ReadPage",
+      // { opentracing::ChildOf(parent_span->get()) });
+  // opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   std::future<std::vector<Review>> movie_review_future;
   std::future<MovieInfo> movie_info_future;
@@ -176,7 +176,7 @@ void PageHandler::ReadPage(
   } catch (...) {
     throw;
   }
-  span->Finish();
+  // span->Finish();
 }
 
 } //namespace media_service

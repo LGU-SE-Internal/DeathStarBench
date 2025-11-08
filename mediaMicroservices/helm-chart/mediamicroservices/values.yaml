@@ -3,11 +3,11 @@ global:
   imagePullPolicy: "IfNotPresent"
   restartPolicy: Always
   serviceType: ClusterIP
-  dockerRegistry: docker.io
+  dockerRegistry: 10.10.10.240/library
   defaultImageVersion: latest
   nginx:
     resolverName: kube-dns.kube-system.svc.cluster.local
   otel:
-    endpoint: http://otel-collector.observability.svc.cluster.local:4318
-    samplerParam: 0.01
+    endpoint: "opentelemetry-kube-stack-deployment-collector.monitoring:4317"
+    samplerParam: 1
     disabled: false

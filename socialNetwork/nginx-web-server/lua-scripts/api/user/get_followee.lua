@@ -23,7 +23,6 @@ end
 
 
 function _M.GetFollowee()
-  local bridge_tracer = require "opentracing_bridge_tracer"
   local ngx = ngx
   local GenericObjectPool = require "GenericObjectPool"
   local SocialGraphServiceClient = require "social_network_SocialGraphService".SocialGraphServiceClient
@@ -32,13 +31,7 @@ function _M.GetFollowee()
   local liblualongnumber = require "liblualongnumber"
 
   local req_id = tonumber(string.sub(ngx.var.request_id, 0, 15), 16)
-  local tracer = bridge_tracer.new_from_global()
-  local parent_span_context = tracer:binary_extract(
-      ngx.var.opentracing_binary_context)
-  local span = tracer:start_span("GetFollowee",
-      {["references"] = {{"child_of", parent_span_context}}})
   local carrier = {}
-  tracer:text_map_inject(span:context(), carrier)
 
   if (_StrIsEmpty(ngx.var.cookie_login_token)) then
     ngx.status = ngx.HTTP_UNAUTHORIZED

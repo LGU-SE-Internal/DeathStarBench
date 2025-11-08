@@ -6,7 +6,7 @@ ports:
 
 container:
   command: UserService
-  image: yg397/media-microservices
+  image: media-microservices
   name: user-service
   ports:
     - containerPort: 9090

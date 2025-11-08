@@ -6,7 +6,7 @@ ports:
 
 container:
   command: ReviewStorageService
-  image: yg397/media-microservices
+  image: media-microservices
   name: review-storage-service
   ports:
     - containerPort: 9090

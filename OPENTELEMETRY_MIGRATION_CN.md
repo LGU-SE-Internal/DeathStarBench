@@ -32,14 +32,62 @@ DeathStarBench 项目已从 OpenTracing/Jaeger 追踪迁移到 OpenTelemetry。�
 - 更新 `docker/thrift-microservice-deps/cpp/Dockerfile` 以安装 OpenTelemetry C++ v1.8.1
 - 移除 Jaeger 客户端和 OpenTracing 依赖
 
-### 2. Go 服务 (hotelReservation)
+### 2. Nginx/OpenResty 服务 (mediaMicroservices, socialNetwork)
+
+#### Docker 变更
+- 从 OpenTelemetry WebServer SDK 迁移到原生 ngx_otel_module 以获得更好的兼容性
+- 移除 `opentracing-cpp`、`nginx-opentracing` 和 `jaeger-client-cpp` 的安装
+- 更新 `docker/openresty-thrift/xenial/Dockerfile` 以：
+  - 从源代码编译 ngx_otel_module v0.1.2
+  - 将模块安装到 `/usr/local/openresty/nginx/modules/ngx_otel_module.so`
+  - 添加所需依赖：`pkg-config`、`libc-ares-dev`、`libre2-dev` 以支持 gRPC
+  - 使用 `--with-compat` 标志构建 OpenResty 以支持动态模块
+  - 下载匹配的 nginx 源码（release-1.25.3）用于模块编译
+- 移除 OpenTelemetry WebServer SDK 依赖
+- 将 OpenResty 从 1.25.3.1 升级到 1.25.3.2
+
+#### Nginx 配置变更
+- 用 ngx_otel_module 替换 OpenTelemetry WebServer SDK 模块
+- 移除 Jaeger 追踪器配置：
+  ```nginx
+  # 旧配置（已移除）
+  opentracing on;
+  opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /usr/local/openresty/nginx/jaeger-config.json;
+  ```
+- 新的 ngx_otel_module 配置语法：
+  ```nginx
+  # 新配置 - 加载 ngx_otel_module
+  load_module modules/ngx_otel_module.so;
+  
+  http {
+      # 配置 OTEL 导出器（仅支持 gRPC）
+      otel_exporter {
+          endpoint "otel-collector:4317";  # 注意：gRPC 端口 4317，而非 HTTP 4318
+      }
+      
+      # 启用追踪
+      otel_trace on;
+      otel_service_name nginx-web-server;
+      otel_trace_context propagate;
+  }
+  ```
+- **重要提示：** ngx_otel_module 目前仅支持 gRPC 导出（端口 4317），不支持 HTTP（端口 4318）
+- 从 init_by_lua_block 中移除 `opentracing_bridge_tracer` Lua 依赖
+
+#### Helm Chart 变更
+- 从 values.yaml 文件中移除 `global.jaeger` 配置部分
+- 从 nginx 服务 chart 中移除 `jaeger-config.json` ConfigMap
+- 所有 nginx 服务现在使用 `global.otel.endpoint` 进行追踪导出
+- **注意：** 端点应使用 gRPC 端口 4317 以兼容 ngx_otel_module
+
+### 3. Go 服务 (hotelReservation)
 
 #### 代码变更
 - 更新 `tracing/tracer.go` 以使用 OpenTelemetry Go SDK
 - 用 OTLP HTTP 导出器替换 Jaeger 客户端
 - 将环境变量从 `JAEGER_*` 改为 `OTEL_*`
 
-### 3. Helm Chart 配置
+### 4. Helm Chart 配置
 
 #### 全局配置
 所有 Helm chart 现在使用统一的 OpenTelemetry 配置结构：
@@ -173,6 +221,42 @@ docker build -t your-registry/media-microservices-deps:latest .
 cd ../../..
 docker build -t your-registry/media-microservices:latest .
 ```
+
+### 对于 nginx/OpenResty 镜像：
+
+带有 ngx_otel_module 支持的 nginx 镜像从 `docker/openresty-thrift/xenial` 目录构建：
+
+```bash
+# 对于 socialNetwork
+cd socialNetwork/docker/openresty-thrift
+docker build -f xenial/Dockerfile -t your-registry/openresty-thrift:focal .
+
+# 对于 mediaMicroservices  
+cd mediaMicroservices/docker/openresty-thrift
+docker build -f xenial/Dockerfile -t your-registry/openresty-thrift:focal .
+```
+
+**构建流程：**
+Dockerfile 会自动：
+1. 使用 Ubuntu 20.04 (Focal) 作为基础镜像以获得现代依赖
+2. 从 Ubuntu 仓库安装 CMake 3.16.3 和 c-ares 1.15.0
+3. 下载并使用 `--with-compat` 标志构建 OpenResty 1.25.3.2
+4. 下载与 OpenResty 版本匹配的 nginx 源码（release-1.25.3）
+5. 使用与 OpenResty 相同的参数配置 nginx
+6. 克隆并使用 OpenSSL 路径从源代码编译 ngx_otel_module v0.1.2
+7. 将编译好的模块安装到 `/usr/local/openresty/nginx/modules/ngx_otel_module.so`
+
+**基础镜像升级：**
+- 从 Ubuntu 16.04 (Xenial) 升级到 Ubuntu 20.04 (Focal)
+- Xenial 的 CMake (3.5.1) 和 c-ares (1.10.0) 对于 ngx_otel_module 来说太旧了
+- Focal 提供的 CMake 3.16.3 和 c-ares 1.15.0 满足所有要求
+- 不需要手动编译 CMake 或 c-ares！
+
+**重要说明：**
+- ngx_otel_module 在 Docker 构建过程中编译
+- 可以通过修改 `NGX_OTEL_VERSION` 构建参数来更改模块版本
+- 该模块所需的 gRPC 依赖现在由 Ubuntu Focal 提供
+- 该模块仅支持 gRPC 导出（端口 4317），不支持 HTTP（端口 4318）
 
 ### 对于 hotelReservation (Go)：
 

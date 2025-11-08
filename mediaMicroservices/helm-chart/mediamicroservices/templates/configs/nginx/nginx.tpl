@@ -1,6 +1,7 @@
 {{- define "mediamicroservices.templates.nginx.nginx.conf"  }}
-# Load the OpenTracing dynamic module.
-load_module modules/ngx_http_opentracing_module.so;
+# Load the ngx_otel_module for OpenTelemetry tracing
+# Note: ngx_otel_module v0.1.2 compiled for OpenResty 1.25.3.2 (nginx 1.25.3)
+load_module modules/ngx_otel_module.so;
 
 # Checklist: Make sure that worker_processes == #cores you gave to
 # nginx process
@@ -18,9 +19,14 @@ events {
 env fqdn_suffix;
 
 http {
-  # Load a vendor tracer
-  opentracing on;
-  opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /usr/local/openresty/nginx/jaeger-config.json;
+  # OpenTelemetry configuration using ngx_otel_module
+  # Note: ngx_otel_module only supports gRPC (port 4317), not HTTP (port 4318)
+  otel_exporter {
+    endpoint {{ .Values.global.otel.endpoint | replace ":4318" ":4317" }};
+  }
+  otel_service_name nginx-web-server;
+  otel_trace on;
+  otel_trace_context propagate;
 
   include       mime.types;
   default_type  application/octet-stream;

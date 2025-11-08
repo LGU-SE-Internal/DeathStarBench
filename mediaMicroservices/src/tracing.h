@@ -7,46 +7,24 @@
 #include <yaml-cpp/yaml.h>
 #include <map>
 #include <cstdlib>
+#include "logger.h"
 
 #include "opentelemetry/sdk/trace/tracer_provider.h"
 #include "opentelemetry/sdk/trace/simple_processor.h"
-#include "opentelemetry/sdk/trace/batch_span_processor.h"
-#include "opentelemetry/exporters/otlp/otlp_http_exporter.h"
-#include "opentelemetry/exporters/otlp/otlp_grpc_exporter.h"
+#include "opentelemetry/exporters/ostream/span_exporter.h"
 #include "opentelemetry/sdk/resource/resource.h"
 #include "opentelemetry/trace/provider.h"
-#include "opentelemetry/context/propagation/global_propagator.h"
-#include "opentelemetry/context/propagation/text_map_propagator.h"
-#include "opentelemetry/trace/propagation/http_trace_context.h"
 
 namespace media_service {
 
 namespace trace_api = opentelemetry::trace;
 namespace trace_sdk = opentelemetry::sdk::trace;
-namespace otlp = opentelemetry::exporter::otlp;
 namespace resource = opentelemetry::sdk::resource;
 
 void SetUpTracer(
     const std::string &config_file_path,
     const std::string &service) {
   auto configYAML = YAML::LoadFile(config_file_path);
-  
-  // Get OTEL endpoint from environment variable or config
-  std::string otel_endpoint;
-  const char* env_endpoint = std::getenv("OTEL_EXPORTER_OTLP_ENDPOINT");
-  if (env_endpoint != nullptr) {
-    otel_endpoint = std::string(env_endpoint);
-  } else if (configYAML["endpoint"]) {
-    otel_endpoint = configYAML["endpoint"].as<std::string>();
-  } else {
-    otel_endpoint = "http://localhost:4318"; // Default HTTP endpoint
-  }
-
-  // Get sampling ratio
-  double sampling_ratio = 0.01; // Default
-  if (configYAML["samplerParam"]) {
-    sampling_ratio = configYAML["samplerParam"].as<double>();
-  }
 
   // Create resource attributes
   auto resource_attributes = resource::ResourceAttributes{
@@ -54,28 +32,30 @@ void SetUpTracer(
   };
   auto resource_ptr = resource::Resource::Create(resource_attributes);
 
-  // Create OTLP HTTP exporter
-  otlp::OtlpHttpExporterOptions exporter_options;
-  exporter_options.url = otel_endpoint + "/v1/traces";
-  
-  auto exporter = std::unique_ptr<trace_sdk::SpanExporter>(
-    new otlp::OtlpHttpExporter(exporter_options));
+  bool r = false;
+  while (!r) {
+    try {
+      // Create console exporter (simple non-OTLP exporter)
+      auto exporter = std::unique_ptr<trace_sdk::SpanExporter>(
+        new opentelemetry::exporter::trace::OStreamSpanExporter());
 
-  // Create batch span processor
-  trace_sdk::BatchSpanProcessorOptions processor_options;
-  auto processor = std::unique_ptr<trace_sdk::SpanProcessor>(
-    new trace_sdk::BatchSpanProcessor(std::move(exporter), processor_options));
+      // Create simple span processor
+      auto processor = std::unique_ptr<trace_sdk::SpanProcessor>(
+        new trace_sdk::SimpleSpanProcessor(std::move(exporter)));
 
-  // Create tracer provider
-  auto provider = std::shared_ptr<trace_api::TracerProvider>(
-    new trace_sdk::TracerProvider(std::move(processor), resource_ptr));
+      // Create tracer provider
+      auto provider = std::shared_ptr<trace_api::TracerProvider>(
+        new trace_sdk::TracerProvider(std::move(processor), resource_ptr));
 
-  // Set global tracer provider
-  trace_api::Provider::SetTracerProvider(provider);
-
-  // Set global propagator
-  opentelemetry::context::propagation::GlobalTextMapPropagator::SetGlobalPropagator(
-    std::make_shared<opentelemetry::trace::propagation::HttpTraceContext>());
+      // Set global tracer provider
+      trace_api::Provider::SetTracerProvider(provider);
+      
+      r = true;
+    } catch(...) {
+      LOG(error) << "Failed to initialize OTEL tracer, retrying ...";
+      sleep(1);
+    }
+  }
 }
 
 } //namespace media_service

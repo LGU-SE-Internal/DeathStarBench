@@ -16,7 +16,7 @@ global:
   imagePullPolicy: "IfNotPresent"
   restartPolicy: Always
   serviceType: ClusterIP
-  dockerRegistry: docker.io
+  dockerRegistry: 10.10.10.240/library
   defaultImageVersion: latest
   redis:
     cluster:
@@ -46,7 +46,7 @@ global:
   nginx:
     resolverName: kube-dns.kube-system.svc.cluster.local
   otel:
-    endpoint: http://otel-collector.observability.svc.cluster.local:4318
+    endpoint: http://otel-collector.observability.svc.cluster.local:4317
     samplerParam: 0.1
     disabled: false
 

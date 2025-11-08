@@ -6,7 +6,7 @@ ports:
 
 container:
   command: ComposeReviewService
-  image: yg397/media-microservices
+  image: media-microservices
   name: compose-review-service
   ports:
     - containerPort: 9090

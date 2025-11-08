@@ -1,18 +1,17 @@
 ARG RESTY_IMAGE_BASE="ubuntu"
-ARG RESTY_IMAGE_TAG="xenial"
+ARG RESTY_IMAGE_TAG="focal"
 
 FROM ${RESTY_IMAGE_BASE}:${RESTY_IMAGE_TAG}
 
 LABEL maintainer="Yu Gan <yg397@cornell.edu>"
 
 # Docker Build Arguments
-ARG RESTY_VERSION="1.15.8.1rc1"
-ARG RESTY_LUAROCKS_VERSION="3.5.0"
-ARG RESTY_OPENSSL_VERSION="1.1.0j"
-ARG RESTY_PCRE_VERSION="8.42"
-ARG JAEGER_TRACING_VERSION="0.4.2"
-ARG NGINX_OPENTRACING_VERSION="0.8.0"
-ARG OPENTRACING_CPP_VERSION="1.5.1"
+ARG RESTY_VERSION="1.25.3.2"
+ARG RESTY_LUAROCKS_VERSION="3.9.2"
+ARG RESTY_OPENSSL_VERSION="1.1.1w"
+ARG RESTY_PCRE_VERSION="8.45"
+ARG NGINX_VERSION="release-1.25.3"
+ARG NGX_OTEL_VERSION="v0.1.2"
 ARG RESTY_J="1"
 ARG RESTY_CONFIG_OPTIONS="\
     --with-file-aio \
@@ -43,7 +42,6 @@ ARG RESTY_CONFIG_OPTIONS="\
     --with-stream \
     --with-stream_ssl_module \
     --with-threads \
-    --add-dynamic-module=/usr/local/nginx-opentracing-${NGINX_OPENTRACING_VERSION}/opentracing \
     "
 ARG RESTY_CONFIG_OPTIONS_MORE=""
 ARG RESTY_ADD_PACKAGE_BUILDDEPS=""
@@ -55,6 +53,8 @@ LABEL resty_version="${RESTY_VERSION}"
 LABEL resty_luarocks_version="${RESTY_LUAROCKS_VERSION}"
 LABEL resty_openssl_version="${RESTY_OPENSSL_VERSION}"
 LABEL resty_pcre_version="${RESTY_PCRE_VERSION}"
+LABEL nginx_version="${NGINX_VERSION}"
+LABEL ngx_otel_version="${NGX_OTEL_VERSION}"
 LABEL resty_config_options="${RESTY_CONFIG_OPTIONS}"
 LABEL resty_config_options_more="${RESTY_CONFIG_OPTIONS_MORE}"
 LABEL resty_add_package_builddeps="${RESTY_ADD_PACKAGE_BUILDDEPS}"
@@ -65,12 +65,7 @@ LABEL resty_eval_post_make="${RESTY_EVAL_POST_MAKE}"
 # These are not intended to be user-specified
 ARG _RESTY_CONFIG_DEPS="--with-openssl=/tmp/openssl-${RESTY_OPENSSL_VERSION} --with-pcre=/tmp/pcre-${RESTY_PCRE_VERSION}"
 
-
-# 1) Install apt dependencies
-# 2) Download and untar OpenSSL, PCRE, and OpenResty
-# 3) Build OpenResty
-# 4) Cleanup
-
+# Install system dependencies (cached layer)
 RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         build-essential \
@@ -89,71 +84,75 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
         unzip \
         zlib1g-dev \
         cmake \
+        pkg-config \
+        libc-ares-dev \
+        libre2-dev \
         ${RESTY_ADD_PACKAGE_BUILDDEPS} \
         ${RESTY_ADD_PACKAGE_RUNDEPS} \
-    && cd /tmp \
+    && rm -rf /var/lib/apt/lists/*
+
+# Download and extract OpenSSL and PCRE (cached layer)
+RUN cd /tmp \
     && if [ -n "${RESTY_EVAL_PRE_CONFIGURE}" ]; then eval $(echo ${RESTY_EVAL_PRE_CONFIGURE}); fi \
     && curl -fSL https://www.openssl.org/source/openssl-${RESTY_OPENSSL_VERSION}.tar.gz -o openssl-${RESTY_OPENSSL_VERSION}.tar.gz \
     && tar xzf openssl-${RESTY_OPENSSL_VERSION}.tar.gz \
     && curl -fSL http://ftp.cs.stanford.edu/pub/exim/pcre/pcre-${RESTY_PCRE_VERSION}.tar.gz -o pcre-${RESTY_PCRE_VERSION}.tar.gz \
-    && tar xzf pcre-${RESTY_PCRE_VERSION}.tar.gz \
-  ### Build opentracing-cpp
-    && cd /tmp \
-    && curl -fSL https://github.com/opentracing/opentracing-cpp/archive/v${OPENTRACING_CPP_VERSION}.tar.gz -o opentracing-cpp-${OPENTRACING_CPP_VERSION}.tar.gz\
-    && tar -zxf opentracing-cpp-${OPENTRACING_CPP_VERSION}.tar.gz \
-    && cd opentracing-cpp-${OPENTRACING_CPP_VERSION} \
-    && mkdir -p cmake-build \
-    && cd cmake-build \
-    && cmake -DCMAKE_BUILD_TYPE=Release \
-             -DBUILD_MOCKTRACER=OFF \
-             -DBUILD_STATIC_LIBS=OFF \
-             -DBUILD_TESTING=OFF \
-       .. \
-    && make -j$(nproc) \
-    && make -j$(nproc) install \
-    && cd /tmp \
-    && rm -rf opentracing-cpp-${OPENTRACING_CPP_VERSION}.tar.gz \
-              opentracing-cpp-${OPENTRACING_CPP_VERSION} \
-  ### Build lua-resty-hmac
-    && cd /tmp \
+    && tar xzf pcre-${RESTY_PCRE_VERSION}.tar.gz
+
+# Build and install lua-resty-hmac (cached layer)
+RUN cd /tmp \
     && git clone https://github.com/jkeys089/lua-resty-hmac.git \
     && cd lua-resty-hmac \
     && make \
     && make install \
     && cd /tmp \
-    && rm -rf lua-resty-hmac \
+    && rm -rf lua-resty-hmac
 
-  ### Add Jaeger plugin
-    && curl -fSL https://github.com/jaegertracing/jaeger-client-cpp/archive/refs/tags/v${JAEGER_TRACING_VERSION}.tar.gz -o v${JAEGER_TRACING_VERSION}.tar.gz \
-    && tar xf v${JAEGER_TRACING_VERSION}.tar.gz \
-    && cd jaeger-client-cpp-${JAEGER_TRACING_VERSION} \
-    && mkdir build && cd build \
-    && cmake CXXFLAGS="-Wno-error=deprecated-copy" -DCMAKE_INSTALL_PREFIX=/opt -DJAEGERTRACING_PLUGIN=ON -DHUNTER_CONFIGURATION_TYPES=Release -DHUNTER_BUILD_SHARED_LIBS=OFF .. \
-    && make && make install \
-    && cp libjaegertracing_plugin.so /usr/local/lib/ \
-    && cd ../.. && rm -rf v${JAEGER_TRACING_VERSION}.tar.gz \
-    && rm -rf jaeger-client-cpp-${JAEGER_TRACING_VERSION} && rm -rf /root/.hunter
-
-RUN cd /usr/local \
-    && curl -fSL https://github.com/opentracing-contrib/nginx-opentracing/archive/v${NGINX_OPENTRACING_VERSION}.tar.gz -o nginx-opentracing-${NGINX_OPENTRACING_VERSION}.tar.gz \
-    && tar -zxf nginx-opentracing-${NGINX_OPENTRACING_VERSION}.tar.gz \
-    && rm nginx-opentracing-${NGINX_OPENTRACING_VERSION}.tar.gz \
-    && cd /tmp \
+# Download, build and install OpenResty with --with-compat flag (cached layer)
+RUN cd /tmp \
     && curl -fSL https://openresty.org/download/openresty-${RESTY_VERSION}.tar.gz -o openresty-${RESTY_VERSION}.tar.gz \
     && tar xzf openresty-${RESTY_VERSION}.tar.gz \
     && cd /tmp/openresty-${RESTY_VERSION} \
-    && ./configure -j${RESTY_J} ${_RESTY_CONFIG_DEPS} ${RESTY_CONFIG_OPTIONS} ${RESTY_CONFIG_OPTIONS_MORE} \
+    && ./configure -j${RESTY_J} ${_RESTY_CONFIG_DEPS} ${RESTY_CONFIG_OPTIONS} ${RESTY_CONFIG_OPTIONS_MORE} --with-compat \
     && make -j${RESTY_J} \
     && make -j${RESTY_J} install \
     && cd /tmp \
-    && rm -rf \
+    && rm -rf openresty-${RESTY_VERSION}.tar.gz openresty-${RESTY_VERSION}
+
+# Download Nginx source code matching OpenResty version (cached layer)
+RUN cd /tmp \
+    && git clone https://github.com/nginx/nginx.git \
+    && cd nginx \
+    && git checkout ${NGINX_VERSION} \
+    && cd /tmp/nginx \
+    && ./auto/configure ${_RESTY_CONFIG_DEPS} ${RESTY_CONFIG_OPTIONS} ${RESTY_CONFIG_OPTIONS_MORE} --with-compat
+
+# Download and build ngx_otel_module (cached layer)
+RUN cd /tmp \
+    && git clone --branch ${NGX_OTEL_VERSION} https://github.com/nginxinc/nginx-otel.git \
+    && cd nginx-otel \
+    && mkdir build \
+    && cd build \
+    && cmake -DNGX_OTEL_NGINX_BUILD_DIR=/tmp/nginx/objs \
+            -DOPENSSL_ROOT_DIR=/tmp/openssl-${RESTY_OPENSSL_VERSION} \
+            -DOPENSSL_INCLUDE_DIR=/tmp/openssl-${RESTY_OPENSSL_VERSION}/include \
+            -DOPENSSL_CRYPTO_LIBRARY=/tmp/openssl-${RESTY_OPENSSL_VERSION}/libcrypto.a \
+            -DOPENSSL_SSL_LIBRARY=/tmp/openssl-${RESTY_OPENSSL_VERSION}/libssl.a \
+            -DCMAKE_C_FLAGS="-I/tmp/pcre-${RESTY_PCRE_VERSION}" \
+            -DCMAKE_CXX_FLAGS="-I/tmp/pcre-${RESTY_PCRE_VERSION}" \
+            .. \
+    && make \
+    && mkdir -p /usr/local/openresty/nginx/modules/ \
+    && cp ngx_otel_module.so /usr/local/openresty/nginx/modules/ \
+    && cd /tmp \
+    && rm -rf nginx nginx-otel \
         openssl-${RESTY_OPENSSL_VERSION} \
         openssl-${RESTY_OPENSSL_VERSION}.tar.gz \
-        openresty-${RESTY_VERSION}.tar.gz openresty-${RESTY_VERSION} \
         pcre-${RESTY_PCRE_VERSION}.tar.gz pcre-${RESTY_PCRE_VERSION}
 
+# Install LuaRocks (cached layer)
 RUN cd /tmp \
-    && curl -fSL  https://luarocks.github.io/luarocks/releases/luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz -o luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz \
+    && curl -fSL https://luarocks.github.io/luarocks/releases/luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz -o luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz \
     && tar xzf luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz \
     && cd luarocks-${RESTY_LUAROCKS_VERSION} \
     && ./configure \
@@ -165,8 +164,10 @@ RUN cd /tmp \
     && make install \
     && cd /tmp \
     && if [ -n "${RESTY_EVAL_POST_MAKE}" ]; then eval $(echo ${RESTY_EVAL_POST_MAKE}); fi \
-    && rm -rf luarocks-${RESTY_LUAROCKS_VERSION} luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz \
-    && if [ -n "${RESTY_ADD_PACKAGE_BUILDDEPS}" ]; then DEBIAN_FRONTEND=noninteractive apt-get remove --purge "${RESTY_ADD_PACKAGE_BUILDDEPS}" ; fi \
+    && rm -rf luarocks-${RESTY_LUAROCKS_VERSION} luarocks-${RESTY_LUAROCKS_VERSION}.tar.gz
+
+# Clean up build dependencies (cached layer)
+RUN if [ -n "${RESTY_ADD_PACKAGE_BUILDDEPS}" ]; then DEBIAN_FRONTEND=noninteractive apt-get remove --purge "${RESTY_ADD_PACKAGE_BUILDDEPS}" ; fi \
     && DEBIAN_FRONTEND=noninteractive apt-get autoremove -y \
     && ln -sf /dev/stdout /usr/local/openresty/nginx/logs/access.log \
     && ln -sf /dev/stderr /usr/local/openresty/nginx/logs/error.log
@@ -175,41 +176,37 @@ RUN cd /tmp \
 ENV PATH=$PATH:/usr/local/openresty/luajit/bin:/usr/local/openresty/nginx/sbin:/usr/local/openresty/bin
 
 # Add LuaRocks paths
-# If OpenResty changes, these may need updating:
-#    /usr/local/openresty/bin/resty -e 'print(package.path)'
-#    /usr/local/openresty/bin/resty -e 'print(package.cpath)'
 ENV LUA_PATH="/usr/local/openresty/site/lualib/?.ljbc;/usr/local/openresty/site/lualib/?/init.ljbc;/usr/local/openresty/lualib/?.ljbc;/usr/local/openresty/lualib/?/init.ljbc;/usr/local/openresty/site/lualib/?.lua;/usr/local/openresty/site/lualib/?/init.lua;/usr/local/openresty/lualib/?.lua;/usr/local/openresty/lualib/?/init.lua;./?.lua;/usr/local/openresty/luajit/share/luajit-2.1.0-beta3/?.lua;/usr/local/share/lua/5.1/?.lua;/usr/local/share/lua/5.1/?/init.lua;/usr/local/openresty/luajit/share/lua/5.1/?.lua;/usr/local/openresty/luajit/share/lua/5.1/?/init.lua;/usr/local/openresty/lualib/?/?.lua;/usr/local/openresty/lualib/thrift/?.lua"
 ENV LUA_CPATH="/usr/local/openresty/site/lualib/?.so;/usr/local/openresty/lualib/?.so;./?.so;/usr/local/lib/lua/5.1/?.so;/usr/local/openresty/luajit/lib/lua/5.1/?.so;/usr/local/lib/lua/5.1/loadall.so;/usr/local/openresty/luajit/lib/lua/5.1/?.so;/usr/local/openresty/lualib/?/?.so"
-
-
-COPY lua-thrift /usr/local/openresty/lualib/thrift
-COPY lua-bridge-tracer /tmp/lua-bridge-tracer
-COPY lua-json/json.lua /usr/local/openresty/lualib/json/json.lua
-
-RUN cd /usr/local/openresty/lualib/thrift/src \
-    && make \
-    && make install \
-  ### Build bridge tracer
-    && cd /tmp/lua-bridge-tracer \
-    && mkdir -p cmake-build \
-    && cd cmake-build \
-    && cmake -DCMAKE_BUILD_TYPE=Release \
-       .. \
-    && make -j$(nproc) \
-    && make -j$(nproc) install
-#    && cd /tmp
-#    && rm -rf lua-bridge-tracer
-
 ENV LUA_PATH=$LUA_PATH;/gen-lua/?.lua
 
-RUN luarocks install long \
-    && luarocks install lua-resty-jwt \
+# Install Lua dependencies from source (bypassing LuaRocks repository issues)
+RUN cd /tmp \
+    && git clone https://github.com/cdbattags/lua-resty-jwt.git \
+    && cd lua-resty-jwt \
+    && cp -r lib/resty /usr/local/openresty/lualib/ \
+    && cd /tmp \
+    && rm -rf lua-resty-jwt \
     && ldconfig
 
+# Copy application files (these change more frequently)
+COPY docker/openresty-thrift/lua-thrift /usr/local/openresty/lualib/thrift
+COPY docker/openresty-thrift/lua-json/json.lua /usr/local/openresty/lualib/json/json.lua
+
+# Build lua-thrift
+RUN cd /usr/local/openresty/lualib/thrift/src \
+    && make \
+    && make install
+
+# Copy application-specific Lua scripts, generated code, pages, and keys
+COPY nginx-web-server/lua-scripts /usr/local/openresty/nginx/lua-scripts
+COPY nginx-web-server/pages /usr/local/openresty/nginx/pages
+COPY gen-lua /gen-lua
+COPY keys /keys
 
 # Copy nginx configuration files
-COPY nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
-COPY nginx.vh.default.conf /etc/nginx/conf.d/default.conf
+COPY docker/openresty-thrift/nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
+COPY docker/openresty-thrift/nginx.vh.default.conf /etc/nginx/conf.d/default.conf
 
 CMD ["/usr/local/openresty/bin/openresty", "-g", "daemon off;"]
 

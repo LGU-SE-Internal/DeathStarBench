@@ -23,11 +23,11 @@ target_link_libraries(
     Boost::log
     Boost::log_setup
     Boost::program_options
+    yaml-cpp
     opentelemetry_trace
-    opentelemetry_exporter_otlp_http
-    opentelemetry_exporter_otlp_grpc
     opentelemetry_resources
     opentelemetry_common
+    opentelemetry_exporter_ostream_span
     /usr/local/lib/libhiredis.a
     /usr/local/lib/libhiredis_ssl.a
     /usr/local/lib/libredis++.a
