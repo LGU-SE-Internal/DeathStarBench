@@ -6,6 +6,12 @@
 bin
 build
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
 wrk2/wrk
 wrk2/*.[oa]
 wrk2/obj/
