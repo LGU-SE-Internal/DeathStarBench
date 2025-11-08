@@ -34,7 +34,7 @@ The chart includes an automatic data initialization job (`data-init-job`) that:
 1. Waits for nginx-web-server to be ready
 2. Fetches movie and cast data from the DeathStarBench repository
 3. Populates MongoDB with movie information (titles, casts, plots, ratings)
-4. Registers test users (username_1 through username_100)
+4. Registers test users (username_1 through username_1000)
 
 This job runs automatically after installation using Helm hooks. You can check its status:
 

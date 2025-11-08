@@ -62,7 +62,7 @@ Added a Kubernetes Job (`data-init-job`) that automatically initializes the data
      - Movie metadata (titles, ratings, thumbnails)
      - Plot information
      - Movie ID mappings
-   - Registers 100 test users via API
+   - Registers 1000 test users via API
 
 ### Helm Hook Configuration
 - Hook: `post-install`, `post-upgrade`

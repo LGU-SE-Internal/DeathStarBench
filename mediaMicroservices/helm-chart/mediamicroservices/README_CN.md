@@ -34,7 +34,7 @@ helm install media-microservices . -n media \
 1. 等待 nginx-web-server 就绪
 2. 从 DeathStarBench 仓库获取电影和演员数据
 3. 用电影信息（标题、演员、剧情、评分）填充 MongoDB
-4. 注册测试用户（username_1 到 username_100）
+4. 注册测试用户（username_1 到 username_1000）
 
 此 Job 在安装后使用 Helm hooks 自动运行。可以检查其状态：
 

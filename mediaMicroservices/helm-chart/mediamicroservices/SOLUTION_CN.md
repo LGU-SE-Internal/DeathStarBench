@@ -50,7 +50,7 @@ coroutine 0:
    - 电影元数据（标题、评分、缩略图）
    - 剧情信息
    - 电影 ID 映射
-4. 注册 100 个测试用户（username_1 到 username_100）
+4. 注册 1000 个测试用户（username_1 到 username_1000）
 
 ## 如何使用
 
