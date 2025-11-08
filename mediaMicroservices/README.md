@@ -11,7 +11,7 @@ Deploy on Kubernetes using Helm with automatic data initialization:
 
 ```bash
 # Install the chart
-helm install media-microservices ./helm-chart/mediamicroservices -n media --create-namespace
+helm install media ./helm-chart/mediamicroservices -n media --create-namespace
 
 # Verify deployment
 kubectl get pods -n media
