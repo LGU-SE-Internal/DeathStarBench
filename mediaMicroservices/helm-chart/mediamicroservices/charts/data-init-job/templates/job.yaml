@@ -1,0 +1,78 @@
+{{- if .Values.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Values.name }}
+  labels:
+    app: {{ .Values.name }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  backoffLimit: {{ .Values.job.backoffLimit }}
+  ttlSecondsAfterFinished: {{ .Values.job.ttlSecondsAfterFinished }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name }}
+    spec:
+      restartPolicy: {{ .Values.job.restartPolicy }}
+      initContainers:
+      - name: wait-for-nginx
+        image: busybox:1.28
+        command: ['sh', '-c', 'until nc -z nginx-web-server 8080; do echo waiting for nginx-web-server; sleep 5; done;']
+      - name: fetch-datasets
+        image: alpine/git:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Cloning DeathStarBench repository to get datasets..."
+          git clone --depth 1 https://github.com/LGU-SE-Internal/DeathStarBench.git /tmp/repo
+          echo "Copying datasets..."
+          cp -r /tmp/repo/mediaMicroservices/datasets /data/
+          cp /tmp/repo/mediaMicroservices/scripts/write_movie_info.py /data/
+          echo "Datasets fetched successfully!"
+          ls -lh /data/datasets/tmdb/
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
+      containers:
+      - name: {{ .Values.container.name }}
+        image: {{ .Values.container.image }}:{{ .Values.container.imageVersion }}
+        imagePullPolicy: {{ .Values.container.imagePullPolicy | default .Values.global.imagePullPolicy }}
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Installing required Python packages..."
+          pip install --no-cache-dir aiohttp
+          
+          echo "Waiting for services to be ready..."
+          sleep 15
+          
+          echo "Starting data initialization..."
+          cd /data
+          
+          echo "Writing movie information..."
+          python3 write_movie_info.py \
+            -c /data/datasets/tmdb/casts.json \
+            -m /data/datasets/tmdb/movies.json \
+            --server_address {{ tpl .Values.serverAddress . }}
+          
+          echo "Registering users..."
+          for i in $(seq 1 100); do
+            curl -s -X POST \
+              -d "first_name=first_name_$i&last_name=last_name_$i&username=username_$i&password=password_$i" \
+              {{ tpl .Values.serverAddress . }}/wrk2-api/user/register || true
+          done
+          
+          echo "Data initialization completed successfully!"
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
+      volumes:
+      - name: data-volume
+        emptyDir: {}
+{{- end }}

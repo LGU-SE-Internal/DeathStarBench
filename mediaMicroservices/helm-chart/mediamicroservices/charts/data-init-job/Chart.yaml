@@ -1,0 +1,6 @@
+apiVersion: v2
+name: data-init-job
+description: Job to initialize movie and user data in MongoDB
+type: application
+version: 0.1.0
+appVersion: "1.0"
