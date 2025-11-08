@@ -1,16 +1,17 @@
 ARG RESTY_IMAGE_BASE="ubuntu"
-ARG RESTY_IMAGE_TAG="xenial"
+ARG RESTY_IMAGE_TAG="focal"
 
 FROM ${RESTY_IMAGE_BASE}:${RESTY_IMAGE_TAG}
 
 LABEL maintainer="Yu Gan <yg397@cornell.edu>"
 
 # Docker Build Arguments
-ARG RESTY_VERSION="1.25.3.1"
+ARG RESTY_VERSION="1.25.3.2"
 ARG RESTY_LUAROCKS_VERSION="3.9.2"
 ARG RESTY_OPENSSL_VERSION="1.1.1w"
 ARG RESTY_PCRE_VERSION="8.45"
-ARG OTEL_WEBSERVER_VERSION="1.1.0"
+ARG NGINX_VERSION="release-1.25.3"
+ARG NGX_OTEL_VERSION="v0.1.2"
 ARG RESTY_J="1"
 ARG RESTY_CONFIG_OPTIONS="\
     --with-file-aio \
@@ -52,6 +53,8 @@ LABEL resty_version="${RESTY_VERSION}"
 LABEL resty_luarocks_version="${RESTY_LUAROCKS_VERSION}"
 LABEL resty_openssl_version="${RESTY_OPENSSL_VERSION}"
 LABEL resty_pcre_version="${RESTY_PCRE_VERSION}"
+LABEL nginx_version="${NGINX_VERSION}"
+LABEL ngx_otel_version="${NGX_OTEL_VERSION}"
 LABEL resty_config_options="${RESTY_CONFIG_OPTIONS}"
 LABEL resty_config_options_more="${RESTY_CONFIG_OPTIONS_MORE}"
 LABEL resty_add_package_builddeps="${RESTY_ADD_PACKAGE_BUILDDEPS}"
@@ -81,6 +84,9 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
         unzip \
         zlib1g-dev \
         cmake \
+        pkg-config \
+        libc-ares-dev \
+        libre2-dev \
         ${RESTY_ADD_PACKAGE_BUILDDEPS} \
         ${RESTY_ADD_PACKAGE_RUNDEPS} \
     && rm -rf /var/lib/apt/lists/*
@@ -102,27 +108,46 @@ RUN cd /tmp \
     && cd /tmp \
     && rm -rf lua-resty-hmac
 
-# Install OpenTelemetry WebServer Module (cached layer)
-RUN cd /opt \
-    && curl -fSL https://github.com/open-telemetry/opentelemetry-cpp-contrib/releases/download/webserver%2Fv${OTEL_WEBSERVER_VERSION}/opentelemetry-webserver-sdk-x64-linux.tgz -o opentelemetry-webserver-sdk-x64-linux.tgz \
-    && tar xzf opentelemetry-webserver-sdk-x64-linux.tgz \
-    && cd opentelemetry-webserver-sdk \
-    && ./install.sh \
-    && rm -rf /opt/opentelemetry-webserver-sdk-x64-linux.tgz
-
-# Download, build and install OpenResty (cached layer)
+# Download, build and install OpenResty with --with-compat flag (cached layer)
 RUN cd /tmp \
     && curl -fSL https://openresty.org/download/openresty-${RESTY_VERSION}.tar.gz -o openresty-${RESTY_VERSION}.tar.gz \
     && tar xzf openresty-${RESTY_VERSION}.tar.gz \
     && cd /tmp/openresty-${RESTY_VERSION} \
-    && ./configure -j${RESTY_J} ${_RESTY_CONFIG_DEPS} ${RESTY_CONFIG_OPTIONS} ${RESTY_CONFIG_OPTIONS_MORE} \
+    && ./configure -j${RESTY_J} ${_RESTY_CONFIG_DEPS} ${RESTY_CONFIG_OPTIONS} ${RESTY_CONFIG_OPTIONS_MORE} --with-compat \
     && make -j${RESTY_J} \
     && make -j${RESTY_J} install \
     && cd /tmp \
-    && rm -rf \
+    && rm -rf openresty-${RESTY_VERSION}.tar.gz openresty-${RESTY_VERSION}
+
+# Download Nginx source code matching OpenResty version (cached layer)
+RUN cd /tmp \
+    && git clone https://github.com/nginx/nginx.git \
+    && cd nginx \
+    && git checkout ${NGINX_VERSION} \
+    && cd /tmp/nginx \
+    && ./auto/configure ${_RESTY_CONFIG_DEPS} ${RESTY_CONFIG_OPTIONS} ${RESTY_CONFIG_OPTIONS_MORE} --with-compat
+
+# Download and build ngx_otel_module (cached layer)
+RUN cd /tmp \
+    && git clone --branch ${NGX_OTEL_VERSION} https://github.com/nginxinc/nginx-otel.git \
+    && cd nginx-otel \
+    && mkdir build \
+    && cd build \
+    && cmake -DNGX_OTEL_NGINX_BUILD_DIR=/tmp/nginx/objs \
+            -DOPENSSL_ROOT_DIR=/tmp/openssl-${RESTY_OPENSSL_VERSION} \
+            -DOPENSSL_INCLUDE_DIR=/tmp/openssl-${RESTY_OPENSSL_VERSION}/include \
+            -DOPENSSL_CRYPTO_LIBRARY=/tmp/openssl-${RESTY_OPENSSL_VERSION}/libcrypto.a \
+            -DOPENSSL_SSL_LIBRARY=/tmp/openssl-${RESTY_OPENSSL_VERSION}/libssl.a \
+            -DCMAKE_C_FLAGS="-I/tmp/pcre-${RESTY_PCRE_VERSION}" \
+            -DCMAKE_CXX_FLAGS="-I/tmp/pcre-${RESTY_PCRE_VERSION}" \
+            .. \
+    && make \
+    && mkdir -p /usr/local/openresty/nginx/modules/ \
+    && cp ngx_otel_module.so /usr/local/openresty/nginx/modules/ \
+    && cd /tmp \
+    && rm -rf nginx nginx-otel \
         openssl-${RESTY_OPENSSL_VERSION} \
         openssl-${RESTY_OPENSSL_VERSION}.tar.gz \
-        openresty-${RESTY_VERSION}.tar.gz openresty-${RESTY_VERSION} \
         pcre-${RESTY_PCRE_VERSION}.tar.gz pcre-${RESTY_PCRE_VERSION}
 
 # Install LuaRocks (cached layer)
@@ -150,9 +175,6 @@ RUN if [ -n "${RESTY_ADD_PACKAGE_BUILDDEPS}" ]; then DEBIAN_FRONTEND=noninteract
 # Add additional binaries into PATH for convenience
 ENV PATH=$PATH:/usr/local/openresty/luajit/bin:/usr/local/openresty/nginx/sbin:/usr/local/openresty/bin
 
-# Set OpenTelemetry library path
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/opentelemetry-webserver-sdk/sdk_lib/lib
-
 # Add LuaRocks paths
 ENV LUA_PATH="/usr/local/openresty/site/lualib/?.ljbc;/usr/local/openresty/site/lualib/?/init.ljbc;/usr/local/openresty/lualib/?.ljbc;/usr/local/openresty/lualib/?/init.ljbc;/usr/local/openresty/site/lualib/?.lua;/usr/local/openresty/site/lualib/?/init.lua;/usr/local/openresty/lualib/?.lua;/usr/local/openresty/lualib/?/init.lua;./?.lua;/usr/local/openresty/luajit/share/luajit-2.1.0-beta3/?.lua;/usr/local/share/lua/5.1/?.lua;/usr/local/share/lua/5.1/?/init.lua;/usr/local/openresty/luajit/share/lua/5.1/?.lua;/usr/local/openresty/luajit/share/lua/5.1/?/init.lua;/usr/local/openresty/lualib/?/?.lua;/usr/local/openresty/lualib/thrift/?.lua"
 ENV LUA_CPATH="/usr/local/openresty/site/lualib/?.so;/usr/local/openresty/lualib/?.so;./?.so;/usr/local/lib/lua/5.1/?.so;/usr/local/openresty/luajit/lib/lua/5.1/?.so;/usr/local/lib/lua/5.1/loadall.so;/usr/local/openresty/luajit/lib/lua/5.1/?.so;/usr/local/openresty/lualib/?/?.so"
@@ -168,17 +190,21 @@ RUN cd /tmp \
     && ldconfig
 
 # Copy application files (these change more frequently)
-COPY ../lua-thrift /usr/local/openresty/lualib/thrift
-COPY ../lua-json/json.lua /usr/local/openresty/lualib/json/json.lua
+COPY docker/openresty-thrift/lua-thrift /usr/local/openresty/lualib/thrift
+COPY docker/openresty-thrift/lua-json/json.lua /usr/local/openresty/lualib/json/json.lua
 
 # Build lua-thrift
 RUN cd /usr/local/openresty/lualib/thrift/src \
     && make \
     && make install
 
+# Copy application-specific Lua scripts and generated code
+COPY nginx-web-server/lua-scripts /usr/local/openresty/nginx/lua-scripts
+COPY gen-lua /gen-lua
+
 # Copy nginx configuration files
-COPY ../nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
-COPY ../nginx.vh.default.conf /etc/nginx/conf.d/default.conf
+COPY docker/openresty-thrift/nginx.conf /usr/local/openresty/nginx/conf/nginx.conf
+COPY docker/openresty-thrift/nginx.vh.default.conf /etc/nginx/conf.d/default.conf
 
 CMD ["/usr/local/openresty/bin/openresty", "-g", "daemon off;"]
 

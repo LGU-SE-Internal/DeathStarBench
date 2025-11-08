@@ -35,42 +35,50 @@ The DeathStarBench project has been migrated from OpenTracing/Jaeger tracing to 
 ### 2. Nginx/OpenResty Services (mediaMicroservices, socialNetwork)
 
 #### Docker Changes
-- Replaced Jaeger client and OpenTracing dependencies with OpenTelemetry WebServer SDK v1.0.3
+- Migrated from OpenTelemetry WebServer SDK to native ngx_otel_module for better compatibility
 - Removed `opentracing-cpp`, `nginx-opentracing`, and `jaeger-client-cpp` installations
-- Added OpenTelemetry WebServer SDK installation and configuration
 - Updated `docker/openresty-thrift/xenial/Dockerfile` to:
-  - Download and install `opentelemetry-webserver-sdk-x64-linux.tgz`
-  - Set `LD_LIBRARY_PATH` to include OpenTelemetry SDK libraries
-  - Remove nginx OpenTracing module from build configuration
+  - Compile ngx_otel_module v0.1.2 from source
+  - Install module to `/usr/local/openresty/nginx/modules/ngx_otel_module.so`
+  - Add required dependencies: `pkg-config`, `libc-ares-dev`, `libre2-dev` for gRPC support
+  - Build OpenResty with `--with-compat` flag for dynamic module support
+  - Download matching nginx source (release-1.25.3) for module compilation
+- Removed OpenTelemetry WebServer SDK dependency
+- Upgraded OpenResty from 1.25.3.1 to 1.25.3.2
 
 #### Nginx Configuration Changes
-- Replaced `ngx_http_opentracing_module.so` with `ngx_http_opentelemetry_module.so`
+- Replaced OpenTelemetry WebServer SDK module with ngx_otel_module
 - Removed Jaeger tracer configuration:
   ```nginx
   # OLD (removed)
   opentracing on;
   opentracing_load_tracer /usr/local/lib/libjaegertracing_plugin.so /usr/local/openresty/nginx/jaeger-config.json;
   ```
-- Added OpenTelemetry directives:
+- New ngx_otel_module configuration syntax:
   ```nginx
-  # NEW
-  load_module /opt/opentelemetry-webserver-sdk/WebServerModule/Nginx/1.15.8/ngx_http_opentelemetry_module.so;
+  # NEW - Load ngx_otel_module
+  load_module modules/ngx_otel_module.so;
   
-  NginxModuleEnabled ON;
-  NginxModuleOtelSpanExporter otlp;
-  NginxModuleOtelExporterEndpoint {{ .Values.global.otel.endpoint }};
-  NginxModuleServiceName nginx-web-server;
-  NginxModuleServiceNamespace {{ .Release.Namespace }};
-  NginxModuleServiceInstanceId {{ .Release.Name }};
-  NginxModuleResolveBackends ON;
-  NginxModuleTraceAsError OFF;
+  http {
+      # Configure OTEL exporter (gRPC only)
+      otel_exporter {
+          endpoint "otel-collector:4317";  # Note: gRPC port 4317, not HTTP 4318
+      }
+      
+      # Enable tracing
+      otel_trace on;
+      otel_service_name nginx-web-server;
+      otel_trace_context propagate;
+  }
   ```
+- **Important:** ngx_otel_module currently only supports gRPC export (port 4317), not HTTP (port 4318)
 - Removed `opentracing_bridge_tracer` Lua dependency from init_by_lua_block
 
 #### Helm Chart Changes
 - Removed `global.jaeger` configuration section from values.yaml
 - Removed `jaeger-config.json` ConfigMap from nginx service charts
 - All nginx services now use `global.otel.endpoint` for trace export
+- **Note:** Endpoint should use gRPC port 4317 for ngx_otel_module compatibility
 
 ### 3. Go Services (hotelReservation)
 
@@ -216,19 +224,39 @@ docker build -t your-registry/media-microservices:latest .
 
 ### For nginx/OpenResty images:
 
-The nginx images with OpenTelemetry support are built from the `docker/openresty-thrift/xenial` directory:
+The nginx images with ngx_otel_module support are built from the `docker/openresty-thrift/xenial` directory:
 
 ```bash
 # For socialNetwork
 cd socialNetwork/docker/openresty-thrift
-docker build -f xenial/Dockerfile -t your-registry/openresty-thrift:xenial .
+docker build -f xenial/Dockerfile -t your-registry/openresty-thrift:focal .
 
 # For mediaMicroservices  
 cd mediaMicroservices/docker/openresty-thrift
-docker build -f xenial/Dockerfile -t your-registry/openresty-thrift:xenial .
+docker build -f xenial/Dockerfile -t your-registry/openresty-thrift:focal .
 ```
 
-**Note:** The OpenTelemetry WebServer SDK will be automatically downloaded and installed during the Docker build process.
+**Build Process:**
+The Dockerfile automatically:
+1. Uses Ubuntu 20.04 (Focal) as base image for modern dependencies
+2. Installs CMake 3.16.3 and c-ares 1.15.0 from Ubuntu repositories
+3. Downloads and builds OpenResty 1.25.3.2 with `--with-compat` flag
+4. Downloads nginx source (release-1.25.3) matching the OpenResty version
+5. Configures nginx with the same parameters as OpenResty
+6. Clones and compiles ngx_otel_module v0.1.2 from source with OpenSSL paths
+7. Installs the compiled module to `/usr/local/openresty/nginx/modules/ngx_otel_module.so`
+
+**Base Image Upgrade:**
+- Upgraded from Ubuntu 16.04 (Xenial) to Ubuntu 20.04 (Focal)
+- Xenial's CMake (3.5.1) and c-ares (1.10.0) were too old for ngx_otel_module
+- Focal provides CMake 3.16.3 and c-ares 1.15.0 meeting all requirements
+- No manual compilation of CMake or c-ares needed!
+
+**Important Notes:**
+- The ngx_otel_module is compiled during the Docker build process
+- Module version can be changed by modifying the `NGX_OTEL_VERSION` build arg
+- The module requires gRPC dependencies which are now provided by Ubuntu Focal
+- The module only supports gRPC export (port 4317), not HTTP (port 4318)
 
 ### For hotelReservation (Go):
 

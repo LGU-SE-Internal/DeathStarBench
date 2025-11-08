@@ -10,7 +10,6 @@ end
 
 function _M.ComposePost()
 
-  local bridge_tracer = require "opentracing_bridge_tracer"
   local ngx = ngx
   local cjson = require "cjson"
   local jwt = require "resty.jwt"
@@ -22,8 +21,6 @@ function _M.ComposePost()
   GenericObjectPool:setMaxTotal(512)
 
   local req_id = tonumber(string.sub(ngx.var.request_id, 0, 15), 16)
-  local tracer = bridge_tracer.new_from_global()
-  local parent_span_context = tracer:binary_extract(ngx.var.opentracing_binary_context)
 
   ngx.req.read_body()
   local post = ngx.req.get_post_args()
@@ -65,10 +62,7 @@ function _M.ComposePost()
     local client = GenericObjectPool:connection(
       ComposePostServiceClient, "compose-post-service" .. k8s_suffix, 9090)
 
-    local span = tracer:start_span("compose_post_client",
-      { ["references"] = { { "child_of", parent_span_context } } })
     local carrier = {}
-    tracer:text_map_inject(span:context(), carrier)
 
     if (not _StrIsEmpty(post.media_ids) and not _StrIsEmpty(post.media_types)) then
       status, ret = pcall(client.ComposePost, client,
@@ -97,8 +91,7 @@ function _M.ComposePost()
     GenericObjectPool:returnConnection(client)
     ngx.status = ngx.HTTP_OK
     ngx.say("Successfully upload post")
-    span:finish()
-    ngx.exit(ngx.status)
+      ngx.exit(ngx.status)
   end
 end
 
