@@ -5,8 +5,8 @@ ports:
     targetPort: 8080
 
 container:
-  image: openresty-thrift
-  imageVersion: xenial
+  image: sn-openresty-thrift
+  imageVersion: focal
   name: nginx-thrift
   ports: 
   - containerPort: 8080

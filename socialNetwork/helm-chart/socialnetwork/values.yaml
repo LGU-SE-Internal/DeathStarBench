@@ -46,9 +46,10 @@ global:
   nginx:
     resolverName: kube-dns.kube-system.svc.cluster.local
   otel:
-    endpoint: http://otel-collector.observability.svc.cluster.local:4317
-    samplerParam: 0.1
+    endpoint: "opentelemetry-kube-stack-deployment-collector.monitoring:4317"
+    samplerParam: 1
     disabled: false
+
 
 mongodb-sharded:
   fullnameOverride: mongodb-sharded
