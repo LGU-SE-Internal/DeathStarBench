@@ -53,6 +53,12 @@ http {
   # Kubernetes default hostname resolver
   resolver {{ .Values.global.nginx.resolverName }} ipv6=off;
 
+  # Lua socket timeout settings for Thrift connections
+  # Increase from default 1s to handle high load during data initialization
+  lua_socket_connect_timeout 10s;
+  lua_socket_send_timeout 10s;
+  lua_socket_read_timeout 10s;
+
   lua_package_path '/usr/local/openresty/nginx/lua-scripts/?.lua;;';
 
   server {
