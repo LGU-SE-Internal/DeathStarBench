@@ -46,7 +46,8 @@ spec:
         - /bin/sh
         - -c
         - |
-          echo "Installing required Python packages..."
+          echo "Installing required packages..."
+          apt-get update && apt-get install -y curl
           pip install --no-cache-dir aiohttp
           
           echo "Waiting for services to be ready..."
