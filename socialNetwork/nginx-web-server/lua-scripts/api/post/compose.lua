@@ -8,6 +8,21 @@ local function _StrIsEmpty(s)
   return s == nil or s == ''
 end
 
+-- Helper function to filter out cjson.null values from arrays
+-- cjson.null is userdata, not a string, which causes writeString to fail
+local function _FilterNulls(arr)
+  local cjson = require("cjson")
+  local filtered = {}
+  if type(arr) == "table" then
+    for _, v in ipairs(arr) do
+      if v ~= cjson.null and type(v) == "string" then
+        table.insert(filtered, v)
+      end
+    end
+  end
+  return filtered
+end
+
 function _M.ComposePost()
 
   local ngx = ngx
@@ -65,9 +80,12 @@ function _M.ComposePost()
     local carrier = {}
 
     if (not _StrIsEmpty(post.media_ids) and not _StrIsEmpty(post.media_types)) then
+      -- Filter out cjson.null values from arrays to prevent Thrift writeString errors
+      local media_ids = _FilterNulls(cjson.decode(post.media_ids))
+      local media_types = _FilterNulls(cjson.decode(post.media_types))
       status, ret = pcall(client.ComposePost, client,
           req_id, username, tonumber(user_id), post.text,
-          cjson.decode(post.media_ids), cjson.decode(post.media_types),
+          media_ids, media_types,
           tonumber(post.post_type), carrier)
     else
       status, ret = pcall(client.ComposePost, client,
