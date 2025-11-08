@@ -9,7 +9,7 @@ metadata:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-weight": "5"
     "helm.sh/hook-delete-policy": before-hook-creation
-    "helm.sh/hook-timeout": "900s"
+    "helm.sh/hook-timeout": "{{ .Values.job.hookTimeout }}s"
 spec:
   backoffLimit: {{ .Values.job.backoffLimit }}
   ttlSecondsAfterFinished: {{ .Values.job.ttlSecondsAfterFinished }}

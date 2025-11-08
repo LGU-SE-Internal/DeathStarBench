@@ -70,16 +70,37 @@ kubectl get jobs -n media
 kubectl logs -n media job/data-init-job -f
 
 # 等待 Job 完成（状态应该显示 "Completed"）
-# 注意：Job 有 15 分钟的超时限制
+# 注意：默认超时为 30 分钟
 kubectl wait --for=condition=complete job/data-init-job -n media --timeout=600s
 ```
 
-**注意**：数据初始化 Job 配置了 15 分钟（900 秒）的超时时间。如果您的集群资源有限或网络较慢，可以通过以下方式增加超时：
+**如果安装仍然超时**，请使用以下方法之一：
 
+**方法 1a：先禁用自动初始化，再手动运行（推荐）**
 ```bash
-# 安装时自定义超时设置
+# 禁用数据初始化安装
 helm install media-microservices ./helm-chart/mediamicroservices -n media \
-  --set data-init-job.job.activeDeadlineSeconds=1200
+  --set data-init-job.enabled=false
+
+# 等待所有服务就绪
+kubectl wait --for=condition=ready pod -l app!=data-init-job -n media --timeout=300s
+
+# 手动创建并运行初始化 Job（去除 Helm hook）
+helm template media-microservices ./helm-chart/mediamicroservices -n media \
+  --set data-init-job.enabled=true \
+  --show-only charts/data-init-job/templates/job.yaml | \
+  sed 's/helm.sh\/hook.*//' | kubectl apply -f -
+
+# 监控 Job 执行
+kubectl logs -n media job/data-init-job -f
+```
+
+**方法 1b：显著增加超时时间**
+```bash
+# 安装时自定义超时设置（增加到 1 小时）
+helm install media-microservices ./helm-chart/mediamicroservices -n media \
+  --set data-init-job.job.hookTimeout=3600 \
+  --set data-init-job.job.activeDeadlineSeconds=3000
 ```
 
 ### 方法 2：手动初始化（如果已部署）

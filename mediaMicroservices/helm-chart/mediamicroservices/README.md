@@ -123,23 +123,52 @@ The following table lists the main configurable parameters:
 | `global.otel.samplerParam` | OpenTelemetry sampling rate | `1` |
 | `data-init-job.enabled` | Enable automatic data initialization | `true` |
 | `data-init-job.serverAddress` | API server address for initialization | `http://nginx-web-server.{namespace}.svc.cluster.local:8080` |
-| `data-init-job.job.activeDeadlineSeconds` | Job timeout in seconds | `900` (15 minutes) |
+| `data-init-job.job.hookTimeout` | Helm hook timeout in seconds | `1800` (30 minutes) |
+| `data-init-job.job.activeDeadlineSeconds` | Job timeout in seconds | `1500` (25 minutes) |
 | `data-init-job.job.backoffLimit` | Job retry attempts | `4` |
 
 ## Troubleshooting
 
-### Data Initialization Job Times Out
+### Data Initialization Job Times Out During Installation
 
-If the job times out during installation:
+**The default timeout is 30 minutes (1800 seconds).** If installation still fails with timeout:
 
+**Option 1: Install without automatic initialization, then run it manually**
 ```bash
-# Check job status and logs
-kubectl get jobs -n media
+# Install with data initialization disabled
+helm install media-microservices ./helm-chart/mediamicroservices -n media \
+  --set data-init-job.enabled=false
+
+# Wait for all services to be ready
+kubectl wait --for=condition=ready pod -l app!=data-init-job -n media --timeout=300s
+
+# Manually create and run the initialization job
+helm template media-microservices ./helm-chart/mediamicroservices -n media \
+  --set data-init-job.enabled=true \
+  --show-only charts/data-init-job/templates/job.yaml | \
+  sed 's/helm.sh\/hook.*//' | kubectl apply -f -
+
+# Monitor the job
+kubectl logs -n media job/data-init-job -f
+```
+
+**Option 2: Increase timeout significantly**
+```bash
+helm install media-microservices ./helm-chart/mediamicroservices -n media \
+  --set data-init-job.job.hookTimeout=3600 \
+  --set data-init-job.job.activeDeadlineSeconds=3000
+```
+
+**Option 3: Check what's causing the delay**
+```bash
+# Check if the job pod is running
+kubectl get pods -n media -l app=data-init-job
+
+# Check job logs
 kubectl logs -n media job/data-init-job -f
 
-# If needed, increase the timeout and reinstall
-helm install media-microservices ./helm-chart/mediamicroservices -n media \
-  --set data-init-job.job.activeDeadlineSeconds=1200
+# Check if services are ready
+kubectl get pods -n media
 ```
 
 ### Data Initialization Job Fails

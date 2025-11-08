@@ -123,8 +123,53 @@ helm uninstall media-microservices -n media
 | `global.otel.samplerParam` | OpenTelemetry 采样率 | `1` |
 | `data-init-job.enabled` | 启用自动数据初始化 | `true` |
 | `data-init-job.serverAddress` | 初始化的 API 服务器地址 | `http://nginx-web-server.{namespace}.svc.cluster.local:8080` |
+| `data-init-job.job.hookTimeout` | Helm hook 超时时间（秒） | `1800`（30 分钟） |
+| `data-init-job.job.activeDeadlineSeconds` | Job 超时时间（秒） | `1500`（25 分钟） |
+| `data-init-job.job.backoffLimit` | Job 重试次数 | `4` |
 
 ## 故障排查
+
+### 安装时数据初始化 Job 超时
+
+**默认超时时间为 30 分钟（1800 秒）**。如果安装仍然超时失败：
+
+**方法 1：先禁用自动初始化安装，然后手动运行**
+```bash
+# 禁用数据初始化安装
+helm install media-microservices ./helm-chart/mediamicroservices -n media \
+  --set data-init-job.enabled=false
+
+# 等待所有服务就绪
+kubectl wait --for=condition=ready pod -l app!=data-init-job -n media --timeout=300s
+
+# 手动创建并运行初始化 Job
+helm template media-microservices ./helm-chart/mediamicroservices -n media \
+  --set data-init-job.enabled=true \
+  --show-only charts/data-init-job/templates/job.yaml | \
+  sed 's/helm.sh\/hook.*//' | kubectl apply -f -
+
+# 监控 Job 执行
+kubectl logs -n media job/data-init-job -f
+```
+
+**方法 2：显著增加超时时间**
+```bash
+helm install media-microservices ./helm-chart/mediamicroservices -n media \
+  --set data-init-job.job.hookTimeout=3600 \
+  --set data-init-job.job.activeDeadlineSeconds=3000
+```
+
+**方法 3：检查延迟原因**
+```bash
+# 检查 Job Pod 是否运行
+kubectl get pods -n media -l app=data-init-job
+
+# 查看 Job 日志
+kubectl logs -n media job/data-init-job -f
+
+# 检查服务是否就绪
+kubectl get pods -n media
+```
 
 ### 数据初始化 Job 失败
 

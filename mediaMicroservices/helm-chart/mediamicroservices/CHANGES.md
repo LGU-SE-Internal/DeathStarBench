@@ -68,8 +68,8 @@ Added a Kubernetes Job (`data-init-job`) that automatically initializes the data
 - Hook: `post-install`, `post-upgrade`
 - Hook Weight: `5`
 - Hook Delete Policy: `before-hook-creation`
-- Hook Timeout: 900 seconds (15 minutes)
-- Job Active Deadline: 900 seconds (15 minutes)
+- Hook Timeout: 1800 seconds (30 minutes) - **configurable via `job.hookTimeout`**
+- Job Active Deadline: 1500 seconds (25 minutes) - **configurable via `job.activeDeadlineSeconds`**
 - TTL after finished: 100 seconds
 - Backoff limit: 4 attempts
 
@@ -77,6 +77,12 @@ Added a Kubernetes Job (`data-init-job`) that automatically initializes the data
 - User registration is performed in parallel batches (100 users per batch)
 - 10 batches total to register 1000 users
 - Significantly reduces initialization time compared to sequential registration
+
+### Timeout Configuration
+If initialization times out, you can:
+1. **Increase timeout**: `--set data-init-job.job.hookTimeout=3600 --set data-init-job.job.activeDeadlineSeconds=3000`
+2. **Install without hook**: `--set data-init-job.enabled=false`, then manually apply the job without hook annotations
+3. **Check logs**: `kubectl logs -n media job/data-init-job -f` to see what's taking time
 
 ### Key Configuration Options
 
@@ -87,7 +93,8 @@ data-init-job:
   job:
     backoffLimit: 4
     ttlSecondsAfterFinished: 100
-    activeDeadlineSeconds: 900  # 15 minutes timeout
+    activeDeadlineSeconds: 1500  # 25 minutes
+    hookTimeout: 1800  # 30 minutes
 ```
 
 ## Testing
