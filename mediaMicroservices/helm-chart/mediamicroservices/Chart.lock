@@ -1,9 +1,102 @@
 dependencies:
+- name: data-init-job
+  repository: ""
+  version: 0.1.0
 - name: nginx-web-server
   repository: ""
   version: 0.1.0
-- name: jaeger
+- name: unique-id-service
   repository: ""
   version: 0.1.0
-digest: sha256:ffd4c49cbc89863810abaa9abf5a8ccf58dd6a115afe9732cf75ef379ba1af59
-generated: "2022-09-02T21:19:32.883931877Z"
+- name: movie-id-service
+  repository: ""
+  version: 0.1.0
+- name: movie-id-mongodb
+  repository: ""
+  version: 0.1.0
+- name: movie-id-memcached
+  repository: ""
+  version: 0.1.0
+- name: text-service
+  repository: ""
+  version: 0.1.0
+- name: rating-service
+  repository: ""
+  version: 0.1.0
+- name: rating-redis
+  repository: ""
+  version: 0.1.0
+- name: user-service
+  repository: ""
+  version: 0.1.0
+- name: user-mongodb
+  repository: ""
+  version: 0.1.0
+- name: user-memcached
+  repository: ""
+  version: 0.1.0
+- name: compose-review-service
+  repository: ""
+  version: 0.1.0
+- name: compose-review-memcached
+  repository: ""
+  version: 0.1.0
+- name: review-storage-service
+  repository: ""
+  version: 0.1.0
+- name: review-storage-memcached
+  repository: ""
+  version: 0.1.0
+- name: review-storage-mongodb
+  repository: ""
+  version: 0.1.0
+- name: user-review-service
+  repository: ""
+  version: 0.1.0
+- name: user-review-mongodb
+  repository: ""
+  version: 0.1.0
+- name: user-review-redis
+  repository: ""
+  version: 0.1.0
+- name: movie-review-service
+  repository: ""
+  version: 0.1.0
+- name: movie-review-mongodb
+  repository: ""
+  version: 0.1.0
+- name: movie-review-redis
+  repository: ""
+  version: 0.1.0
+- name: cast-info-service
+  repository: ""
+  version: 0.1.0
+- name: cast-info-mongodb
+  repository: ""
+  version: 0.1.0
+- name: cast-info-memcached
+  repository: ""
+  version: 0.1.0
+- name: page-service
+  repository: ""
+  version: 0.1.0
+- name: plot-service
+  repository: ""
+  version: 0.1.0
+- name: plot-mongodb
+  repository: ""
+  version: 0.1.0
+- name: plot-memcached
+  repository: ""
+  version: 0.1.0
+- name: movie-info-service
+  repository: ""
+  version: 0.1.0
+- name: movie-info-mongodb
+  repository: ""
+  version: 0.1.0
+- name: movie-info-memcached
+  repository: ""
+  version: 0.1.0
+digest: sha256:62ea2a9268af67e9f57c7adc26deafc4c7a13d55bb55ddff112181deceecc792
+generated: "2025-11-08T11:52:03.941917355Z"

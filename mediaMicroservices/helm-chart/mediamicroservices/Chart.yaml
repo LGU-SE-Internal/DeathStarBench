@@ -6,6 +6,8 @@ version: 0.1.0
 appVersion: "1.16.0"
 
 dependencies:
+  - name: data-init-job
+    version: 0.1.0
   - name: nginx-web-server
     version: 0.1.0
   - name: unique-id-service
@@ -33,6 +35,8 @@ dependencies:
   - name: compose-review-memcached
     version: 0.1.0
   - name: review-storage-service
+    version: 0.1.0
+  - name: review-storage-memcached
     version: 0.1.0
   - name: review-storage-mongodb
     version: 0.1.0

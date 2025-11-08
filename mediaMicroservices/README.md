@@ -3,6 +3,31 @@
 ## Workload architecture
 ![Media microservices architecture diagram](assets/media_microservices_architecture.png)
 
+## Deployment Options
+
+### Option 1: Kubernetes with Helm (Recommended)
+
+Deploy on Kubernetes using Helm with automatic data initialization:
+
+```bash
+# Install the chart
+helm install media-microservices ./helm-chart/mediamicroservices -n media --create-namespace
+
+# Verify deployment
+kubectl get pods -n media
+kubectl get jobs -n media
+
+# Run load tests
+kubectl port-forward -n media svc/nginx-web-server 8080:8080
+# In another terminal:
+cd ../wrk2 && make
+./wrk -D exp -t 2 -c 2 -d 30 -L -s ../mediaMicroservices/wrk2/scripts/media-microservices/compose-review.lua http://localhost:8080/wrk2-api/review/compose -R 10
+```
+
+For detailed Helm deployment instructions, see [helm-chart/mediamicroservices/README.md](helm-chart/mediamicroservices/README.md).
+
+### Option 2: Docker Compose
+
 ## Dependencies
 - thrift C++ library
 - mongo-c-driver
