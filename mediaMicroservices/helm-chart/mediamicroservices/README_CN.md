@@ -36,12 +36,14 @@ helm install media-microservices . -n media \
 3. 用电影信息（标题、演员、剧情、评分）填充 MongoDB
 4. 注册测试用户（username_1 到 username_1000）
 
-此 Job 在安装后使用 Helm hooks 自动运行。可以检查其状态：
+此 Job 在安装后使用 Helm hooks 自动运行，**超时时间为 15 分钟**（900 秒）。Job 会并行批量注册用户以提高执行速度。可以检查其状态：
 
 ```bash
 kubectl get jobs -n media
-kubectl logs -n media job/data-init-job
+kubectl logs -n media job/data-init-job -f
 ```
+
+**注意**：初始化过程可能需要 5-10 分钟，具体取决于集群资源和网络状况。
 
 ### 禁用数据初始化
 

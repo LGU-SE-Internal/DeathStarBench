@@ -65,12 +65,21 @@ helm uninstall media-microservices -n media
 # 重新安装（会自动运行数据初始化）
 helm install media-microservices ./helm-chart/mediamicroservices -n media
 
-# 查看初始化 Job 的状态
+# 查看初始化 Job 的状态（初始化可能需要 5-10 分钟）
 kubectl get jobs -n media
 kubectl logs -n media job/data-init-job -f
 
 # 等待 Job 完成（状态应该显示 "Completed"）
+# 注意：Job 有 15 分钟的超时限制
 kubectl wait --for=condition=complete job/data-init-job -n media --timeout=600s
+```
+
+**注意**：数据初始化 Job 配置了 15 分钟（900 秒）的超时时间。如果您的集群资源有限或网络较慢，可以通过以下方式增加超时：
+
+```bash
+# 安装时自定义超时设置
+helm install media-microservices ./helm-chart/mediamicroservices -n media \
+  --set data-init-job.job.activeDeadlineSeconds=1200
 ```
 
 ### 方法 2：手动初始化（如果已部署）

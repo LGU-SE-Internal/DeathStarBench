@@ -9,9 +9,11 @@ metadata:
     "helm.sh/hook": post-install,post-upgrade
     "helm.sh/hook-weight": "5"
     "helm.sh/hook-delete-policy": before-hook-creation
+    "helm.sh/hook-timeout": "900s"
 spec:
   backoffLimit: {{ .Values.job.backoffLimit }}
   ttlSecondsAfterFinished: {{ .Values.job.ttlSecondsAfterFinished }}
+  activeDeadlineSeconds: {{ .Values.job.activeDeadlineSeconds }}
   template:
     metadata:
       labels:
@@ -63,10 +65,17 @@ spec:
             --server_address {{ tpl .Values.serverAddress . }}
           
           echo "Registering users..."
-          for i in $(seq 1 1000); do
-            curl -s -X POST \
-              -d "first_name=first_name_$i&last_name=last_name_$i&username=username_$i&password=password_$i" \
-              {{ tpl .Values.serverAddress . }}/wrk2-api/user/register || true
+          # Register users in parallel batches for faster execution
+          for batch_start in $(seq 1 100 1000); do
+            batch_end=$((batch_start + 99))
+            for i in $(seq $batch_start $batch_end); do
+              curl -s -X POST \
+                -d "first_name=first_name_$i&last_name=last_name_$i&username=username_$i&password=password_$i" \
+                {{ tpl .Values.serverAddress . }}/wrk2-api/user/register &
+            done
+            # Wait for current batch to complete before starting next batch
+            wait
+            echo "Registered users $batch_start to $batch_end"
           done
           
           echo "Data initialization completed successfully!"

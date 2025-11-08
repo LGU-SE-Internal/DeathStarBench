@@ -13,6 +13,7 @@ job:
   backoffLimit: 4
   ttlSecondsAfterFinished: 100
   restartPolicy: Never
+  activeDeadlineSeconds: 900
   
 # Server address for API calls (nginx service)
 serverAddress: "http://nginx-web-server.{{ .Release.Namespace }}.svc.cluster.local:8080"

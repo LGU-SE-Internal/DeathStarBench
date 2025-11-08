@@ -36,12 +36,14 @@ The chart includes an automatic data initialization job (`data-init-job`) that:
 3. Populates MongoDB with movie information (titles, casts, plots, ratings)
 4. Registers test users (username_1 through username_1000)
 
-This job runs automatically after installation using Helm hooks. You can check its status:
+This job runs automatically after installation using Helm hooks with a **15-minute timeout** (900 seconds). The job registers users in parallel batches for faster execution. You can check its status:
 
 ```bash
 kubectl get jobs -n media
-kubectl logs -n media job/data-init-job
+kubectl logs -n media job/data-init-job -f
 ```
+
+**Note**: The initialization process may take 5-10 minutes depending on cluster resources and network conditions.
 
 ### Disabling Data Initialization
 
@@ -121,8 +123,24 @@ The following table lists the main configurable parameters:
 | `global.otel.samplerParam` | OpenTelemetry sampling rate | `1` |
 | `data-init-job.enabled` | Enable automatic data initialization | `true` |
 | `data-init-job.serverAddress` | API server address for initialization | `http://nginx-web-server.{namespace}.svc.cluster.local:8080` |
+| `data-init-job.job.activeDeadlineSeconds` | Job timeout in seconds | `900` (15 minutes) |
+| `data-init-job.job.backoffLimit` | Job retry attempts | `4` |
 
 ## Troubleshooting
+
+### Data Initialization Job Times Out
+
+If the job times out during installation:
+
+```bash
+# Check job status and logs
+kubectl get jobs -n media
+kubectl logs -n media job/data-init-job -f
+
+# If needed, increase the timeout and reinstall
+helm install media-microservices ./helm-chart/mediamicroservices -n media \
+  --set data-init-job.job.activeDeadlineSeconds=1200
+```
 
 ### Data Initialization Job Fails
 
