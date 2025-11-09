@@ -264,7 +264,10 @@ services:
       - ./docker/openresty-thrift/lua-thrift:/usr/local/openresty/lualib/thrift
 
   media-frontend:
-    image: media-frontend:xenial
+    build:
+      context: ./media-frontend
+      dockerfile: Dockerfile
+    image: media-frontend:focal
     hostname: media-frontend
     ports:
       - 8081:8080
