@@ -1,0 +1,30 @@
+name: data-init-job
+
+global:
+  replicas: 1
+  imagePullPolicy: "IfNotPresent"
+
+container:
+  name: data-init
+  image: python
+  imageVersion: "3.9-slim"
+  
+job:
+  backoffLimit: 4
+  ttlSecondsAfterFinished: 100
+  restartPolicy: Never
+  activeDeadlineSeconds: 1500  # 25 minutes - Job timeout (should be less than hookTimeout)
+  hookTimeout: 1800  # 30 minutes - Helm hook timeout
+  
+# Server address for API calls (nginx service)
+serverAddress: "http://nginx-thrift.{{ .Release.Namespace }}.svc.cluster.local:8080"
+
+# Social graph to use for initialization
+# Options: socfb-Reed98 (default), ego-twitter, soc-twitter-follows-mun
+graphName: "socfb-Reed98"
+
+# Whether to compose posts after creating users and follows
+composePosts: false
+
+# Enable or disable the data initialization job
+enabled: true
