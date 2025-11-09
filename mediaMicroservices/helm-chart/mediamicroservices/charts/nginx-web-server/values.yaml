@@ -5,8 +5,8 @@ ports:
     targetPort: 8080
 
 container:
-  image: openresty-thrift
-  imageVersion: bb5a3d2
+  image: media-nginx
+  imageVersion: a404443
   name: nginx-web-server
   ports:
     - containerPort: 8080
