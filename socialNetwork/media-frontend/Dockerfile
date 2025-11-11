@@ -181,7 +181,8 @@ RUN cd /tmp \
     # Install resty-mongol (MongoDB driver) from source
     && git clone https://github.com/Olivine-Labs/resty-mongol.git \
     && cd resty-mongol \
-    && cp -r lib/resty /usr/local/openresty/lualib/ \
+    && mkdir -p /usr/local/openresty/lualib/resty-mongol \
+    && cp src/*.lua /usr/local/openresty/lualib/resty-mongol/ \
     && cd /tmp \
     && rm -rf resty-mongol \
     && ldconfig
