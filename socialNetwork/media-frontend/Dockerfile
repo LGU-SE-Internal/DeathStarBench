@@ -175,11 +175,16 @@ RUN cd /tmp \
     && rm -rf mongo-c-driver-1.9.3 mongo-c-driver-1.9.3.tar.gz \
     && ldconfig
 
-# Install Lua dependencies
-RUN luarocks install resty-mongol --server=http://rocks.moonscript.org \
-    && luarocks install luasocket \
-    && luarocks install chronos \
-    && luarocks install magick
+# Install Lua dependencies from source (bypassing LuaRocks repository issues)
+# Note: lua-resty-upload is included in OpenResty by default
+RUN cd /tmp \
+    # Install resty-mongol (MongoDB driver) from source
+    && git clone https://github.com/Olivine-Labs/resty-mongol.git \
+    && cd resty-mongol \
+    && cp -r lib/resty /usr/local/openresty/lualib/ \
+    && cd /tmp \
+    && rm -rf resty-mongol \
+    && ldconfig
 
 # Clean up build dependencies (cached layer)
 RUN if [ -n "${RESTY_ADD_PACKAGE_BUILDDEPS}" ]; then DEBIAN_FRONTEND=noninteractive apt-get remove --purge "${RESTY_ADD_PACKAGE_BUILDDEPS}" ; fi \
