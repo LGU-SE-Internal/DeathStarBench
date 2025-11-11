@@ -4,6 +4,21 @@ local function _StrIsEmpty(s)
   return s == nil or s == ''
 end
 
+-- Helper function to filter out cjson.null values from arrays
+-- cjson.null is userdata, not a string, which causes writeString to fail
+local function _FilterNulls(arr)
+  local cjson = require("cjson")
+  local filtered = {}
+  if type(arr) == "table" then
+    for _, v in ipairs(arr) do
+      if v ~= cjson.null and type(v) == "string" then
+        table.insert(filtered, v)
+      end
+    end
+  end
+  return filtered
+end
+
 local function _UploadUserId(req_id, user_id, username, carrier)
   local GenericObjectPool = require "GenericObjectPool"
   local UserServiceClient = require "social_network_UserService"
@@ -50,8 +65,11 @@ local function _UploadMedia(req_id, post, carrier)
   local media_client = GenericObjectPool:connection(
       MediaServiceClient, "media-service.social-network.svc.cluster.local", 9090)
   if (not _StrIsEmpty(post.media_ids) and not _StrIsEmpty(post.media_types)) then
+    -- Filter out cjson.null values from arrays to prevent Thrift writeString errors
+    local media_ids = _FilterNulls(cjson.decode(post.media_ids))
+    local media_types = _FilterNulls(cjson.decode(post.media_types))
     local status, err = pcall(media_client.UploadMedia, media_client,
-        req_id, cjson.decode(post.media_types), cjson.decode(post.media_ids), carrier)
+        req_id, media_types, media_ids, carrier)
   else
     local status, err = pcall(media_client.UploadMedia, media_client,
         req_id, {}, {}, carrier)

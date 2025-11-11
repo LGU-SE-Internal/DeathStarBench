@@ -74,7 +74,10 @@ services:
       restart_policy:
         condition: any
     hostname: media-frontend
-    image: media-frontend:xenial
+    build:
+      context: ./media-frontend
+      dockerfile: Dockerfile
+    image: media-frontend:focal
     ports:
       - 8081:8080
     volumes:

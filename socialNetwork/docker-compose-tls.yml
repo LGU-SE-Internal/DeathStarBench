@@ -385,7 +385,10 @@ services:
       - ./keys:/keys
 
   media-frontend:
-    image: media-frontend:xenial
+    build:
+      context: ./media-frontend
+      dockerfile: Dockerfile
+    image: media-frontend:focal
     hostname: media-frontend
     ports:
       - 8081:8080

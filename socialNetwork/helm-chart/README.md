@@ -51,10 +51,61 @@ By default, Kuberentes’ resolver is configured with search domains. However, w
 ## Deployment ##
 In order to deploy services using helm chart, helm needs to be installed ([how-to](https://helm.sh/docs/intro/install/)).
 
-The following line shows a default deployment of Social Nework Microservices using helm chart:
+The following line shows a default deployment of Social Network Microservices using helm chart:
 
 ```
 $ helm install RELEASE_NAME HELM_CHART_REPO_PATH
+```
+
+### Automatic Data Initialization
+
+The chart includes an automatic data initialization job (`data-init-job`) that:
+1. Waits for nginx-thrift to be ready
+2. Fetches social graph datasets from the DeathStarBench repository
+3. Registers users based on the selected social graph
+4. Creates follow relationships between users
+5. Optionally composes posts for users (if enabled)
+
+This job runs automatically after installation using Helm hooks with a **30-minute timeout** (1800 seconds). You can check its status:
+
+```bash
+kubectl get jobs -n <namespace>
+kubectl logs -n <namespace> job/data-init-job -f
+```
+
+**Note**: The initialization process may take 5-15 minutes depending on the selected social graph size, cluster resources, and network conditions.
+
+### Customizing Data Initialization
+
+You can customize the initialization by setting values during deployment:
+
+```bash
+# Use a different social graph (default: socfb-Reed98)
+helm install social-network . -n social --set data-init-job.graphName=ego-twitter
+
+# Enable post composition (creates up to 20 posts per user)
+helm install social-network . -n social --set data-init-job.composePosts=true
+
+# Disable automatic data initialization
+helm install social-network . -n social --set data-init-job.enabled=false
+```
+
+Available social graphs:
+- `socfb-Reed98` (default) - ~1000 nodes
+- `ego-twitter` - ~81,000 nodes
+- `soc-twitter-follows-mun` - ~465,000 nodes
+
+### Manual Data Initialization
+
+If you disabled the automatic initialization or need to re-initialize data:
+
+```bash
+# Forward port to access nginx-thrift
+kubectl port-forward -n <namespace> svc/nginx-thrift 8080:8080
+
+# In another terminal, run the init script
+cd socialNetwork/scripts
+python3 init_social_graph.py --ip localhost --port 8080 --graph socfb-Reed98
 ```
 
 ### Setting namespace ###

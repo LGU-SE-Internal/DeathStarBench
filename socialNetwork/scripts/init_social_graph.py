@@ -30,6 +30,8 @@ async def upload_compose(session, addr, user_id, num_users):
     text += ' http://' + \
         ''.join(random.choices(string.ascii_lowercase + string.digits, k=64))
   # media
+  # Note: Filter out None/null values to prevent cjson.null errors in Lua
+  # The Lua scripts will also filter cjson.null values as a defense layer
   media_ids = []
   media_types = []
   for _ in range(random.randint(0, 5)):

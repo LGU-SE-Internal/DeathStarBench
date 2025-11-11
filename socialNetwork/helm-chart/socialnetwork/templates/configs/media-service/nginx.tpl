@@ -1,4 +1,8 @@
 {{- define "socialnetwork.templates.media-service.nginx.conf"  }}
+# Load the ngx_otel_module for OpenTelemetry tracing
+# Note: ngx_otel_module v0.1.2 compiled for OpenResty 1.25.3.2 (nginx 1.25.3)
+load_module modules/ngx_otel_module.so;
+
 # Checklist: Make sure that worker_processes == #cores you gave to
 # nginx process
 worker_processes  16;
@@ -14,6 +18,15 @@ events {
 env fqdn_suffix;
 
 http {
+  # OpenTelemetry configuration using ngx_otel_module
+  # Note: ngx_otel_module only supports gRPC (port 4317), not HTTP (port 4318)
+  otel_exporter {
+    endpoint {{ .Values.global.otel.endpoint | replace ":4318" ":4317" }};
+  }
+  otel_service_name media-frontend;
+  otel_trace on;
+  otel_trace_context propagate;
+
   include       mime.types;
   default_type  application/octet-stream;
 
@@ -35,6 +48,12 @@ http {
 
   # Docker default hostname resolver
   resolver {{ .Values.global.nginx.resolverName }} valid=10s ipv6=off;
+
+  # Lua socket timeout settings for Thrift connections
+  # Increase from default 1s to handle high load during data initialization
+  lua_socket_connect_timeout 10s;
+  lua_socket_send_timeout 10s;
+  lua_socket_read_timeout 10s;
 
   lua_package_path '/usr/local/openresty/nginx/lua-scripts/?.lua;/usr/local/openresty/luajit/share/lua/5.1/?.lua;;';
 

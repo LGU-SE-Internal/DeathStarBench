@@ -1,0 +1,84 @@
+{{- if .Values.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Values.name }}
+  labels:
+    app: {{ .Values.name }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": before-hook-creation
+    "helm.sh/hook-timeout": "{{ .Values.job.hookTimeout }}s"
+spec:
+  backoffLimit: {{ .Values.job.backoffLimit }}
+  ttlSecondsAfterFinished: {{ .Values.job.ttlSecondsAfterFinished }}
+  activeDeadlineSeconds: {{ .Values.job.activeDeadlineSeconds }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name }}
+    spec:
+      restartPolicy: {{ .Values.job.restartPolicy }}
+      initContainers:
+      - name: wait-for-nginx
+        image: busybox:1.28
+        command: ['sh', '-c', 'until nc -z nginx-thrift 8080; do echo waiting for nginx-thrift; sleep 5; done;']
+      - name: fetch-datasets
+        image: alpine/git:latest
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Cloning DeathStarBench repository to get datasets..."
+          git clone --depth 1 https://github.com/LGU-SE-Internal/DeathStarBench.git /tmp/repo
+          echo "Copying datasets and scripts..."
+          cp -r /tmp/repo/socialNetwork/datasets /data/
+          cp /tmp/repo/socialNetwork/scripts/init_social_graph.py /data/
+          echo "Datasets fetched successfully!"
+          ls -lh /data/datasets/social-graph/
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
+      containers:
+      - name: {{ .Values.container.name }}
+        image: {{ .Values.container.image }}:{{ .Values.container.imageVersion }}
+        imagePullPolicy: {{ .Values.container.imagePullPolicy | default .Values.global.imagePullPolicy }}
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Installing required packages..."
+          apt-get update && apt-get install -y curl
+          pip install --no-cache-dir aiohttp
+          
+          echo "Waiting for services to be ready..."
+          sleep 15
+          
+          echo "Starting social graph initialization..."
+          cd /data
+          
+          echo "Initializing social graph: {{ .Values.graphName }}"
+          {{- if .Values.composePosts }}
+          python3 init_social_graph.py \
+            --graph {{ .Values.graphName }} \
+            --ip nginx-thrift.{{ .Release.Namespace }}.svc.cluster.local \
+            --port 8080 \
+            --compose \
+            --limit 200
+          {{- else }}
+          python3 init_social_graph.py \
+            --graph {{ .Values.graphName }} \
+            --ip nginx-thrift.{{ .Release.Namespace }}.svc.cluster.local \
+            --port 8080 \
+            --limit 200
+          {{- end }}
+          
+          echo "Social graph initialization completed successfully!"
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
+      volumes:
+      - name: data-volume
+        emptyDir: {}
+{{- end }}
