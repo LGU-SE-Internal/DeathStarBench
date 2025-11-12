@@ -1,4 +1,4 @@
-FROM yg397/thrift-microservice-deps:xenial
+FROM deathstarbench/media-microservices-deps:latest
 
 COPY ./ /media-microservices
 RUN cd /media-microservices \

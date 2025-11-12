@@ -6,6 +6,27 @@ This document describes the migration from OpenTracing to OpenTelemetry for the 
 
 The migration uses the OpenTelemetry C++ SDK with the OpenTracing shim layer to provide backward compatibility. This allows existing OpenTracing API calls to continue working while using OpenTelemetry as the underlying telemetry implementation.
 
+## ⚠️ Important: Building Docker Images
+
+After this migration, the Docker images **must** be rebuilt with updated dependencies. The old base images don't include OpenTelemetry C++ SDK.
+
+**See [BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md) for detailed build instructions.**
+
+Quick start:
+```bash
+# Use the provided build script
+./build-docker.sh
+
+# Or build manually:
+# 1. Build dependency images first
+cd socialNetwork/docker/thrift-microservice-deps/cpp
+docker build -t deathstarbench/social-network-microservices-deps:latest .
+
+# 2. Then build service images
+cd ../../../
+docker build -t social-network-microservices:otel .
+```
+
 ## Changes Made
 
 ### 1. Dependency Updates
@@ -20,6 +41,10 @@ Added OpenTelemetry C++ SDK v1.14.2 installation with the following features ena
 - OpenTracing shim for backward compatibility
 
 The OpenTracing library (v1.5.1) is kept for shim compatibility.
+
+**Updated Main Dockerfiles:**
+- **socialNetwork/Dockerfile** - Now uses `deathstarbench/social-network-microservices-deps:latest`
+- **mediaMicroservices/Dockerfile** - Now uses `deathstarbench/media-microservices-deps:latest`
 
 ### 2. Tracing Implementation Updates
 
