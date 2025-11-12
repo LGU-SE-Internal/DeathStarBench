@@ -115,20 +115,20 @@ void HomeTimelineHandler::WriteHomeTimeline(
 
   // auto social_graph_client_wrapper = _social_graph_client_pool->Pop();
   // if (!social_graph_client_wrapper) {
-    // ServiceException se;
-    // se.errorCode = ErrorCode::SE_THRIFT_CONN_ERROR;
-    // se.message = "Failed to connect to social-graph-service";
-    // throw se;
+  //   ServiceException se;
+  //   se.errorCode = ErrorCode::SE_THRIFT_CONN_ERROR;
+  //   se.message = "Failed to connect to social-graph-service";
+  //   throw se;
   // }
   // auto social_graph_client = social_graph_client_wrapper->GetClient();
   // std::vector<int64_t> followers_id;
   // try {
-    // social_graph_client->GetFollowers(followers_id, req_id, user_id,
-                                      // writer_text_map);
+  //   social_graph_client->GetFollowers(followers_id, req_id, user_id,
+  //                                     writer_text_map);
   // } catch (...) {
-    // LOG(error) << "Failed to get followers from social-network-service";
-    // _social_graph_client_pool->Remove(social_graph_client_wrapper);
-    // throw;
+  //   LOG(error) << "Failed to get followers from social-network-service";
+  //   _social_graph_client_pool->Remove(social_graph_client_wrapper);
+  //   throw;
   // }
   // _social_graph_client_pool->Keepalive(social_graph_client_wrapper);
   // followers_span->Finish();
@@ -144,68 +144,68 @@ void HomeTimelineHandler::WriteHomeTimeline(
   // std::string post_id_str = std::to_string(post_id);
 
   // {
-    // if (_redis_client_pool) {
-      // auto pipe = _redis_client_pool->pipeline(false);
-      // for (auto &follower_id : followers_id_set) {
-        // pipe.zadd(std::to_string(follower_id), post_id_str, timestamp,
-                  // UpdateType::NOT_EXIST);
-      // }
-      // try {
-        // auto replies = pipe.exec();
-      // } catch (const Error &err) {
-        // LOG(error) << err.what();
-        // throw err;
-      // }
-    // }
+  //   if (_redis_client_pool) {
+  //     auto pipe = _redis_client_pool->pipeline(false);
+  //     for (auto &follower_id : followers_id_set) {
+  //       pipe.zadd(std::to_string(follower_id), post_id_str, timestamp,
+  //                 UpdateType::NOT_EXIST);
+  //     }
+  //     try {
+  //       auto replies = pipe.exec();
+  //     } catch (const Error &err) {
+  //       LOG(error) << err.what();
+  //       throw err;
+  //     }
+  //   }
     
-    // else if (IsRedisReplicationEnabled()) {
-        // auto pipe = _redis_primary_pool->pipeline(false);
-        // for (auto& follower_id : followers_id_set) {
-            // pipe.zadd(std::to_string(follower_id), post_id_str, timestamp,
-                // UpdateType::NOT_EXIST);
-        // }
-        // try {
-            // auto replies = pipe.exec();
-        // }
-        // catch (const Error& err) {
-            // LOG(error) << err.what();
-            // throw err;
-        // }
-    // }
+  //   else if (IsRedisReplicationEnabled()) {
+  //       auto pipe = _redis_primary_pool->pipeline(false);
+  //       for (auto& follower_id : followers_id_set) {
+  //           pipe.zadd(std::to_string(follower_id), post_id_str, timestamp,
+  //               UpdateType::NOT_EXIST);
+  //       }
+  //       try {
+  //           auto replies = pipe.exec();
+  //       }
+  //       catch (const Error& err) {
+  //           LOG(error) << err.what();
+  //           throw err;
+  //       }
+  //   }
     
-    // else {
-      // // Create multi-pipeline that match with shards pool
-      // std::map<std::shared_ptr<ConnectionPool>, std::shared_ptr<Pipeline>> pipe_map;
-      // auto *shards_pool = _redis_cluster_client_pool->get_shards_pool();
+  //   else {
+  //     // Create multi-pipeline that match with shards pool
+  //     std::map<std::shared_ptr<ConnectionPool>, std::shared_ptr<Pipeline>> pipe_map;
+  //     auto *shards_pool = _redis_cluster_client_pool->get_shards_pool();
 
-      // for (auto &follower_id : followers_id_set) {
-        // auto conn = shards_pool->fetch(std::to_string(follower_id));
-        // auto pipe = pipe_map.find(conn);
-        // if(pipe == pipe_map.end()) {//Not found, create new pipeline and insert
-          // auto new_pipe = std::make_shared<Pipeline>(_redis_cluster_client_pool->pipeline(std::to_string(follower_id), false));
-          // pipe_map.insert(make_pair(conn, new_pipe));
-          // auto *_pipe = new_pipe.get();
-          // _pipe->zadd(std::to_string(follower_id), post_id_str, timestamp,
-                  // UpdateType::NOT_EXIST);
-        // }else{//Found, use exist pipeline
-          // std::pair<std::shared_ptr<ConnectionPool>, std::shared_ptr<Pipeline>> found = *pipe;
-          // auto *_pipe = found.second.get();
-          // _pipe->zadd(std::to_string(follower_id), post_id_str, timestamp,
-                  // UpdateType::NOT_EXIST);
-        // }
-      // }
-      // // LOG(info) <<"followers_id_set items:" << followers_id_set.size()<<"; pipeline items:" << pipe_map.size();
-      // try {
-        // for(auto const &it : pipe_map) {
-          // auto _pipe = it.second.get();
-          // _pipe->exec();
-        // }
+  //     for (auto &follower_id : followers_id_set) {
+  //       auto conn = shards_pool->fetch(std::to_string(follower_id));
+  //       auto pipe = pipe_map.find(conn);
+  //       if(pipe == pipe_map.end()) {//Not found, create new pipeline and insert
+  //         auto new_pipe = std::make_shared<Pipeline>(_redis_cluster_client_pool->pipeline(std::to_string(follower_id), false));
+  //         pipe_map.insert(make_pair(conn, new_pipe));
+  //         auto *_pipe = new_pipe.get();
+  //         _pipe->zadd(std::to_string(follower_id), post_id_str, timestamp,
+  //                 UpdateType::NOT_EXIST);
+  //       }else{//Found, use exist pipeline
+  //         std::pair<std::shared_ptr<ConnectionPool>, std::shared_ptr<Pipeline>> found = *pipe;
+  //         auto *_pipe = found.second.get();
+  //         _pipe->zadd(std::to_string(follower_id), post_id_str, timestamp,
+  //                 UpdateType::NOT_EXIST);
+  //       }
+  //     }
+  //     // LOG(info) <<"followers_id_set items:" << followers_id_set.size()<<"; pipeline items:" << pipe_map.size();
+  //     try {
+  //       for(auto const &it : pipe_map) {
+  //         auto _pipe = it.second.get();
+  //         _pipe->exec();
+  //       }
 
-      // } catch (const Error &err) {
-        // LOG(error) << err.what();
-        // throw err;
-      // }
-    // }
+  //     } catch (const Error &err) {
+  //       LOG(error) << err.what();
+  //       throw err;
+  //     }
+  //   }
   // }
   // redis_span->Finish();
 // }
