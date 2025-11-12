@@ -11,6 +11,10 @@ container:
   ports:
     - containerPort: 9090
 
+  env:
+  - name: OTEL_EXPORTER_OTLP_ENDPOINT
+    value: "{{ .Values.global.opentelemetry.collectorEndpoint }}"
+
 configMaps:
   - name: jaeger-config.yml
     mountPath: /media-microservices/config/jaeger-config.yml

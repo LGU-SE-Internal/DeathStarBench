@@ -24,7 +24,7 @@ target_link_libraries(
     ${Boost_LIBRARIES}
     Boost::log
     Boost::log_setup
-    opentelemetry_trace opentelemetry_exporter_jaeger_trace opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable opentracing_shim
+    opentelemetry_trace opentelemetry_exporter_jaeger_trace opentelemetry_exporter_otlp_http opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable opentracing_shim
 )
 
 target_compile_definitions (

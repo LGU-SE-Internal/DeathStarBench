@@ -23,9 +23,9 @@ endif()
 #                     "${POCO_LIB_DIR}/libPocoFoundation.so")
 
 
-#add_library(opentelemetry_trace opentelemetry_exporter_jaeger_trace opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable opentracing_shim SHARED IMPORTED)
-#set_target_properties(opentelemetry_trace opentelemetry_exporter_jaeger_trace opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable opentracing_shim PROPERTIES IMPORTED_LOCATION
-#    /usr/local/lib/libopentelemetry_trace opentelemetry_exporter_jaeger_trace opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable opentracing_shim.so)
+#add_library(opentelemetry_trace opentelemetry_exporter_jaeger_trace opentelemetry_exporter_otlp_http opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable opentracing_shim SHARED IMPORTED)
+#set_target_properties(opentelemetry_trace opentelemetry_exporter_jaeger_trace opentelemetry_exporter_otlp_http opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable opentracing_shim PROPERTIES IMPORTED_LOCATION
+#    /usr/local/lib/libopentelemetry_trace opentelemetry_exporter_jaeger_trace opentelemetry_exporter_otlp_http opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable opentracing_shim.so)
 
 #add_library(cpp_redis STATIC IMPORTED)
 #set_target_properties(cpp_redis PROPERTIES IMPORTED_LOCATION

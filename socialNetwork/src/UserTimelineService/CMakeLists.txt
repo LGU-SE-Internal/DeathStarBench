@@ -24,7 +24,7 @@ target_link_libraries(
     Boost::log
     Boost::log_setup
     Boost::program_options
-    opentelemetry_trace opentelemetry_exporter_jaeger_trace opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable opentracing_shim
+    opentelemetry_trace opentelemetry_exporter_jaeger_trace opentelemetry_exporter_otlp_http opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable opentracing_shim
     /usr/local/lib/libhiredis.a
     /usr/local/lib/libhiredis_ssl.a
     /usr/local/lib/libredis++.a

@@ -4,6 +4,7 @@
 #define MEDIA_MICROSERVICES_TRACING_H
 
 #include <string>
+#include <cstdlib>
 #include <yaml-cpp/yaml.h>
 #include <map>
 
@@ -12,6 +13,7 @@
 #include <opentelemetry/sdk/trace/simple_processor_factory.h>
 #include <opentelemetry/sdk/resource/resource.h>
 #include <opentelemetry/exporters/jaeger/jaeger_exporter_factory.h>
+#include <opentelemetry/exporters/otlp/otlp_http_exporter_factory.h>
 #include <opentelemetry/trace/provider.h>
 #include <opentracing/shim/tracer.h>
 
@@ -58,21 +60,33 @@ void SetUpTracer(
     const std::string &service) {
   auto configYAML = YAML::LoadFile(config_file_path);
   
-  // Parse Jaeger endpoint configuration
-  std::string jaeger_endpoint = "localhost:6831";
-  if (configYAML["reporter"] && configYAML["reporter"]["localAgentHostPort"]) {
-    jaeger_endpoint = configYAML["reporter"]["localAgentHostPort"].as<std::string>();
-  }
-
-  // Configure OpenTelemetry Jaeger exporter
-  opentelemetry::exporter::jaeger::JaegerExporterOptions jaeger_options;
-  jaeger_options.endpoint = jaeger_endpoint;
-  
-  auto exporter = opentelemetry::exporter::jaeger::JaegerExporterFactory::Create(jaeger_options);
-  auto processor = opentelemetry::sdk::trace::SimpleSpanProcessorFactory::Create(std::move(exporter));
-  
   std::vector<std::unique_ptr<opentelemetry::sdk::trace::SpanProcessor>> processors;
-  processors.push_back(std::move(processor));
+  
+  // Check if OTEL_EXPORTER_OTLP_ENDPOINT environment variable is set
+  const char* otlp_endpoint_env = std::getenv("OTEL_EXPORTER_OTLP_ENDPOINT");
+  
+  if (otlp_endpoint_env != nullptr) {
+    // Use OTLP HTTP exporter if endpoint is configured
+    opentelemetry::exporter::otlp::OtlpHttpExporterOptions otlp_options;
+    otlp_options.url = std::string(otlp_endpoint_env) + "/v1/traces";
+    
+    auto exporter = opentelemetry::exporter::otlp::OtlpHttpExporterFactory::Create(otlp_options);
+    auto processor = opentelemetry::sdk::trace::SimpleSpanProcessorFactory::Create(std::move(exporter));
+    processors.push_back(std::move(processor));
+  } else {
+    // Fall back to Jaeger exporter
+    std::string jaeger_endpoint = "localhost:6831";
+    if (configYAML["reporter"] && configYAML["reporter"]["localAgentHostPort"]) {
+      jaeger_endpoint = configYAML["reporter"]["localAgentHostPort"].as<std::string>();
+    }
+    
+    opentelemetry::exporter::jaeger::JaegerExporterOptions jaeger_options;
+    jaeger_options.endpoint = jaeger_endpoint;
+    
+    auto exporter = opentelemetry::exporter::jaeger::JaegerExporterFactory::Create(jaeger_options);
+    auto processor = opentelemetry::sdk::trace::SimpleSpanProcessorFactory::Create(std::move(exporter));
+    processors.push_back(std::move(processor));
+  }
   
   // Create resource with service name
   auto resource_attributes = opentelemetry::sdk::resource::ResourceAttributes{
