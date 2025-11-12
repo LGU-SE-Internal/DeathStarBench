@@ -77,8 +77,8 @@ void UrlShortenHandler::ComposeUrls(
   // TextMapWriter writer(writer_text_map);
   // auto parent_span = opentracing::Tracer::Global()->Extract(reader);
   // auto span = opentracing::Tracer::Global()->StartSpan(
-      // "compose_urls_server",
-      // { opentracing::ChildOf(parent_span->get()) });
+  //     "compose_urls_server",
+  //     { opentracing::ChildOf(parent_span->get()) });
   // opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   std::vector<Url> target_urls;

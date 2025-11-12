@@ -104,11 +104,11 @@ void HomeTimelineHandler::WriteHomeTimeline(
   // TextMapReader reader(carrier);
   // auto parent_span = opentracing::Tracer::Global()->Extract(reader);
   // auto span = opentracing::Tracer::Global()->StartSpan(
-      // "write_home_timeline_server", {opentracing::ChildOf(parent_span->get())});
+  //     "write_home_timeline_server", {opentracing::ChildOf(parent_span->get())});
 
   // // Find followers of the user
   // auto followers_span = opentracing::Tracer::Global()->StartSpan(
-      // "get_followers_client", {opentracing::ChildOf(&span->context())});
+  //     "get_followers_client", {opentracing::ChildOf(&span->context())});
   std::map<std::string, std::string> writer_text_map;
   // TextMapWriter writer(writer_text_map);
   // opentracing::Tracer::Global()->Inject(followers_span->context(), writer);
@@ -139,8 +139,8 @@ void HomeTimelineHandler::WriteHomeTimeline(
   // // Update Redis ZSet
   // // Zset key: follower_id, Zset value: post_id_str, Zset score: timestamp_str
   // auto redis_span = opentracing::Tracer::Global()->StartSpan(
-      // "write_home_timeline_redis_update_client",
-      // {opentracing::ChildOf(&span->context())});
+  //     "write_home_timeline_redis_update_client",
+  //     {opentracing::ChildOf(&span->context())});
   // std::string post_id_str = std::to_string(post_id);
 
   // {
@@ -212,15 +212,15 @@ void HomeTimelineHandler::WriteHomeTimeline(
 
 
 // void HomeTimelineHandler::ReadHomeTimeline(
-    // std::vector<Post> &_return, int64_t req_id, int64_t user_id, int start_idx,
-    // int stop_idx, const std::map<std::string, std::string> &carrier) {
+  //   std::vector<Post> &_return, int64_t req_id, int64_t user_id, int start_idx,
+  //   int stop_idx, const std::map<std::string, std::string> &carrier) {
   // // Initialize a span
   // TextMapReader reader(carrier);
   std::map<std::string, std::string> writer_text_map;
   // TextMapWriter writer(writer_text_map);
   // auto parent_span = opentracing::Tracer::Global()->Extract(reader);
   // auto span = opentracing::Tracer::Global()->StartSpan(
-      // "read_home_timeline_server", {opentracing::ChildOf(parent_span->get())});
+  //     "read_home_timeline_server", {opentracing::ChildOf(parent_span->get())});
   // opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   if (stop_idx <= start_idx || start_idx < 0) {
@@ -228,8 +228,8 @@ void HomeTimelineHandler::WriteHomeTimeline(
   }
 
   // auto redis_span = opentracing::Tracer::Global()->StartSpan(
-      // "read_home_timeline_redis_find_client",
-      // {opentracing::ChildOf(&span->context())});
+  //     "read_home_timeline_redis_find_client",
+  //     {opentracing::ChildOf(&span->context())});
 
   std::vector<std::string> post_ids_str;
   try {

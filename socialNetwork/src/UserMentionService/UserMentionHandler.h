@@ -46,8 +46,8 @@ void UserMentionHandler::ComposeUserMentions(
   // TextMapWriter writer(writer_text_map);
   // auto parent_span = opentracing::Tracer::Global()->Extract(reader);
   // auto span = opentracing::Tracer::Global()->StartSpan(
-      // "compose_user_mentions_server",
-      // {opentracing::ChildOf(parent_span->get())});
+  //     "compose_user_mentions_server",
+  //     {opentracing::ChildOf(parent_span->get())});
   // opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   std::vector<UserMention> user_mentions;
@@ -58,7 +58,7 @@ void UserMentionHandler::ComposeUserMentions(
       usernames_not_cached.emplace(std::make_pair(username, false));
     }
 
-    // Find in Memcached
+  //   Find in Memcached
     memcached_return_t rc;
     auto client = memcached_pool_pop(_memcached_client_pool, true, &rc);
     if (!client) {
@@ -81,9 +81,9 @@ void UserMentionHandler::ComposeUserMentions(
       idx++;
     }
 
-    // auto get_span = opentracing::Tracer::Global()->StartSpan(
-        // "compose_user_mentions_memcached_get_client",
-        // {opentracing::ChildOf(&span->context())});
+  //   auto get_span = opentracing::Tracer::Global()->StartSpan(
+  //       "compose_user_mentions_memcached_get_client",
+  //       {opentracing::ChildOf(&span->context())});
     rc = memcached_mget(client, keys, key_sizes, usernames.size());
     if (rc != MEMCACHED_SUCCESS) {
       LOG(error) << "Cannot get usernames of request " << req_id << ": "
@@ -92,7 +92,7 @@ void UserMentionHandler::ComposeUserMentions(
       se.errorCode = ErrorCode::SE_MEMCACHED_ERROR;
       se.message = memcached_strerror(client, rc);
       memcached_pool_push(_memcached_client_pool, client);
-      // get_span->Finish();
+  //     get_span->Finish();
       throw se;
     }
 
@@ -119,7 +119,7 @@ void UserMentionHandler::ComposeUserMentions(
         se.errorCode = ErrorCode::SE_MEMCACHED_ERROR;
         se.message =
             "Cannot get usernames of request " + std::to_string(req_id);
-        // get_span->Finish();
+  //       get_span->Finish();
         throw se;
       }
       UserMention new_user_mention;
@@ -135,14 +135,14 @@ void UserMentionHandler::ComposeUserMentions(
     }
     memcached_quit(client);
     memcached_pool_push(_memcached_client_pool, client);
-    // get_span->Finish();
+  //   get_span->Finish();
     for (int i = 0; i < usernames.size(); ++i) {
       delete keys[i];
     }
     delete[] keys;
     delete[] key_sizes;
 
-    // Find the rest in MongoDB
+  //   Find the rest in MongoDB
     if (!usernames_not_cached.empty()) {
       mongoc_client_t *mongodb_client =
           mongoc_client_pool_pop(_mongodb_client_pool);
@@ -180,7 +180,7 @@ void UserMentionHandler::ComposeUserMentions(
       bson_append_array_end(&query_child_0, &query_username_list);
       bson_append_document_end(query, &query_child_0);
 
-      // auto find_span = opentracing::Tracer::Global()->StartSpan(
+  //     auto find_span = opentracing::Tracer::Global()->StartSpan(
           // "compose_user_mentions_mongo_find_client",
           // {opentracing::ChildOf(&span->context())});
       mongoc_cursor_t *cursor =
@@ -222,7 +222,7 @@ void UserMentionHandler::ComposeUserMentions(
       mongoc_cursor_destroy(cursor);
       mongoc_collection_destroy(collection);
       mongoc_client_pool_push(_mongodb_client_pool, mongodb_client);
-      // find_span->Finish();
+  //     find_span->Finish();
     }
   }
 
