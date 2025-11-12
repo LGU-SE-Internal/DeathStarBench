@@ -137,7 +137,7 @@ void PostStorageHandler::StorePost(
 
   bson_error_t error;
   // auto insert_span = opentracing::Tracer::Global()->StartSpan(
-      "post_storage_mongo_insert_client",
+      // "post_storage_mongo_insert_client",
       // {opentracing::ChildOf(&span->context())});
   bool inserted = mongoc_collection_insert_one(collection, new_doc, nullptr,
                                                nullptr, &error);
@@ -256,7 +256,7 @@ void PostStorageHandler::ReadPost(
     bson_t *query = bson_new();
     BSON_APPEND_INT64(query, "post_id", post_id);
     // auto find_span = opentracing::Tracer::Global()->StartSpan(
-        "post_storage_mongo_find_client",
+        // "post_storage_mongo_find_client",
         // {opentracing::ChildOf(&span->context())});
     mongoc_cursor_t *cursor =
         mongoc_collection_find_with_opts(collection, query, nullptr, nullptr);
@@ -331,7 +331,7 @@ void PostStorageHandler::ReadPost(
         throw se;
       }
       // auto set_span = opentracing::Tracer::Global()->StartSpan(
-          "post_storage_mmc_set_client",
+          // "post_storage_mmc_set_client",
           // {opentracing::ChildOf(&span->context())});
 
       memcached_rc = memcached_set(

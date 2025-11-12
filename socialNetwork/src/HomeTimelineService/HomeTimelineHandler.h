@@ -228,7 +228,7 @@ void HomeTimelineHandler::WriteHomeTimeline(
   }
 
   // auto redis_span = opentracing::Tracer::Global()->StartSpan(
-      "read_home_timeline_redis_find_client",
+      // "read_home_timeline_redis_find_client",
       // {opentracing::ChildOf(&span->context())});
 
   std::vector<std::string> post_ids_str;

@@ -766,7 +766,7 @@ int64_t UserHandler::GetUserId(
   char *user_id_mmc;
   if (memcached_client) {
     // auto id_get_span = opentracing::Tracer::Global()->StartSpan(
-        "user_mmc_get_user_id_client",
+        // "user_mmc_get_user_id_client",
         // {opentracing::ChildOf(&span->context())});
     user_id_mmc =
         memcached_get(memcached_client, (username + ":user_id").c_str(),

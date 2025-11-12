@@ -82,7 +82,7 @@ void UserMentionHandler::ComposeUserMentions(
     }
 
     // auto get_span = opentracing::Tracer::Global()->StartSpan(
-        "compose_user_mentions_memcached_get_client",
+        // "compose_user_mentions_memcached_get_client",
         // {opentracing::ChildOf(&span->context())});
     rc = memcached_mget(client, keys, key_sizes, usernames.size());
     if (rc != MEMCACHED_SUCCESS) {
@@ -181,7 +181,7 @@ void UserMentionHandler::ComposeUserMentions(
       bson_append_document_end(query, &query_child_0);
 
       // auto find_span = opentracing::Tracer::Global()->StartSpan(
-          "compose_user_mentions_mongo_find_client",
+          // "compose_user_mentions_mongo_find_client",
           // {opentracing::ChildOf(&span->context())});
       mongoc_cursor_t *cursor =
           mongoc_collection_find_with_opts(collection, query, nullptr, nullptr);

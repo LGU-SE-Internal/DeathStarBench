@@ -126,7 +126,7 @@ void UserTimelineHandler::WriteUserTimeline(
   bson_error_t error;
   bson_t reply;
   // auto update_span = opentracing::Tracer::Global()->StartSpan(
-      "write_user_timeline_mongo_insert_client",
+      // "write_user_timeline_mongo_insert_client",
       // {opentracing::ChildOf(&span->context())});
   bool updated = mongoc_collection_find_and_modify(collection, query, nullptr,
                                                    update, nullptr, false, true,
@@ -161,7 +161,7 @@ void UserTimelineHandler::WriteUserTimeline(
 
   // Update user's timeline in redis
   // auto redis_span = opentracing::Tracer::Global()->StartSpan(
-      "write_user_timeline_redis_update_client",
+      // "write_user_timeline_redis_update_client",
       // {opentracing::ChildOf(&span->context())});
   try {
     if (_redis_client_pool)
@@ -200,7 +200,7 @@ void UserTimelineHandler::ReadUserTimeline(
   }
 
   // auto redis_span = opentracing::Tracer::Global()->StartSpan(
-      "read_user_timeline_redis_find_client",
+      // "read_user_timeline_redis_find_client",
       // {opentracing::ChildOf(&span->context())});
 
   std::vector<std::string> post_ids_str;
@@ -253,7 +253,7 @@ void UserTimelineHandler::ReadUserTimeline(
                             BCON_INT32(0), BCON_INT32(stop), "]", "}", "}");
 
     // auto find_span = opentracing::Tracer::Global()->StartSpan(
-        "user_timeline_mongo_find_client",
+        // "user_timeline_mongo_find_client",
         // {opentracing::ChildOf(&span->context())});
     mongoc_cursor_t *cursor =
         mongoc_collection_find_with_opts(collection, query, opts, nullptr);
@@ -325,7 +325,7 @@ void UserTimelineHandler::ReadUserTimeline(
 
   if (redis_update_map.size() > 0) {
     // auto redis_update_span = opentracing::Tracer::Global()->StartSpan(
-        "user_timeline_redis_update_client",
+        // "user_timeline_redis_update_client",
         // {opentracing::ChildOf(&span->context())});
     try {
       if (_redis_client_pool)
