@@ -10,9 +10,10 @@
 #include <opentracing/propagation.h>
 #include <opentelemetry/sdk/trace/tracer_provider_factory.h>
 #include <opentelemetry/sdk/trace/simple_processor_factory.h>
+#include <opentelemetry/sdk/resource/resource.h>
 #include <opentelemetry/exporters/jaeger/jaeger_exporter_factory.h>
 #include <opentelemetry/trace/provider.h>
-#include "opentracing-shim/include/tracer.h"
+#include <opentracing/shim/tracer.h>
 
 namespace media_service {
 
