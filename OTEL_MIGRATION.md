@@ -8,32 +8,32 @@ The migration uses the OpenTelemetry C++ SDK with the OpenTracing shim layer to 
 
 ## ⚠️ Important: Building Docker Images
 
-After this migration, the Docker images **must** be rebuilt with updated dependencies. The old base images don't include OpenTelemetry C++ SDK.
+After this migration, the Docker images **must** be rebuilt with updated dependencies including OpenTelemetry C++ SDK.
 
 **See [BUILD_INSTRUCTIONS.md](BUILD_INSTRUCTIONS.md) for detailed build instructions.**
 
 Quick start:
 ```bash
-# Use the provided build script
+# Use the provided build script (uses registry 10.10.10.240/library by default)
 ./build-docker.sh
 
 # Or build manually:
-# 1. Build dependency images first
-cd socialNetwork/docker/thrift-microservice-deps/cpp
-docker build -t deathstarbench/social-network-microservices-deps:latest .
+cd socialNetwork
+docker build -t 10.10.10.240/library/social-network-microservices:otel .
 
-# 2. Then build service images
-cd ../../../
-docker build -t social-network-microservices:otel .
+cd ../mediaMicroservices
+docker build -t 10.10.10.240/library/media-microservices:otel .
 ```
+
+**Note:** The Dockerfiles now include all dependencies in a single build stage, eliminating the need for separate dependency images.
 
 ## Changes Made
 
 ### 1. Dependency Updates
 
 #### Dockerfiles
-- **socialNetwork/docker/thrift-microservice-deps/cpp/Dockerfile**
-- **mediaMicroservices/docker/thrift-microservice-deps/cpp/Dockerfile**
+- **socialNetwork/Dockerfile** - Single-stage build including all dependencies and OpenTelemetry C++ SDK
+- **mediaMicroservices/Dockerfile** - Single-stage build including all dependencies and OpenTelemetry C++ SDK
 
 Added OpenTelemetry C++ SDK v1.14.2 installation with the following features enabled:
 - Jaeger exporter support (`WITH_JAEGER=ON`)
@@ -42,9 +42,10 @@ Added OpenTelemetry C++ SDK v1.14.2 installation with the following features ena
 
 The OpenTracing library (v1.5.1) is kept for shim compatibility.
 
-**Updated Main Dockerfiles:**
-- **socialNetwork/Dockerfile** - Now uses `deathstarbench/social-network-microservices-deps:latest`
-- **mediaMicroservices/Dockerfile** - Now uses `deathstarbench/media-microservices-deps:latest`
+**Simplified Build Process:**
+- Dependencies are now built directly in the main Dockerfiles
+- No separate dependency images required
+- Default registry configured to `10.10.10.240/library`
 
 ### 2. Tracing Implementation Updates
 
