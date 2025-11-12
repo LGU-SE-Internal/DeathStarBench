@@ -106,7 +106,7 @@ void TextHandler::ComposeText(
     std::map<std::string, std::string> user_mention_writer_text_map;
     // TextMapWriter user_mention_writer(user_mention_writer_text_map);
     // opentracing::Tracer::Global()->Inject(user_mention_span->context(),
-                                          user_mention_writer);
+                                          // user_mention_writer);
 
     auto user_mention_client_wrapper = _user_mention_client_pool->Pop();
     if (!user_mention_client_wrapper) {
