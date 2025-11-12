@@ -81,6 +81,13 @@ RUN cd /tmp && \
     make -j$(nproc) && make install && \
     cd /tmp && rm -rf jaeger-client-cpp-${LIB_JAEGER_VERSION}*
 
+# Upgrade CMake for OpenTelemetry (requires CMake 3.12+)
+RUN cd /tmp && \
+    wget https://github.com/Kitware/CMake/releases/download/v3.20.0/cmake-3.20.0-linux-x86_64.tar.gz && \
+    tar -zxf cmake-3.20.0-linux-x86_64.tar.gz && \
+    cp -r cmake-3.20.0-linux-x86_64/* /usr/local/ && \
+    rm -rf cmake-3.20.0-linux-x86_64*
+
 # Install opentelemetry-cpp
 RUN cd /tmp && \
     wget -O opentelemetry-cpp-${LIB_OPENTELEMETRY_VERSION}.tar.gz https://github.com/open-telemetry/opentelemetry-cpp/archive/v${LIB_OPENTELEMETRY_VERSION}.tar.gz && \
@@ -159,7 +166,7 @@ RUN cd /tmp && \
 RUN pip3 install PyYAML
 
 # Update library cache
-ENV LD_LIBRARY_PATH /usr/local/lib:${LD_LIBRARY_PATH}
+ENV LD_LIBRARY_PATH=/usr/local/lib:${LD_LIBRARY_PATH}
 RUN ldconfig
 
 # Build social network microservices
@@ -186,7 +193,7 @@ RUN apt-get update && \
         libmemcachedutil2 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-ENV LD_LIBRARY_PATH /usr/local/lib:${LD_LIBRARY_PATH}
+ENV LD_LIBRARY_PATH=/usr/local/lib:${LD_LIBRARY_PATH}
 RUN ldconfig
 
 WORKDIR /social-network-microservices
