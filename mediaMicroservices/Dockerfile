@@ -1,4 +1,4 @@
-FROM ubuntu:16.04
+FROM ubuntu:20.04
 
 ARG LIB_MONGOC_VERSION=1.14.0
 ARG LIB_THRIFT_VERSION=0.12.0
@@ -14,7 +14,7 @@ ARG BUILD_DEPS="ca-certificates g++ cmake wget git libmemcached-dev automake bis
 
 # Install build dependencies
 RUN apt-get update && \
-    apt-get install -y ${BUILD_DEPS} --no-install-recommends && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y ${BUILD_DEPS} --no-install-recommends && \
     rm -rf /var/lib/apt/lists/*
 
 # Install mongo-c-driver
@@ -77,14 +77,7 @@ RUN cd /tmp && \
     make && make install && \
     cd /tmp && rm -rf jaeger-client-cpp-${LIB_JAEGER_VERSION}*
 
-# Upgrade CMake for OpenTelemetry (requires CMake 3.12+)
-RUN cd /tmp && \
-    wget https://github.com/Kitware/CMake/releases/download/v3.20.0/cmake-3.20.0-linux-x86_64.tar.gz && \
-    tar -zxf cmake-3.20.0-linux-x86_64.tar.gz && \
-    cp -r cmake-3.20.0-linux-x86_64/* /usr/local/ && \
-    rm -rf cmake-3.20.0-linux-x86_64*
-
-# Install opentelemetry-cpp
+# Install opentelemetry-cpp (Ubuntu 20.04 comes with CMake 3.16+ which is sufficient)
 RUN cd /tmp && \
     wget -O opentelemetry-cpp-${LIB_OPENTELEMETRY_VERSION}.tar.gz https://github.com/open-telemetry/opentelemetry-cpp/archive/v${LIB_OPENTELEMETRY_VERSION}.tar.gz && \
     tar -zxf opentelemetry-cpp-${LIB_OPENTELEMETRY_VERSION}.tar.gz && \
