@@ -827,7 +827,7 @@ void SocialGraphHandler::FollowWithUsername(
     const std::map<std::string, std::string> &carrier) {
   // // Initialize a span
   // TextMapReader reader(carrier);
-  // std::map<std::string, std::string> writer_text_map;
+  std::map<std::string, std::string> writer_text_map;
   // TextMapWriter writer(writer_text_map);
   // auto parent_span = opentracing::Tracer::Global()->Extract(reader);
   // auto span = opentracing::Tracer::Global()->StartSpan(
@@ -901,7 +901,7 @@ void SocialGraphHandler::UnfollowWithUsername(
     const std::map<std::string, std::string> &carrier) {
   // // Initialize a span
   // TextMapReader reader(carrier);
-  // std::map<std::string, std::string> writer_text_map;
+  std::map<std::string, std::string> writer_text_map;
   // TextMapWriter writer(writer_text_map);
   // auto parent_span = opentracing::Tracer::Global()->Extract(reader);
   // auto span = opentracing::Tracer::Global()->StartSpan(
