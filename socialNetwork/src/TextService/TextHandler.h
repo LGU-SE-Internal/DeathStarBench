@@ -100,7 +100,7 @@ void TextHandler::ComposeText(
 
   auto user_mention_future = std::async(std::launch::async, [&]() {
     // auto user_mention_span = opentracing::Tracer::Global()->StartSpan(
-        "compose_user_mentions_client",
+        // "compose_user_mentions_client",
         // {opentracing::ChildOf(&span->context())});
 
     std::map<std::string, std::string> user_mention_writer_text_map;
