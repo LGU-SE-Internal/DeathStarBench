@@ -11,7 +11,7 @@ target_include_directories(
     MovieIdService PRIVATE
     ${LIBMEMCACHED_INCLUDE_DIR}
     ${MONGOC_INCLUDE_DIRS}
-    /usr/local/include/jaegertracing
+    /usr/local/include/opentelemetry
 )
 
 target_link_libraries(
@@ -24,7 +24,7 @@ target_link_libraries(
     ${Boost_LIBRARIES}
     Boost::log
     Boost::log_setup
-    jaegertracing
+    opentelemetry_trace opentelemetry_exporter_jaeger_trace opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable opentracing_shim
 )
 
 target_compile_definitions (

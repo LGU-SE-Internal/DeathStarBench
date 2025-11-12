@@ -5,11 +5,14 @@
 
 #include <string>
 #include <yaml-cpp/yaml.h>
-#include <jaegertracing/Tracer.h>
+#include <map>
 
 #include <opentracing/propagation.h>
-#include <string>
-#include <map>
+#include <opentelemetry/sdk/trace/tracer_provider_factory.h>
+#include <opentelemetry/sdk/trace/simple_processor_factory.h>
+#include <opentelemetry/exporters/jaeger/jaeger_exporter_factory.h>
+#include <opentelemetry/trace/provider.h>
+#include "opentracing-shim/include/tracer.h"
 #include "logger.h"
 
 namespace social_network {
@@ -55,31 +58,48 @@ void SetUpTracer(
     const std::string &service) {
   auto configYAML = YAML::LoadFile(config_file_path);
 
-  // Enable local Jaeger agent, by prepending the service name to the default
-  // Jaeger agent's hostname
-  // configYAML["reporter"]["localAgentHostPort"] = service + "-" +
-  //     configYAML["reporter"]["localAgentHostPort"].as<std::string>();
-
-  auto config = jaegertracing::Config::parse(configYAML);
+  // Parse Jaeger endpoint configuration
+  std::string jaeger_endpoint = "localhost:6831";
+  if (configYAML["reporter"] && configYAML["reporter"]["localAgentHostPort"]) {
+    jaeger_endpoint = configYAML["reporter"]["localAgentHostPort"].as<std::string>();
+  }
 
   bool r = false;
   while (!r) {
-    try
-    {
-      auto tracer = jaegertracing::Tracer::make(
-        service, config, jaegertracing::logging::consoleLogger());
+    try {
+      // Configure OpenTelemetry Jaeger exporter
+      opentelemetry::exporter::jaeger::JaegerExporterOptions jaeger_options;
+      jaeger_options.endpoint = jaeger_endpoint;
+      
+      auto exporter = opentelemetry::exporter::jaeger::JaegerExporterFactory::Create(jaeger_options);
+      auto processor = opentelemetry::sdk::trace::SimpleSpanProcessorFactory::Create(std::move(exporter));
+      
+      std::vector<std::unique_ptr<opentelemetry::sdk::trace::SpanProcessor>> processors;
+      processors.push_back(std::move(processor));
+      
+      // Create resource with service name
+      auto resource_attributes = opentelemetry::sdk::resource::ResourceAttributes{
+        {"service.name", service}
+      };
+      auto resource = opentelemetry::sdk::resource::Resource::Create(resource_attributes);
+      
+      auto provider = opentelemetry::sdk::trace::TracerProviderFactory::Create(
+        std::move(processors), resource);
+      
+      // Set the global tracer provider
+      opentelemetry::trace::Provider::SetTracerProvider(std::move(provider));
+      
+      // Create OpenTracing shim
+      auto tracer_shim = opentracing::shim::TracerShim::createTracerShim();
+      opentracing::Tracer::InitGlobal(tracer_shim);
+      
       r = true;
-      opentracing::Tracer::InitGlobal(
-      std::static_pointer_cast<opentracing::Tracer>(tracer));
     }
-    catch(...)
-    {
+    catch(...) {
       LOG(error) << "Failed to connect to jaeger, retrying ...";
       sleep(1);
     }
   }
-
-
 }
 
 

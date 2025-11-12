@@ -11,7 +11,7 @@ add_executable(
 target_include_directories(
     ComposeReviewService PRIVATE
     ${LIBMEMCACHED_INCLUDE_DIR}
-    /usr/local/include/jaegertracing
+    /usr/local/include/opentelemetry
 )
 
 target_link_libraries(
@@ -23,7 +23,7 @@ target_link_libraries(
     ${Boost_LIBRARIES}
     Boost::log
     Boost::log_setup
-    jaegertracing
+    opentelemetry_trace opentelemetry_exporter_jaeger_trace opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable opentracing_shim
 )
 
 install(TARGETS ComposeReviewService DESTINATION ./)
