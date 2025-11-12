@@ -211,9 +211,9 @@ void HomeTimelineHandler::WriteHomeTimeline(
 // }
 
 
-// void HomeTimelineHandler::ReadHomeTimeline(
-  //   std::vector<Post> &_return, int64_t req_id, int64_t user_id, int start_idx,
-  //   int stop_idx, const std::map<std::string, std::string> &carrier) {
+void HomeTimelineHandler::ReadHomeTimeline(
+    std::vector<Post> &_return, int64_t req_id, int64_t user_id, int start_idx,
+    int stop_idx, const std::map<std::string, std::string> &carrier) {
   // // Initialize a span
   // TextMapReader reader(carrier);
   std::map<std::string, std::string> writer_text_map;
