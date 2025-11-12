@@ -81,7 +81,7 @@ RUN cd /tmp \
 RUN cd /tmp \
   && git clone -b v1.43.0 --depth 1 https://github.com/grpc/grpc.git \
   && cd grpc \
-  && git submodule update --init --depth 1 third_party/abseil-cpp third_party/re2 third_party/zlib third_party/cares/cares \
+  && git submodule update --init third_party/abseil-cpp third_party/re2 third_party/zlib third_party/cares/cares \
   && mkdir -p cmake-build && cd cmake-build \
   && cmake -DgRPC_INSTALL=ON \
     -DgRPC_BUILD_TESTS=OFF \
