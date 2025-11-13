@@ -6,6 +6,7 @@ ARG LIB_JSON_VERSION=3.6.1
 ARG LIB_JAEGER_VERSION=0.4.2
 ARG LIB_YAML_VERSION=0.6.2
 ARG LIB_OPENTRACING_VERSION=1.5.1
+ARG LIB_PROTOBUF_VERSION=3.19.4
 ARG LIB_OPENTELEMETRY_VERSION=1.14.2
 ARG LIB_CPP_JWT_VERSION=1.1.1
 ARG LIB_CPP_REDIS_VERSION=4.3.1
@@ -80,6 +81,15 @@ RUN cd /tmp && \
     cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-fPIC" -DHUNTER_ENABLED=0 -DBUILD_TESTING=0 -DJAEGERTRACING_WITH_YAML_CPP=1 -DJAEGERTRACING_BUILD_EXAMPLES=0 .. && \
     make -j$(nproc) && make install && \
     cd /tmp && rm -rf jaeger-client-cpp-${LIB_JAEGER_VERSION}*
+
+# Install protobuf (required by OpenTelemetry OTLP exporters)
+RUN cd /tmp && \
+    wget -O protobuf-${LIB_PROTOBUF_VERSION}.tar.gz https://github.com/protocolbuffers/protobuf/releases/download/v${LIB_PROTOBUF_VERSION}/protobuf-all-${LIB_PROTOBUF_VERSION}.tar.gz && \
+    tar -zxf protobuf-${LIB_PROTOBUF_VERSION}.tar.gz && \
+    cd protobuf-${LIB_PROTOBUF_VERSION} && \
+    ./configure --prefix=/usr/local && \
+    make -j$(nproc) && make install && ldconfig && \
+    cd /tmp && rm -rf protobuf-${LIB_PROTOBUF_VERSION}*
 
 # Install opentelemetry-cpp (Ubuntu 20.04 comes with CMake 3.16+ which is sufficient)
 # Note: Only building OTLP HTTP support (collector uses HTTP endpoint :4318)
