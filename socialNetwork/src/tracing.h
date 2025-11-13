@@ -89,7 +89,7 @@ void SetUpTracer(
         std::move(processors), resource);
       
       // Set the global tracer provider
-      opentelemetry::trace::Provider::SetTracerProvider(std::move(provider));
+      opentelemetry::trace::Provider::SetTracerProvider(std::shared_ptr<opentelemetry::trace::TracerProvider>(std::move(provider)));
       
       // Create OpenTracing shim
       auto tracer_shim = opentelemetry::opentracingshim::TracerShim::createTracerShim();
