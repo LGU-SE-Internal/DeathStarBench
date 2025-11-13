@@ -15,7 +15,7 @@ ARG LIB_SIMPLEAMQPCLIENT_VERSION=2.4.0
 ARG LIB_HIREDIS_VERSION=1.0.0
 ARG LIB_REDIS_PLUS_PLUS_VERSION=1.2.3
 
-ARG BUILD_DEPS="ca-certificates g++ cmake wget git libmemcached-dev automake bison flex libboost-all-dev libevent-dev libssl-dev libtool make pkg-config librabbitmq-dev python3-dev python3-pip python3-setuptools python3-wheel"
+ARG BUILD_DEPS="ca-certificates g++ cmake wget git libmemcached-dev automake bison flex libboost-all-dev libevent-dev libssl-dev libtool make pkg-config librabbitmq-dev python3-dev python3-pip python3-setuptools python3-wheel libcurl4-openssl-dev"
 
 # Install build dependencies
 RUN apt-get update && \

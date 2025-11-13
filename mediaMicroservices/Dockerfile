@@ -11,7 +11,7 @@ ARG LIB_OPENTELEMETRY_VERSION=1.14.2
 ARG LIB_CPP_JWT_VERSION=1.1.1
 ARG LIB_CPP_REDIS_VERSION=4.3.1
 
-ARG BUILD_DEPS="ca-certificates g++ cmake wget git libmemcached-dev automake bison flex libboost-all-dev libevent-dev libssl-dev libtool make pkg-config"
+ARG BUILD_DEPS="ca-certificates g++ cmake wget git libmemcached-dev automake bison flex libboost-all-dev libevent-dev libssl-dev libtool make pkg-config libcurl4-openssl-dev"
 
 # Install build dependencies
 RUN apt-get update && \
