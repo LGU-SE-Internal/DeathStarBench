@@ -14,7 +14,7 @@
 #include <opentelemetry/sdk/resource/resource.h>
 #include <opentelemetry/exporters/otlp/otlp_http_exporter_factory.h>
 #include <opentelemetry/trace/provider.h>
-#include <opentracing/shim/tracer.h>
+#include <opentelemetry/opentracingshim/tracer_shim.h>
 #include "logger.h"
 
 namespace social_network {
@@ -92,7 +92,7 @@ void SetUpTracer(
       opentelemetry::trace::Provider::SetTracerProvider(std::move(provider));
       
       // Create OpenTracing shim
-      auto tracer_shim = opentracing::shim::TracerShim::createTracerShim();
+      auto tracer_shim = opentelemetry::opentracingshim::TracerShim::createTracerShim();
       opentracing::Tracer::InitGlobal(tracer_shim);
       
       r = true;
