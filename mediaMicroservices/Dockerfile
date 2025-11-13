@@ -86,7 +86,6 @@ RUN cd /tmp && \
     cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-fPIC" \
       -DBUILD_TESTING=OFF \
       -DWITH_JAEGER=ON \
-      -DWITH_OTLP=ON \
       -DWITH_OTLP_GRPC=ON \
       -DWITH_OTLP_HTTP=ON \
       -DWITH_EXAMPLES=OFF \
