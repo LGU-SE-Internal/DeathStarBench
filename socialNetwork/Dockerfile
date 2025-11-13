@@ -3,11 +3,10 @@ FROM ubuntu:20.04 AS builder
 ARG LIB_MONGOC_VERSION=1.15.0
 ARG LIB_THRIFT_VERSION=0.12.0
 ARG LIB_JSON_VERSION=3.6.1
-ARG LIB_JAEGER_VERSION=0.4.2
 ARG LIB_YAML_VERSION=0.6.2
-ARG LIB_OPENTRACING_VERSION=1.5.1
+ARG LIB_OPENTRACING_VERSION=1.6.0
 ARG LIB_PROTOBUF_VERSION=3.19.4
-ARG LIB_OPENTELEMETRY_VERSION=1.14.2
+ARG LIB_OPENTELEMETRY_VERSION=1.23.0
 ARG LIB_CPP_JWT_VERSION=1.1.1
 ARG LIB_CPP_REDIS_VERSION=4.3.1
 ARG LIB_AMQP_CPP_VERSION=4.1.4
@@ -72,15 +71,6 @@ RUN cd /tmp && \
     make -j$(nproc) && make install && \
     cd /tmp && rm -rf opentracing-cpp-${LIB_OPENTRACING_VERSION}*
 
-# Install jaeger-client-cpp
-RUN cd /tmp && \
-    wget -O jaeger-client-cpp-${LIB_JAEGER_VERSION}.tar.gz https://github.com/jaegertracing/jaeger-client-cpp/archive/v${LIB_JAEGER_VERSION}.tar.gz && \
-    tar -zxf jaeger-client-cpp-${LIB_JAEGER_VERSION}.tar.gz && \
-    cd jaeger-client-cpp-${LIB_JAEGER_VERSION} && \
-    mkdir -p cmake-build && cd cmake-build && \
-    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-fPIC" -DHUNTER_ENABLED=0 -DBUILD_TESTING=0 -DJAEGERTRACING_WITH_YAML_CPP=1 -DJAEGERTRACING_BUILD_EXAMPLES=0 .. && \
-    make -j$(nproc) && make install && \
-    cd /tmp && rm -rf jaeger-client-cpp-${LIB_JAEGER_VERSION}*
 
 # Install protobuf (required by OpenTelemetry OTLP exporters)
 RUN cd /tmp && \
