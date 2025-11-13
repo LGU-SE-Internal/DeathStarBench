@@ -93,6 +93,7 @@ RUN cd /tmp && \
 
 # Install opentelemetry-cpp (Ubuntu 20.04 comes with CMake 3.16+ which is sufficient)
 # Note: Only building OTLP HTTP support (collector uses HTTP endpoint :4318)
+# WITH_OPENTRACING=ON builds the OpenTracing shim for backward compatibility
 RUN cd /tmp && \
     wget -O opentelemetry-cpp-${LIB_OPENTELEMETRY_VERSION}.tar.gz https://github.com/open-telemetry/opentelemetry-cpp/archive/v${LIB_OPENTELEMETRY_VERSION}.tar.gz && \
     tar -zxf opentelemetry-cpp-${LIB_OPENTELEMETRY_VERSION}.tar.gz && \
@@ -101,6 +102,7 @@ RUN cd /tmp && \
     cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-fPIC" \
       -DBUILD_TESTING=OFF \
       -DWITH_OTLP_HTTP=ON \
+      -DWITH_OPENTRACING=ON \
       -DWITH_EXAMPLES=OFF \
       -DBUILD_SHARED_LIBS=ON \
       -DOPENTELEMETRY_INSTALL=ON \
