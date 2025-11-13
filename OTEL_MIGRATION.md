@@ -70,7 +70,7 @@ auto exporter = opentelemetry::exporter::jaeger::JaegerExporterFactory::Create(j
 auto processor = opentelemetry::sdk::trace::SimpleSpanProcessorFactory::Create(std::move(exporter));
 auto provider = opentelemetry::sdk::trace::TracerProviderFactory::Create(std::move(processors), resource);
 opentelemetry::trace::Provider::SetTracerProvider(std::move(provider));
-auto tracer_shim = opentracing::shim::TracerShim::createTracerShim();
+auto tracer_shim = opentelemetry::opentracingshim::TracerShim::createTracerShim();
 opentracing::Tracer::InitGlobal(tracer_shim);
 ```
 
