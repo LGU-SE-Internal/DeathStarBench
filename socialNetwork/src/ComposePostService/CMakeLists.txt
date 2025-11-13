@@ -26,7 +26,7 @@ target_link_libraries(
     Boost::log
     Boost::log_setup
     OpenSSL::SSL
-    /usr/local/lib/libopentelemetry_trace opentelemetry_exporter_otlp_http opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable opentracing_shim.so
+    /usr/local/lib/libopentelemetry_trace opentelemetry_exporter_otlp_http opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable opentelemetry_opentelemetry_opentracing_shim
     /usr/local/lib/libSimpleAmqpClient.so
 
 )
