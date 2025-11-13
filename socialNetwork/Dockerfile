@@ -100,7 +100,6 @@ RUN cd /tmp && \
     mkdir -p cmake-build && cd cmake-build && \
     cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-fPIC" \
       -DBUILD_TESTING=OFF \
-      -DWITH_JAEGER=ON \
       -DWITH_OTLP_HTTP=ON \
       -DWITH_EXAMPLES=OFF \
       -DBUILD_SHARED_LIBS=ON \

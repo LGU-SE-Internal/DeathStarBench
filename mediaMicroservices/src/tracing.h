@@ -12,7 +12,6 @@
 #include <opentelemetry/sdk/trace/tracer_provider_factory.h>
 #include <opentelemetry/sdk/trace/simple_processor_factory.h>
 #include <opentelemetry/sdk/resource/resource.h>
-#include <opentelemetry/exporters/jaeger/jaeger_exporter_factory.h>
 #include <opentelemetry/exporters/otlp/otlp_http_exporter_factory.h>
 #include <opentelemetry/trace/provider.h>
 #include <opentracing/shim/tracer.h>
@@ -62,31 +61,19 @@ void SetUpTracer(
   
   std::vector<std::unique_ptr<opentelemetry::sdk::trace::SpanProcessor>> processors;
   
-  // Check if OTEL_EXPORTER_OTLP_ENDPOINT environment variable is set
+  // Use OTLP HTTP exporter
+  // Get endpoint from environment variable or use default
   const char* otlp_endpoint_env = std::getenv("OTEL_EXPORTER_OTLP_ENDPOINT");
+  std::string otlp_endpoint = otlp_endpoint_env != nullptr ? otlp_endpoint_env : "http://localhost:4318";
   
-  if (otlp_endpoint_env != nullptr) {
-    // Use OTLP HTTP exporter if endpoint is configured
-    opentelemetry::exporter::otlp::OtlpHttpExporterOptions otlp_options;
-    otlp_options.url = std::string(otlp_endpoint_env) + "/v1/traces";
-    
-    auto exporter = opentelemetry::exporter::otlp::OtlpHttpExporterFactory::Create(otlp_options);
-    auto processor = opentelemetry::sdk::trace::SimpleSpanProcessorFactory::Create(std::move(exporter));
-    processors.push_back(std::move(processor));
-  } else {
-    // Fall back to Jaeger exporter
-    std::string jaeger_endpoint = "localhost:6831";
-    if (configYAML["reporter"] && configYAML["reporter"]["localAgentHostPort"]) {
-      jaeger_endpoint = configYAML["reporter"]["localAgentHostPort"].as<std::string>();
-    }
-    
-    opentelemetry::exporter::jaeger::JaegerExporterOptions jaeger_options;
-    jaeger_options.endpoint = jaeger_endpoint;
-    
-    auto exporter = opentelemetry::exporter::jaeger::JaegerExporterFactory::Create(jaeger_options);
-    auto processor = opentelemetry::sdk::trace::SimpleSpanProcessorFactory::Create(std::move(exporter));
-    processors.push_back(std::move(processor));
-  }
+  opentelemetry::exporter::otlp::OtlpHttpExporterOptions otlp_options;
+  otlp_options.url = otlp_endpoint + "/v1/traces";
+  
+  auto exporter = opentelemetry::exporter::otlp::OtlpHttpExporterFactory::Create(otlp_options);
+  auto processor = opentelemetry::sdk::trace::SimpleSpanProcessorFactory::Create(std::move(exporter));
+  processors.push_back(std::move(processor));
+  
+  std::cout << "Using OpenTelemetry OTLP HTTP exporter: " << otlp_options.url << std::endl;
   
   // Create resource with service name
   auto resource_attributes = opentelemetry::sdk::resource::ResourceAttributes{
