@@ -183,7 +183,8 @@ RUN apt-get update && \
         ca-certificates \
         libsasl2-2 \
         libmemcached11 \
-        libmemcachedutil2 && \
+        libmemcachedutil2 \
+        libcurl4 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ENV LD_LIBRARY_PATH=/usr/local/lib:${LD_LIBRARY_PATH}
