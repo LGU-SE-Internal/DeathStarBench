@@ -4,12 +4,17 @@
 #define MEDIA_MICROSERVICES_TRACING_H
 
 #include <string>
+#include <cstdlib>
 #include <yaml-cpp/yaml.h>
-#include <jaegertracing/Tracer.h>
+#include <map>
 
 #include <opentracing/propagation.h>
-#include <string>
-#include <map>
+#include <opentelemetry/sdk/trace/tracer_provider_factory.h>
+#include <opentelemetry/sdk/trace/simple_processor_factory.h>
+#include <opentelemetry/sdk/resource/resource.h>
+#include <opentelemetry/exporters/otlp/otlp_http_exporter_factory.h>
+#include <opentelemetry/trace/provider.h>
+#include <opentelemetry/opentracingshim/tracer_shim.h>
 
 namespace media_service {
 
@@ -53,11 +58,38 @@ void SetUpTracer(
     const std::string &config_file_path,
     const std::string &service) {
   auto configYAML = YAML::LoadFile(config_file_path);
-  auto config = jaegertracing::Config::parse(configYAML);
-  auto tracer = jaegertracing::Tracer::make(
-      service, config, jaegertracing::logging::consoleLogger());
-  opentracing::Tracer::InitGlobal(
-      std::static_pointer_cast<opentracing::Tracer>(tracer));
+  
+  std::vector<std::unique_ptr<opentelemetry::sdk::trace::SpanProcessor>> processors;
+  
+  // Use OTLP HTTP exporter
+  // Get endpoint from environment variable or use default
+  const char* otlp_endpoint_env = std::getenv("OTEL_EXPORTER_OTLP_ENDPOINT");
+  std::string otlp_endpoint = otlp_endpoint_env != nullptr ? otlp_endpoint_env : "http://localhost:4318";
+  
+  opentelemetry::exporter::otlp::OtlpHttpExporterOptions otlp_options;
+  otlp_options.url = otlp_endpoint + "/v1/traces";
+  
+  auto exporter = opentelemetry::exporter::otlp::OtlpHttpExporterFactory::Create(otlp_options);
+  auto processor = opentelemetry::sdk::trace::SimpleSpanProcessorFactory::Create(std::move(exporter));
+  processors.push_back(std::move(processor));
+  
+  std::cout << "Using OpenTelemetry OTLP HTTP exporter: " << otlp_options.url << std::endl;
+  
+  // Create resource with service name
+  auto resource_attributes = opentelemetry::sdk::resource::ResourceAttributes{
+    {"service.name", service}
+  };
+  auto resource = opentelemetry::sdk::resource::Resource::Create(resource_attributes);
+  
+  auto provider = opentelemetry::sdk::trace::TracerProviderFactory::Create(
+    std::move(processors), resource);
+  
+  // Set the global tracer provider
+  opentelemetry::trace::Provider::SetTracerProvider(std::shared_ptr<opentelemetry::trace::TracerProvider>(std::move(provider)));
+  
+  // Create OpenTracing shim
+  auto tracer_shim = opentelemetry::opentracingshim::TracerShim::createTracerShim();
+  opentracing::Tracer::InitGlobal(tracer_shim);
 }
 
 

@@ -9,7 +9,7 @@ add_executable(
 target_include_directories(
     SocialGraphService PRIVATE
     ${MONGOC_INCLUDE_DIRS}
-    /usr/local/include/jaegertracing
+    /usr/local/include/opentelemetry
     /usr/local/include/hiredis
     /usr/local/include/sw
 )
@@ -24,7 +24,7 @@ target_link_libraries(
     Boost::log
     Boost::log_setup
     Boost::program_options
-    /usr/local/lib/libjaegertracing.so
+    opentelemetry_trace opentelemetry_exporter_otlp_http opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable opentelemetry_opentracing_shim opentracing yaml-cpp
     /usr/local/lib/libhiredis.a
     /usr/local/lib/libhiredis_ssl.a
     /usr/local/lib/libredis++.a

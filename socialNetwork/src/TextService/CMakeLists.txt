@@ -9,7 +9,7 @@ add_executable(
 
 target_include_directories(
     TextService PRIVATE
-    /usr/local/include/jaegertracing
+    /usr/local/include/opentelemetry
 )
 
 target_link_libraries(
@@ -20,7 +20,7 @@ target_link_libraries(
     ${Boost_LIBRARIES}
     Boost::log
     Boost::log_setup
-    jaegertracing
+    opentelemetry_trace opentelemetry_exporter_otlp_http opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable opentelemetry_opentracing_shim opentracing yaml-cpp
 )
 
 install(TARGETS TextService DESTINATION ./)

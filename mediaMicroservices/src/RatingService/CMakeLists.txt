@@ -8,7 +8,7 @@ add_executable(
 
 target_include_directories(
     RatingService PRIVATE
-    /usr/local/include/jaegertracing
+    /usr/local/include/opentelemetry
     /usr/local/include/cpp_redis
 )
 
@@ -20,7 +20,7 @@ target_link_libraries(
     ${Boost_LIBRARIES}
     Boost::log
     Boost::log_setup
-    jaegertracing
+    opentelemetry_trace opentelemetry_exporter_otlp_http opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable opentelemetry_opentracing_shim opentracing yaml-cpp
     /usr/local/lib/libcpp_redis.a
     /usr/local/lib/libtacopie.a
 )

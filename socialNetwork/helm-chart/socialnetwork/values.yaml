@@ -53,6 +53,9 @@ global:
     samplerParam: 0.1
     disabled: false
     logSpans: false
+  opentelemetry:
+    enabled: true
+    collectorEndpoint: "http://opentelemetry-kube-stack-deployment-collector.monitoring:4318"
 
 mongodb-sharded:
   fullnameOverride: mongodb-sharded

@@ -6,6 +6,7 @@ ARG LIB_JSON_VERSION=3.6.1
 ARG LIB_JAEGER_VERSION=0.4.2
 ARG LIB_YAML_VERSION=0.6.2
 ARG LIB_OPENTRACING_VERSION=1.5.1
+ARG LIB_OPENTELEMETRY_VERSION=1.14.2
 ARG LIB_CPP_JWT_VERSION=1.1.1
 ARG LIB_CPP_REDIS_VERSION=4.3.1
 ARG LIB_AMQP_CPP_VERSION=4.1.4
@@ -78,6 +79,25 @@ RUN apt-get update \
   && make -j$(nproc) \
   && make install \
   && cd /tmp \
+  # Install opentelemetry-cpp
+  && wget -O opentelemetry-cpp-${LIB_OPENTELEMETRY_VERSION}.tar.gz https://github.com/open-telemetry/opentelemetry-cpp/archive/v${LIB_OPENTELEMETRY_VERSION}.tar.gz \
+  && tar -zxf opentelemetry-cpp-${LIB_OPENTELEMETRY_VERSION}.tar.gz \
+  && cd opentelemetry-cpp-${LIB_OPENTELEMETRY_VERSION} \
+  && mkdir -p cmake-build \
+  && cd cmake-build \
+  && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS="-fPIC" \
+    -DBUILD_TESTING=OFF \
+    -DWITH_JAEGER=ON \
+    -DWITH_OTLP=ON \
+    -DWITH_OTLP_GRPC=ON \
+    -DWITH_OTLP_HTTP=ON \
+    -DWITH_EXAMPLES=OFF \
+    -DBUILD_SHARED_LIBS=ON \
+    -DOPENTELEMETRY_INSTALL=ON \
+    -DWITH_DEPRECATED_SDK_FACTORY=OFF .. \
+  && make -j$(nproc) \
+  && make install \
+  && cd /tmp \
   # Install jwt
   && wget -O cpp-jwt-${LIB_CPP_JWT_VERSION}.tar.gz https://github.com/arun11299/cpp-jwt/archive/v${LIB_CPP_JWT_VERSION}.tar.gz \
   && tar -zxf cpp-jwt-${LIB_CPP_JWT_VERSION}.tar.gz \
@@ -145,6 +165,8 @@ RUN apt-get update \
     yaml-cpp-yaml-cpp-${LIB_YAML_VERSION} \
     opentracing-cpp-${LIB_OPENTRACING_VERSION}.tar.gz \
     opentracing-cpp-${LIB_OPENTRACING_VERSION} \
+    opentelemetry-cpp-${LIB_OPENTELEMETRY_VERSION}.tar.gz \
+    opentelemetry-cpp-${LIB_OPENTELEMETRY_VERSION} \
     cpp-jwt-${LIB_CPP_JWT_VERSION}.tar.gz \
     cpp-jwt-${LIB_CPP_JWT_VERSION} \
     cpp_redis \

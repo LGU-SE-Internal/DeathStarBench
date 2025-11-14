@@ -10,6 +10,9 @@ container:
   name: media-service
   ports: 
   - containerPort: 9090
+  env:
+  - name: OTEL_EXPORTER_OTLP_ENDPOINT
+    value: "{{ .Values.global.opentelemetry.collectorEndpoint }}"
 
 configMaps:
   - name: jaeger-config.yml
