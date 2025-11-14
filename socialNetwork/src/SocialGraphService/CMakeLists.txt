@@ -25,7 +25,7 @@ target_link_libraries(
     Boost::log_setup
     Boost::program_options
     yaml-cpp
-    /usr/local/lib/libopentelemetry_trace
+    opentelemetry_trace
     opentelemetry_resources
     opentelemetry_common
     opentelemetry_exporter_ostream_span
