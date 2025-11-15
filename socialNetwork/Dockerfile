@@ -176,6 +176,9 @@ FROM ubuntu:20.04
 COPY --from=builder /usr/local/bin/* /usr/local/bin/
 COPY --from=builder /usr/local/lib/* /usr/local/lib/
 
+# Copy configuration files
+COPY --from=builder /social-network-microservices/config /social-network-microservices/config
+
 # Install system dependencies
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
