@@ -175,6 +175,19 @@ RUN cd /tmp \
     && rm -rf mongo-c-driver-1.9.3 mongo-c-driver-1.9.3.tar.gz \
     && ldconfig
 
+# Install luacrypto (required by resty-mongol's gridfs module)
+RUN cd /tmp \
+    && git clone https://github.com/mkottman/luacrypto.git \
+    && cd luacrypto \
+    && ./configure \
+        --lua-suffix=jit-2.1.0-beta3 \
+        --with-lua-includes=/usr/local/openresty/luajit/include/luajit-2.1 \
+    && make \
+    && make install LUA_LIBDIR=/usr/local/openresty/luajit/lib/lua/5.1 LUA_SHAREDIR=/usr/local/openresty/luajit/share/lua/5.1 \
+    && cd /tmp \
+    && rm -rf luacrypto \
+    && ldconfig
+
 # Install Lua dependencies from source (bypassing LuaRocks repository issues)
 # Note: lua-resty-upload is included in OpenResty by default
 RUN cd /tmp \
