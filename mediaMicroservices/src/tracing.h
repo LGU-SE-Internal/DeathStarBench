@@ -5,7 +5,6 @@
 
 #include <string>
 #include <cstdlib>
-#include <yaml-cpp/yaml.h>
 #include <map>
 
 #include <opentracing/propagation.h>
@@ -54,10 +53,7 @@ class TextMapWriter : public opentracing::TextMapWriter {
   std::map<std::string, std::string>& _text_map;
 };
 
-void SetUpTracer(
-    const std::string &config_file_path,
-    const std::string &service) {
-  auto configYAML = YAML::LoadFile(config_file_path);
+void SetUpTracer(const std::string &service) {
   
   std::vector<std::unique_ptr<opentelemetry::sdk::trace::SpanProcessor>> processors;
   
