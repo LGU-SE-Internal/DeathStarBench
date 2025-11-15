@@ -179,14 +179,16 @@ RUN cd /tmp \
 RUN cd /tmp \
     && git clone https://github.com/mkottman/luacrypto.git \
     && cd luacrypto \
-    && OPENSSL_CFLAGS="-I/usr/include" OPENSSL_LIBS="-lssl -lcrypto" \
-       LUA_CFLAGS="-I/usr/local/openresty/luajit/include/luajit-2.1" \
-       LUA_LIBS="-L/usr/local/openresty/luajit/lib -lluajit-5.1" \
-       ./configure \
-        --lua-suffix=jit-2.1.0-beta3 \
-        --with-lua-includes=/usr/local/openresty/luajit/include/luajit-2.1 \
+    && mkdir build \
+    && cd build \
+    && cmake .. \
+        -DCMAKE_INSTALL_PREFIX=/usr/local/openresty/luajit \
+        -DLUA_INCLUDE_DIR=/usr/local/openresty/luajit/include/luajit-2.1 \
+        -DLUA_LIBRARIES=/usr/local/openresty/luajit/lib/libluajit-5.1.so \
+        -DINSTALL_CMOD=/usr/local/openresty/luajit/lib/lua/5.1 \
+        -DINSTALL_LIB=/usr/local/openresty/luajit/lib \
     && make \
-    && make install LUA_LIBDIR=/usr/local/openresty/luajit/lib/lua/5.1 LUA_SHAREDIR=/usr/local/openresty/luajit/share/lua/5.1 \
+    && make install \
     && cd /tmp \
     && rm -rf luacrypto \
     && ldconfig
