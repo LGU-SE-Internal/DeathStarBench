@@ -100,7 +100,11 @@ RUN cd /tmp \
     && curl -fSL https://www.openssl.org/source/openssl-${RESTY_OPENSSL_VERSION}.tar.gz -o openssl-${RESTY_OPENSSL_VERSION}.tar.gz \
     && tar xzf openssl-${RESTY_OPENSSL_VERSION}.tar.gz \
     && curl -fSL http://ftp.cs.stanford.edu/pub/exim/pcre/pcre-${RESTY_PCRE_VERSION}.tar.gz -o pcre-${RESTY_PCRE_VERSION}.tar.gz \
-    && tar xzf pcre-${RESTY_PCRE_VERSION}.tar.gz
+    && tar xzf pcre-${RESTY_PCRE_VERSION}.tar.gz \
+    && cd /tmp/openssl-${RESTY_OPENSSL_VERSION} \
+    && ./config shared -fPIC --prefix=/tmp/openssl-${RESTY_OPENSSL_VERSION}/.openssl \
+    && make \
+    && make install
 
 # Download, build and install OpenResty with --with-compat flag (cached layer)
 RUN cd /tmp \
