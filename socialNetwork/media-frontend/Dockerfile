@@ -184,7 +184,7 @@ RUN cd /tmp \
     && cmake .. \
         -DCMAKE_INSTALL_PREFIX=/usr/local/openresty/luajit \
         -DLUA_INCLUDE_DIR=/usr/local/openresty/luajit/include/luajit-2.1 \
-        -DLUA_LIBRARIES=/usr/local/openresty/luajit/lib/libluajit-5.1.so \
+        -DLUA_LIBRARY=/usr/local/openresty/luajit/lib/libluajit-5.1.so \
         -DINSTALL_CMOD=/usr/local/openresty/luajit/lib/lua/5.1 \
         -DINSTALL_LIB=/usr/local/openresty/luajit/lib \
     && make \
