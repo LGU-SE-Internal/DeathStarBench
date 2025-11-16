@@ -8,7 +8,7 @@ LABEL maintainer="Yu Gan <yg397@cornell.edu>"
 # Docker Build Arguments
 ARG RESTY_VERSION="1.25.3.2"
 ARG RESTY_LUAROCKS_VERSION="3.9.2"
-ARG RESTY_OPENSSL_VERSION="1.1.1w"
+ARG RESTY_OPENSSL_VERSION="1.0.2k"
 ARG RESTY_PCRE_VERSION="8.45"
 ARG NGINX_VERSION="release-1.25.3"
 ARG NGX_OTEL_VERSION="v0.1.2"
@@ -175,6 +175,25 @@ RUN cd /tmp \
     && rm -rf mongo-c-driver-1.9.3 mongo-c-driver-1.9.3.tar.gz \
     && ldconfig
 
+# Install luacrypto (required by resty-mongol's gridfs module)
+# Using OpenSSL 1.0.2k for compatibility with luacrypto
+RUN cd /tmp \
+    && git clone https://github.com/mkottman/luacrypto.git \
+    && cd luacrypto \
+    && mkdir build \
+    && cd build \
+    && cmake .. \
+        -DCMAKE_INSTALL_PREFIX=/usr/local/openresty/luajit \
+        -DLUA_INCLUDE_DIR=/usr/local/openresty/luajit/include/luajit-2.1 \
+        -DLUA_LIBRARY=/usr/local/openresty/luajit/lib/libluajit-5.1.so \
+        -DINSTALL_CMOD=/usr/local/openresty/luajit/lib/lua/5.1 \
+        -DINSTALL_LIB=/usr/local/openresty/luajit/lib \
+    && make \
+    && make install \
+    && cd /tmp \
+    && rm -rf luacrypto \
+    && ldconfig
+
 # Install Lua dependencies from source (bypassing LuaRocks repository issues)
 # Note: lua-resty-upload is included in OpenResty by default
 RUN cd /tmp \
@@ -183,9 +202,6 @@ RUN cd /tmp \
     && cd resty-mongol \
     && mkdir -p /usr/local/openresty/lualib/resty-mongol \
     && cp src/*.lua /usr/local/openresty/lualib/resty-mongol/ \
-    # Patch gridfs.lua to use lua-resty-string instead of luacrypto for OpenSSL 1.1 compatibility
-    && sed -i '3s|local md5 = require "crypto".digest|-- Patched to use lua-resty-string instead of luacrypto for OpenSSL 1.1 compatibility\nlocal resty_md5 = require "resty.md5"\nlocal str = require "resty.string"\nlocal md5 = { new = function(alg) return resty_md5:new() end }|' /usr/local/openresty/lualib/resty-mongol/gridfs.lua \
-    && sed -i 's|local md5hex = md5_obj:final()|local digest = md5_obj:final()\n  local md5hex = str.to_hex(digest)|' /usr/local/openresty/lualib/resty-mongol/gridfs.lua \
     && cd /tmp \
     && rm -rf resty-mongol \
     && ldconfig
