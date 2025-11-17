@@ -103,7 +103,7 @@ RUN cd /tmp \
     && curl -fSL http://ftp.cs.stanford.edu/pub/exim/pcre/pcre-${RESTY_PCRE_VERSION}.tar.gz -o pcre-${RESTY_PCRE_VERSION}.tar.gz \
     && tar xzf pcre-${RESTY_PCRE_VERSION}.tar.gz \
     && cd /tmp/openssl-${RESTY_OPENSSL_VERSION} \
-    && ./config shared -fPIC --openssldir=/etc/ssl --prefix=/usr/local/ssl \
+    && CFLAGS=-fPIC ./config -fPIC shared --openssldir=/etc/ssl --prefix=/usr/local/ssl \
     && make depend \
     && make \
     && make install_sw
