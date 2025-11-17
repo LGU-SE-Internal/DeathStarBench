@@ -95,21 +95,24 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Download and extract OpenSSL and PCRE (cached layer)
-# Configure OpenSSL with -fPIC before OpenResty builds it
+# Build OpenSSL completely with -fPIC before OpenResty uses it
 RUN cd /tmp \
     && if [ -n "${RESTY_EVAL_PRE_CONFIGURE}" ]; then eval $(echo ${RESTY_EVAL_PRE_CONFIGURE}); fi \
     && curl -fSL https://www.openssl.org/source/openssl-${RESTY_OPENSSL_VERSION}.tar.gz -o openssl-${RESTY_OPENSSL_VERSION}.tar.gz \
     && tar xzf openssl-${RESTY_OPENSSL_VERSION}.tar.gz \
     && curl -fSL http://ftp.cs.stanford.edu/pub/exim/pcre/pcre-${RESTY_PCRE_VERSION}.tar.gz -o pcre-${RESTY_PCRE_VERSION}.tar.gz \
-    && tar xzf pcre-${RESTY_PCRE_VERSION}.tar.gz
+    && tar xzf pcre-${RESTY_PCRE_VERSION}.tar.gz \
+    && cd /tmp/openssl-${RESTY_OPENSSL_VERSION} \
+    && ./config shared -fPIC --openssldir=/etc/ssl --prefix=/usr/local/ssl \
+    && make depend \
+    && make \
+    && make install_sw
 
 # Download, build and install OpenResty with --with-compat flag (cached layer)
-# Set CFLAGS for OpenSSL build within OpenResty
 RUN cd /tmp \
     && curl -fSL https://openresty.org/download/openresty-${RESTY_VERSION}.tar.gz -o openresty-${RESTY_VERSION}.tar.gz \
     && tar xzf openresty-${RESTY_VERSION}.tar.gz \
     && cd /tmp/openresty-${RESTY_VERSION} \
-    && export CFLAGS="-fPIC" \
     && ./configure -j${RESTY_J} ${_RESTY_CONFIG_DEPS} ${RESTY_CONFIG_OPTIONS} ${RESTY_CONFIG_OPTIONS_MORE} --with-compat \
     && make -j${RESTY_J} \
     && make -j${RESTY_J} install \
@@ -125,16 +128,17 @@ RUN cd /tmp \
     && ./auto/configure ${_RESTY_CONFIG_DEPS} ${RESTY_CONFIG_OPTIONS} ${RESTY_CONFIG_OPTIONS_MORE} --with-compat
 
 # Download and build ngx_otel_module (cached layer)
+# Use pre-installed OpenSSL shared libraries to avoid -fPIC issues
 RUN cd /tmp \
     && git clone --branch ${NGX_OTEL_VERSION} https://github.com/nginxinc/nginx-otel.git \
     && cd nginx-otel \
     && mkdir build \
     && cd build \
     && cmake -DNGX_OTEL_NGINX_BUILD_DIR=/tmp/nginx/objs \
-            -DOPENSSL_ROOT_DIR=/tmp/openssl-${RESTY_OPENSSL_VERSION} \
-            -DOPENSSL_INCLUDE_DIR=/tmp/openssl-${RESTY_OPENSSL_VERSION}/include \
-            -DOPENSSL_CRYPTO_LIBRARY=/tmp/openssl-${RESTY_OPENSSL_VERSION}/libcrypto.a \
-            -DOPENSSL_SSL_LIBRARY=/tmp/openssl-${RESTY_OPENSSL_VERSION}/libssl.a \
+            -DOPENSSL_ROOT_DIR=/usr/local/ssl \
+            -DOPENSSL_INCLUDE_DIR=/usr/local/ssl/include \
+            -DOPENSSL_CRYPTO_LIBRARY=/usr/local/ssl/lib/libcrypto.so \
+            -DOPENSSL_SSL_LIBRARY=/usr/local/ssl/lib/libssl.so \
             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
             -DCMAKE_C_FLAGS="-I/tmp/pcre-${RESTY_PCRE_VERSION} -fPIC" \
             -DCMAKE_CXX_FLAGS="-I/tmp/pcre-${RESTY_PCRE_VERSION} -fPIC" \
