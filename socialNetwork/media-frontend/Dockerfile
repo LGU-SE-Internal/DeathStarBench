@@ -135,8 +135,9 @@ RUN cd /tmp \
             -DOPENSSL_INCLUDE_DIR=/tmp/openssl-${RESTY_OPENSSL_VERSION}/include \
             -DOPENSSL_CRYPTO_LIBRARY=/tmp/openssl-${RESTY_OPENSSL_VERSION}/libcrypto.a \
             -DOPENSSL_SSL_LIBRARY=/tmp/openssl-${RESTY_OPENSSL_VERSION}/libssl.a \
-            -DCMAKE_C_FLAGS="-I/tmp/pcre-${RESTY_PCRE_VERSION}" \
-            -DCMAKE_CXX_FLAGS="-I/tmp/pcre-${RESTY_PCRE_VERSION}" \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_C_FLAGS="-I/tmp/pcre-${RESTY_PCRE_VERSION} -fPIC" \
+            -DCMAKE_CXX_FLAGS="-I/tmp/pcre-${RESTY_PCRE_VERSION} -fPIC" \
             .. \
     && make \
     && mkdir -p /usr/local/openresty/nginx/modules/ \
