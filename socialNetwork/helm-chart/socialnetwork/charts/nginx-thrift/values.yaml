@@ -6,7 +6,7 @@ ports:
 
 container:
   image: sn-openresty-thrift
-  imageVersion: focal
+  imageVersion: 031e27d 
   name: nginx-thrift
   ports: 
   - containerPort: 8080

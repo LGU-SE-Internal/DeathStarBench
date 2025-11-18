@@ -17,7 +17,7 @@ global:
   restartPolicy: Always
   serviceType: ClusterIP
   dockerRegistry: 10.10.10.240/library
-  defaultImageVersion: latest
+  defaultImageVersion: "5625841"
   redis:
     cluster:
       enabled: false
