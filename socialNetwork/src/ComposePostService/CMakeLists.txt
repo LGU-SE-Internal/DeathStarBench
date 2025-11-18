@@ -14,7 +14,7 @@ add_executable(
 
 target_include_directories(
     ComposePostService PRIVATE
-    
+    /usr/local/include/opentelemetry
 )
 
 target_link_libraries(
@@ -26,12 +26,8 @@ target_link_libraries(
     Boost::log
     Boost::log_setup
     OpenSSL::SSL
-    yaml-cpp
-    opentelemetry_trace
-    opentelemetry_resources
-    opentelemetry_common
-    opentelemetry_exporter_ostream_span
-    SimpleAmqpClient
+    opentelemetry_trace opentelemetry_exporter_otlp_http opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable opentelemetry_opentracing_shim opentracing yaml-cpp
+    /usr/local/lib/libSimpleAmqpClient.so
 
 )
 

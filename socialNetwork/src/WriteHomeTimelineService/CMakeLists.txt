@@ -7,7 +7,7 @@ add_executable(
 
 target_include_directories(
     WriteHomeTimelineService PRIVATE
-    
+    /usr/local/include/opentelemetry
     /usr/local/include/cpp_redis
     ${LIBEVENT_INCLUDE_DIRS}
 )
@@ -22,11 +22,7 @@ target_link_libraries(
     Boost::log
     Boost::log_setup
     OpenSSL::SSL
-    yaml-cpp
-    opentelemetry_trace
-    opentelemetry_resources
-    opentelemetry_common
-    opentelemetry_exporter_ostream_span
+    opentelemetry_trace opentelemetry_exporter_otlp_http opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable opentelemetry_opentracing_shim opentracing yaml-cpp
     /usr/local/lib/libamqpcpp.so
     ${LIBEVENT_LIBRARIES}
     /usr/local/lib/libcpp_redis.a

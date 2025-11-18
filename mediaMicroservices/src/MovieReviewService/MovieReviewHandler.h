@@ -51,15 +51,15 @@ void MovieReviewHandler::UploadMovieReview(
     int64_t timestamp,
     const std::map<std::string, std::string> & carrier) {
 
-  // // Initialize a span
-  // TextMapReader reader(carrier);
+  // Initialize a span
+  TextMapReader reader(carrier);
   std::map<std::string, std::string> writer_text_map;
-  // TextMapWriter writer(writer_text_map);
-  // auto parent_span = opentracing::Tracer::Global()->Extract(reader);
-  // auto span = opentracing::Tracer::Global()->StartSpan(
-      // "UploadMovieReview",
-      // { opentracing::ChildOf(parent_span->get()) });
-  // opentracing::Tracer::Global()->Inject(span->context(), writer);
+  TextMapWriter writer(writer_text_map);
+  auto parent_span = opentracing::Tracer::Global()->Extract(reader);
+  auto span = opentracing::Tracer::Global()->StartSpan(
+      "UploadMovieReview",
+      { opentracing::ChildOf(parent_span->get()) });
+  opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   mongoc_client_t *mongodb_client = mongoc_client_pool_pop(
       _mongodb_client_pool);
@@ -82,8 +82,8 @@ void MovieReviewHandler::UploadMovieReview(
 
   bson_t *query = bson_new();
   BSON_APPEND_UTF8(query, "movie_id", movie_id.c_str());
-  // auto find_span = opentracing::Tracer::Global()->StartSpan(
-      // "MongoFindMovie", {opentracing::ChildOf(&span->context())});
+  auto find_span = opentracing::Tracer::Global()->StartSpan(
+      "MongoFindMovie", {opentracing::ChildOf(&span->context())});
   mongoc_cursor_t *cursor = mongoc_collection_find_with_opts(
       collection, query, nullptr, nullptr);
   const bson_t *doc;
@@ -96,11 +96,11 @@ void MovieReviewHandler::UploadMovieReview(
         "timestamp", BCON_INT64(timestamp), "}", "]"
     );
     bson_error_t error;
-    // auto insert_span = opentracing::Tracer::Global()->StartSpan(
-        // "MongoInsert", {opentracing::ChildOf(&span->context())});
+    auto insert_span = opentracing::Tracer::Global()->StartSpan(
+        "MongoInsert", {opentracing::ChildOf(&span->context())});
     bool plotinsert = mongoc_collection_insert_one(
         collection, new_doc, nullptr, nullptr, &error);
-    // insert_span->Finish();
+    insert_span->Finish();
     if (!plotinsert) {
       LOG(error) << "Failed to insert movie review of movie " << movie_id
                  << " to MongoDB: " << error.message;
@@ -129,12 +129,12 @@ void MovieReviewHandler::UploadMovieReview(
     );
     bson_error_t error;
     bson_t reply;
-    // auto update_span = opentracing::Tracer::Global()->StartSpan(
-        // "MongoUpdate.", {opentracing::ChildOf(&span->context())});
+    auto update_span = opentracing::Tracer::Global()->StartSpan(
+        "MongoUpdate.", {opentracing::ChildOf(&span->context())});
     bool plotupdate = mongoc_collection_find_and_modify(
         collection, query, nullptr, update, nullptr, false, false,
         true, &reply, &error);
-    // update_span->Finish();
+    update_span->Finish();
     if (!plotupdate) {
       LOG(error) << "Failed to update movie-review for movie " << movie_id
                  << " to MongoDB: " << error.message;
@@ -165,8 +165,8 @@ void MovieReviewHandler::UploadMovieReview(
     throw se;
   }
   auto redis_client = redis_client_wrapper->GetClient();
-  // auto redis_span = opentracing::Tracer::Global()->StartSpan(
-      // "RedisUpdate", {opentracing::ChildOf(&span->context())});
+  auto redis_span = opentracing::Tracer::Global()->StartSpan(
+      "RedisUpdate", {opentracing::ChildOf(&span->context())});
   auto num_reviews = redis_client->zcard(movie_id);
   redis_client->sync_commit();
   auto num_reviews_reply = num_reviews.get();
@@ -178,8 +178,8 @@ void MovieReviewHandler::UploadMovieReview(
     redis_client->sync_commit();
   }
   _redis_client_pool->Push(redis_client_wrapper);
-  // redis_span->Finish();
-  // span->Finish();
+  redis_span->Finish();
+  span->Finish();
 }
 
 void MovieReviewHandler::ReadMovieReviews(
@@ -187,15 +187,15 @@ void MovieReviewHandler::ReadMovieReviews(
     const std::string& movie_id, int32_t start, int32_t stop,
     const std::map<std::string, std::string> & carrier) {
   
-  // // Initialize a span
-  // TextMapReader reader(carrier);
+  // Initialize a span
+  TextMapReader reader(carrier);
   std::map<std::string, std::string> writer_text_map;
-  // TextMapWriter writer(writer_text_map);
-  // auto parent_span = opentracing::Tracer::Global()->Extract(reader);
-  // auto span = opentracing::Tracer::Global()->StartSpan(
-      // "ReadMovieReviews",
-      // { opentracing::ChildOf(parent_span->get()) });
-  // opentracing::Tracer::Global()->Inject(span->context(), writer);
+  TextMapWriter writer(writer_text_map);
+  auto parent_span = opentracing::Tracer::Global()->Extract(reader);
+  auto span = opentracing::Tracer::Global()->StartSpan(
+      "ReadMovieReviews",
+      { opentracing::ChildOf(parent_span->get()) });
+  opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   if (stop <= start || start < 0) {
     return;
@@ -209,11 +209,11 @@ void MovieReviewHandler::ReadMovieReviews(
     throw se;
   }
   auto redis_client = redis_client_wrapper->GetClient();
-  // auto redis_span = opentracing::Tracer::Global()->StartSpan(
-      // "RedisFind", {opentracing::ChildOf(&span->context())});
+  auto redis_span = opentracing::Tracer::Global()->StartSpan(
+      "RedisFind", {opentracing::ChildOf(&span->context())});
   auto review_ids_future = redis_client->zrevrange(movie_id, start, stop - 1);
   redis_client->commit();
-  // redis_span->Finish();
+  redis_span->Finish();
 
   cpp_redis::reply review_ids_reply;
   try {
@@ -258,11 +258,11 @@ void MovieReviewHandler::ReadMovieReviews(
         "$slice", "[",
         BCON_INT32(0), BCON_INT32(stop),
         "]", "}", "}");
-    // auto find_span = opentracing::Tracer::Global()->StartSpan(
-        // "MongoFindMovieReviews", {opentracing::ChildOf(&span->context())});
+    auto find_span = opentracing::Tracer::Global()->StartSpan(
+        "MongoFindMovieReviews", {opentracing::ChildOf(&span->context())});
     mongoc_cursor_t *cursor = mongoc_collection_find_with_opts(
         collection, query, opts, nullptr);
-    // find_span->Finish();
+    find_span->Finish();
     const bson_t *doc;
     bool found = mongoc_cursor_next(cursor, &doc);
     if (found) {
@@ -295,7 +295,7 @@ void MovieReviewHandler::ReadMovieReviews(
         idx++;
       }
     }
-    // find_span->Finish();
+    find_span->Finish();
     bson_destroy(opts);
     bson_destroy(query);
     mongoc_cursor_destroy(cursor);
@@ -337,14 +337,14 @@ void MovieReviewHandler::ReadMovieReviews(
       throw se;
     }
     redis_client = redis_client_wrapper->GetClient();
-    // auto redis_update_span = opentracing::Tracer::Global()->StartSpan(
-        // "RedisUpdate", {opentracing::ChildOf(&span->context())});
+    auto redis_update_span = opentracing::Tracer::Global()->StartSpan(
+        "RedisUpdate", {opentracing::ChildOf(&span->context())});
     redis_client->del(std::vector<std::string>{movie_id});
     std::vector<std::string> options{"NX"};
     zadd_reply_future = redis_client->zadd(
         movie_id, options, redis_update_map);
     redis_client->commit();
-    // redis_update_span->Finish();
+    redis_update_span->Finish();
   }
 
   try {
@@ -373,7 +373,7 @@ void MovieReviewHandler::ReadMovieReviews(
     _redis_client_pool->Push(redis_client_wrapper);
   }
 
-  // span->Finish();
+  span->Finish();
   
 }
 

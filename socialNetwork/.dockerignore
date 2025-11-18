@@ -2,6 +2,7 @@
 !/src/
 !/CMakeLists.txt
 !/cmake/
+!/config/
 !/datasets/
 !/gen-cpp/
 !/scripts/

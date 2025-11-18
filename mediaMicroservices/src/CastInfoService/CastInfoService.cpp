@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
   signal(SIGINT, sigintHandler);
   init_logger();
 
-  SetUpTracer("config/otel-config.yml", "cast-info-service");
+  SetUpTracer("cast-info-service");
 
   json config_json;
   if (load_config_file("config/service-config.json", &config_json) != 0) {
