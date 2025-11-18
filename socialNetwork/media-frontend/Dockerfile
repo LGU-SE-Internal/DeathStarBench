@@ -8,7 +8,7 @@ LABEL maintainer="Yu Gan <yg397@cornell.edu>"
 # Docker Build Arguments
 ARG RESTY_VERSION="1.25.3.2"
 ARG RESTY_LUAROCKS_VERSION="3.9.2"
-ARG RESTY_OPENSSL_VERSION="1.1.1w"
+ARG RESTY_OPENSSL_VERSION="1.0.2k"
 ARG RESTY_PCRE_VERSION="8.45"
 ARG NGINX_VERSION="release-1.25.3"
 ARG NGX_OTEL_VERSION="v0.1.2"
@@ -95,12 +95,18 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Download and extract OpenSSL and PCRE (cached layer)
+# Build OpenSSL completely with -fPIC before OpenResty uses it
 RUN cd /tmp \
     && if [ -n "${RESTY_EVAL_PRE_CONFIGURE}" ]; then eval $(echo ${RESTY_EVAL_PRE_CONFIGURE}); fi \
     && curl -fSL https://www.openssl.org/source/openssl-${RESTY_OPENSSL_VERSION}.tar.gz -o openssl-${RESTY_OPENSSL_VERSION}.tar.gz \
     && tar xzf openssl-${RESTY_OPENSSL_VERSION}.tar.gz \
     && curl -fSL http://ftp.cs.stanford.edu/pub/exim/pcre/pcre-${RESTY_PCRE_VERSION}.tar.gz -o pcre-${RESTY_PCRE_VERSION}.tar.gz \
-    && tar xzf pcre-${RESTY_PCRE_VERSION}.tar.gz
+    && tar xzf pcre-${RESTY_PCRE_VERSION}.tar.gz \
+    && cd /tmp/openssl-${RESTY_OPENSSL_VERSION} \
+    && CFLAGS=-fPIC ./config -fPIC shared --openssldir=/etc/ssl --prefix=/usr/local/ssl \
+    && make depend \
+    && make \
+    && make install_sw
 
 # Download, build and install OpenResty with --with-compat flag (cached layer)
 RUN cd /tmp \
@@ -122,18 +128,20 @@ RUN cd /tmp \
     && ./auto/configure ${_RESTY_CONFIG_DEPS} ${RESTY_CONFIG_OPTIONS} ${RESTY_CONFIG_OPTIONS_MORE} --with-compat
 
 # Download and build ngx_otel_module (cached layer)
+# Use pre-installed OpenSSL shared libraries to avoid -fPIC issues
 RUN cd /tmp \
     && git clone --branch ${NGX_OTEL_VERSION} https://github.com/nginxinc/nginx-otel.git \
     && cd nginx-otel \
     && mkdir build \
     && cd build \
     && cmake -DNGX_OTEL_NGINX_BUILD_DIR=/tmp/nginx/objs \
-            -DOPENSSL_ROOT_DIR=/tmp/openssl-${RESTY_OPENSSL_VERSION} \
-            -DOPENSSL_INCLUDE_DIR=/tmp/openssl-${RESTY_OPENSSL_VERSION}/include \
-            -DOPENSSL_CRYPTO_LIBRARY=/tmp/openssl-${RESTY_OPENSSL_VERSION}/libcrypto.a \
-            -DOPENSSL_SSL_LIBRARY=/tmp/openssl-${RESTY_OPENSSL_VERSION}/libssl.a \
-            -DCMAKE_C_FLAGS="-I/tmp/pcre-${RESTY_PCRE_VERSION}" \
-            -DCMAKE_CXX_FLAGS="-I/tmp/pcre-${RESTY_PCRE_VERSION}" \
+            -DOPENSSL_ROOT_DIR=/usr/local/ssl \
+            -DOPENSSL_INCLUDE_DIR=/usr/local/ssl/include \
+            -DOPENSSL_CRYPTO_LIBRARY=/usr/local/ssl/lib/libcrypto.so \
+            -DOPENSSL_SSL_LIBRARY=/usr/local/ssl/lib/libssl.so \
+            -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+            -DCMAKE_C_FLAGS="-I/tmp/pcre-${RESTY_PCRE_VERSION} -fPIC" \
+            -DCMAKE_CXX_FLAGS="-I/tmp/pcre-${RESTY_PCRE_VERSION} -fPIC" \
             .. \
     && make \
     && mkdir -p /usr/local/openresty/nginx/modules/ \
@@ -173,6 +181,29 @@ RUN cd /tmp \
     && make -j${RESTY_J} install \
     && cd /tmp \
     && rm -rf mongo-c-driver-1.9.3 mongo-c-driver-1.9.3.tar.gz \
+    && ldconfig
+
+# Install luacrypto (required by resty-mongol's gridfs module)
+# Using OpenSSL 1.0.2k for compatibility with luacrypto
+RUN cd /tmp \
+    && git clone https://github.com/mkottman/luacrypto.git \
+    && cd luacrypto \
+    && mkdir build \
+    && cd build \
+    && cmake .. \
+        -DCMAKE_INSTALL_PREFIX=/usr/local/openresty/luajit \
+        -DLUA_INCLUDE_DIR=/usr/local/openresty/luajit/include/luajit-2.1 \
+        -DLUA_LIBRARY=/usr/local/openresty/luajit/lib/libluajit-5.1.so \
+        -DOPENSSL_ROOT_DIR=/usr/local/ssl \
+        -DOPENSSL_INCLUDE_DIR=/usr/local/ssl/include \
+        -DOPENSSL_CRYPTO_LIBRARY=/usr/local/ssl/lib/libcrypto.so \
+        -DOPENSSL_SSL_LIBRARY=/usr/local/ssl/lib/libssl.so \
+        -DINSTALL_CMOD=/usr/local/openresty/luajit/lib/lua/5.1 \
+        -DINSTALL_LIB=/usr/local/openresty/luajit/lib \
+    && make \
+    && make install \
+    && cd /tmp \
+    && rm -rf luacrypto \
     && ldconfig
 
 # Install Lua dependencies from source (bypassing LuaRocks repository issues)
