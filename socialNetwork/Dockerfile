@@ -176,6 +176,9 @@ FROM ubuntu:20.04
 COPY --from=builder /usr/local/bin/* /usr/local/bin/
 COPY --from=builder /usr/local/lib/* /usr/local/lib/
 
+# Copy configuration files
+COPY --from=builder /social-network-microservices/config /social-network-microservices/config
+
 # Install system dependencies
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
@@ -183,7 +186,20 @@ RUN apt-get update && \
         ca-certificates \
         libsasl2-2 \
         libmemcached11 \
-        libmemcachedutil2 && \
+        libmemcachedutil2 \
+        libcurl4 \
+        libicu66 \
+        libboost-system1.71.0 \
+        libboost-thread1.71.0 \
+        libboost-filesystem1.71.0 \
+        libboost-regex1.71.0 \
+        libboost-program-options1.71.0 \
+        libevent-2.1-7 \
+        libevent-core-2.1-7 \
+        libevent-extra-2.1-7 \
+        libevent-openssl-2.1-7 \
+        libevent-pthreads-2.1-7 \
+        librabbitmq4 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 ENV LD_LIBRARY_PATH=/usr/local/lib:${LD_LIBRARY_PATH}
