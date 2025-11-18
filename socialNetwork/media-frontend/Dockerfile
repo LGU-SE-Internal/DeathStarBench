@@ -194,6 +194,10 @@ RUN cd /tmp \
         -DCMAKE_INSTALL_PREFIX=/usr/local/openresty/luajit \
         -DLUA_INCLUDE_DIR=/usr/local/openresty/luajit/include/luajit-2.1 \
         -DLUA_LIBRARY=/usr/local/openresty/luajit/lib/libluajit-5.1.so \
+        -DOPENSSL_ROOT_DIR=/usr/local/ssl \
+        -DOPENSSL_INCLUDE_DIR=/usr/local/ssl/include \
+        -DOPENSSL_CRYPTO_LIBRARY=/usr/local/ssl/lib/libcrypto.so \
+        -DOPENSSL_SSL_LIBRARY=/usr/local/ssl/lib/libssl.so \
         -DINSTALL_CMOD=/usr/local/openresty/luajit/lib/lua/5.1 \
         -DINSTALL_LIB=/usr/local/openresty/luajit/lib \
     && make \
