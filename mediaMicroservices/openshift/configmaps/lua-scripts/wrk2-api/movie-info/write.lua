@@ -42,7 +42,7 @@ function _M.WriteMovieInfo()
   local casts = {}
   for _,cast in ipairs(movie_info["casts"]) do
     local new_cast = Cast:new{}
-    new_cast["charactor"]=cast["charactor"]
+    new_cast["character"]=cast["character"]
     new_cast["cast_id"]=cast["cast_id"]
     new_cast["cast_info_id"]=cast["cast_info_id"]
     table.insert(casts, new_cast)
