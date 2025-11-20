@@ -28,7 +28,21 @@ function _M.RegisterMovie()
 
   local client = GenericObjectPool:connection(MovieIdServiceClient,"movie-id-service" .. k8s_suffix ,9090)
 
-  client:RegisterMovieId(req_id, post.title, tostring(post.movie_id), carrier)
+  local status, err = pcall(client.RegisterMovieId, client, req_id, post.title, tostring(post.movie_id), carrier)
+
+  if not status then
+    ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
+    if (err.message) then
+      ngx.say("Movie registration failure: " .. err.message)
+      ngx.log(ngx.ERR, "Movie registration failure: " .. err.message)
+    else
+      ngx.say("Movie registration failure: " .. err)
+      ngx.log(ngx.ERR, "Movie registration failure: " .. err)
+    end
+    client.iprot.trans:close()
+    ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
+  end
+
   GenericObjectPool:returnConnection(client)
 
 end

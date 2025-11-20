@@ -30,8 +30,23 @@ function _M.RegisterUser()
 
   local client = GenericObjectPool:connection(UserServiceClient, "user-service.media-microsvc.svc.cluster.local", 9090)
 
-  client:RegisterUser(req_id, post.first_name, post.last_name,
+  local status, err = pcall(client.RegisterUser, client, req_id, post.first_name, post.last_name,
       post.username, post.password, carrier)
+
+  if not status then
+    ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
+    if (err.message) then
+      ngx.say("User registration failure: " .. err.message)
+      ngx.log(ngx.ERR, "User registration failure: " .. err.message)
+    else
+      ngx.say("User registration failure: " .. err)
+      ngx.log(ngx.ERR, "User registration failure: " .. err)
+    end
+    client.iprot.trans:close()
+    span:finish()
+    ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
+  end
+
   GenericObjectPool:returnConnection(client)
 
   span:finish()
