@@ -16,6 +16,18 @@ function _M.WriteCastInfo()
   ngx.req.read_body()
   local data = ngx.req.get_body_data()
 
+  -- If body is not in memory, it might be in a temp file
+  if not data then
+    local body_file = ngx.req.get_body_file()
+    if body_file then
+      local file = io.open(body_file, "r")
+      if file then
+        data = file:read("*all")
+        file:close()
+      end
+    end
+  end
+
   if not data then
     ngx.status = ngx.HTTP_BAD_REQUEST
     ngx.say("Empty body")
