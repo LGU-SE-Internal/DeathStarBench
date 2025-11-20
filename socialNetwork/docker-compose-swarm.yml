@@ -38,6 +38,8 @@ services:
     volumes:
       - ./config:/social-network-microservices/config
       - ./keys:/keys
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4318
 
   home-timeline-redis:
     depends_on:
@@ -64,6 +66,8 @@ services:
     volumes:
       - ./config:/social-network-microservices/config
       - ./keys:/keys
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4318
 
   media-frontend:
     depends_on:
@@ -123,6 +127,8 @@ services:
     volumes:
       - ./config:/social-network-microservices/config
       - ./keys:/keys
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4318
 
   nginx-web-server:
     depends_on:
@@ -184,6 +190,8 @@ services:
     volumes:
       - ./config:/social-network-microservices/config
       - ./keys:/keys
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4318
 
   social-graph-mongodb:
     depends_on:
@@ -223,6 +231,8 @@ services:
     volumes:
       - ./config:/social-network-microservices/config
       - ./keys:/keys
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4318
 
   text-service:
     depends_on:
@@ -238,6 +248,8 @@ services:
     volumes:
       - ./config:/social-network-microservices/config
       - ./keys:/keys
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4318
 
   unique-id-service:
     depends_on:
@@ -253,6 +265,8 @@ services:
     volumes:
       - ./config:/social-network-microservices/config
       - ./keys:/keys
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4318
 
   url-shorten-memcached:
     depends_on:
@@ -293,6 +307,8 @@ services:
     volumes:
       - ./config:/social-network-microservices/config
       - ./keys:/keys
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4318
 
   user-memcached:
     depends_on:
@@ -320,6 +336,8 @@ services:
     volumes:
       - ./config:/social-network-microservices/config
       - ./keys:/keys
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4318
 
   user-mongodb:
     depends_on:
@@ -348,6 +366,8 @@ services:
     volumes:
       - ./config:/social-network-microservices/config
       - ./keys:/keys
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4318
 
   user-timeline-mongodb:
     depends_on:
@@ -385,6 +405,8 @@ services:
     image: deathstarbench/social-network-microservices:latest
     volumes:
       - ./config:/social-network-microservices/config
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4318
 
   jaeger-collector:
     image: jaegertracing/jaeger-collector
@@ -394,10 +416,13 @@ services:
         "--cassandra.servers=cassandra",
         "--collector.zipkin.host-port=9411",
         "--collector.num-workers=100",
-        "--collector.queue-size=100000"
+        "--collector.queue-size=100000",
+        "--collector.otlp.enabled=true"
       ]
     ports:
       - "14269:14269"
+      - "4317:4317"  # OTLP gRPC receiver
+      - "4318:4318"  # OTLP HTTP receiver
     deploy:
       restart_policy:
         condition: any

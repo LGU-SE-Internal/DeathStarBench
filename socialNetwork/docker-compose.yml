@@ -14,6 +14,8 @@ services:
     entrypoint: SocialGraphService
     volumes:
       - ./config:/social-network-microservices/config
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-agent:4318
 
   social-graph-mongodb:
     image: mongo:4.4.6
@@ -48,6 +50,8 @@ services:
     entrypoint: ComposePostService
     volumes:
       - ./config:/social-network-microservices/config
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-agent:4318
 
   post-storage-service:
     image: deathstarbench/social-network-microservices:latest
@@ -63,6 +67,8 @@ services:
     entrypoint: PostStorageService
     volumes:
       - ./config:/social-network-microservices/config
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-agent:4318
 
   post-storage-memcached:
     image: memcached
@@ -92,6 +98,8 @@ services:
     entrypoint: UserTimelineService
     volumes:
       - ./config:/social-network-microservices/config
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-agent:4318
 
   user-timeline-redis:
     image: redis
@@ -121,6 +129,8 @@ services:
         condition: service_started
     volumes:
       - ./config:/social-network-microservices/config
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-agent:4318
 
   url-shorten-memcached:
     image: memcached
@@ -150,6 +160,8 @@ services:
     entrypoint: UserService
     volumes:
       - ./config:/social-network-microservices/config
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-agent:4318
 
   user-memcached:
     image: memcached
@@ -179,6 +191,8 @@ services:
     entrypoint: MediaService
     volumes:
       - ./config:/social-network-microservices/config
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-agent:4318
 
   media-memcached:
     image: memcached
@@ -206,6 +220,8 @@ services:
     entrypoint: TextService
     volumes:
       - ./config:/social-network-microservices/config
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-agent:4318
 
   unique-id-service:
     image: deathstarbench/social-network-microservices:latest
@@ -219,6 +235,8 @@ services:
     entrypoint: UniqueIdService
     volumes:
       - ./config:/social-network-microservices/config
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-agent:4318
 
   user-mention-service:
     image: deathstarbench/social-network-microservices:latest
@@ -232,6 +250,8 @@ services:
     entrypoint: UserMentionService
     volumes:
       - ./config:/social-network-microservices/config
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-agent:4318
 
   home-timeline-service:
     image: deathstarbench/social-network-microservices:latest
@@ -245,6 +265,8 @@ services:
     entrypoint: HomeTimelineService
     volumes:
       - ./config:/social-network-microservices/config
+    environment:
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-agent:4318
 
   nginx-thrift:
     image: openresty-thrift:xenial
@@ -289,6 +311,8 @@ services:
       - 16686:16686
       #      - 14268:14268
       #      - 9411:9411
+      - 4317:4317  # OTLP gRPC receiver
+      - 4318:4318  # OTLP HTTP receiver
     restart: always
     environment:
       - COLLECTOR_ZIPKIN_HTTP_PORT=9411
