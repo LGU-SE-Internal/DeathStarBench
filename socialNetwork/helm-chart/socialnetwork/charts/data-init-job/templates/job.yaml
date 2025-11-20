@@ -31,12 +31,9 @@ spec:
         - -c
         - |
           echo "Cloning DeathStarBench repository to get datasets..."
-          git clone --depth 1 https://github.com/LGU-SE-Internal/DeathStarBench.git /tmp/repo
-          echo "Copying datasets and scripts..."
-          cp -r /tmp/repo/socialNetwork/datasets /data/
-          cp /tmp/repo/socialNetwork/scripts/init_social_graph.py /data/
-          echo "Datasets fetched successfully!"
-          ls -lh /data/datasets/social-graph/
+          cd /data
+          git clone https://github.com/delimitrou/DeathStarBench.git
+          ls -lh /data/DeathStarBench/socialNetwork/datasets/social-graph/
         volumeMounts:
         - name: data-volume
           mountPath: /data
@@ -48,33 +45,26 @@ spec:
         - /bin/sh
         - -c
         - |
-          echo "Installing required packages..."
-          apt-get update && apt-get install -y curl
-          pip install --no-cache-dir aiohttp
+          set -x
+          echo "=== Starting data initialization ==="
+          cd /data/DeathStarBench/socialNetwork
+          echo "=== Installing aiohttp ==="
+          pip install aiohttp
           
-          echo "Waiting for services to be ready..."
-          sleep 15
+          echo "=== Verifying files exist ==="
+          ls -la datasets/social-graph/{{ .Values.graphName }}/
           
-          echo "Starting social graph initialization..."
-          cd /data
+          echo "=== Testing nginx connection ==="
+          nc -zv {{ .Values.serverAddress }}.{{ .Release.Namespace }}.svc.cluster.local {{ .Values.serverPort }}
           
-          echo "Initializing social graph: {{ .Values.graphName }}"
-          {{- if .Values.composePosts }}
-          python3 init_social_graph.py \
+          echo "=== Starting initialization script ==="
+          python3 -u scripts/init_social_graph.py \
+            --ip {{ .Values.serverAddress }}.{{ .Release.Namespace }}.svc.cluster.local \
+            --port {{ .Values.serverPort }} \
             --graph {{ .Values.graphName }} \
-            --ip nginx-thrift.{{ .Release.Namespace }}.svc.cluster.local \
-            --port 8080 \
-            --compose \
-            --limit 200
-          {{- else }}
-          python3 init_social_graph.py \
-            --graph {{ .Values.graphName }} \
-            --ip nginx-thrift.{{ .Release.Namespace }}.svc.cluster.local \
-            --port 8080 \
-            --limit 200
-          {{- end }}
+            {{ if .Values.composePosts }}--compose{{ end }}
           
-          echo "Social graph initialization completed successfully!"
+          echo "=== Initialization completed ==="
         volumeMounts:
         - name: data-volume
           mountPath: /data

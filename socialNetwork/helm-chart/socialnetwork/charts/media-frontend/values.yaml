@@ -6,7 +6,7 @@ ports:
 
 container:
   image: media-frontend
-  imageVersion: xenial
+  imageVersion: otel
   name: media-frontend
   ports: 
   - containerPort: 8081

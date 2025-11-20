@@ -182,6 +182,11 @@ ENV LUA_PATH=$LUA_PATH;/gen-lua/?.lua
 
 # Install Lua dependencies from source (bypassing LuaRocks repository issues)
 RUN cd /tmp \
+    && git clone --branch 1.6.4 --depth 1 https://github.com/fffonion/lua-resty-openssl.git \
+    && cd lua-resty-openssl \
+    && cp -r lib/resty /usr/local/openresty/lualib/ \
+    && cd /tmp \
+    && rm -rf lua-resty-openssl \
     && git clone https://github.com/cdbattags/lua-resty-jwt.git \
     && cd lua-resty-jwt \
     && cp -r lib/resty /usr/local/openresty/lualib/ \

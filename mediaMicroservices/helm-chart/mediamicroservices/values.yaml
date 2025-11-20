@@ -4,7 +4,7 @@ global:
   restartPolicy: Always
   serviceType: ClusterIP
   dockerRegistry: 10.10.10.240/library
-  defaultImageVersion: latest
+  defaultImageVersion: otel
   nginx:
     resolverName: kube-dns.kube-system.svc.cluster.local
   otel:
