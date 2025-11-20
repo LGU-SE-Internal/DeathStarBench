@@ -27,7 +27,7 @@ async def register_movie(session, addr, movie):
 async def write_cast_info(addr, raw_casts):
   idx = 0
   tasks = []
-  conn = aiohttp.TCPConnector(limit=200)
+  conn = aiohttp.TCPConnector(limit=50)
   async with aiohttp.ClientSession(connector=conn) as session:
     for raw_cast in raw_casts:
       try:
@@ -41,16 +41,18 @@ async def write_cast_info(addr, raw_casts):
         idx += 1
       except:
         print("Warning: cast info missing!")
-      if idx % 200 == 0:
+      if idx % 50 == 0:
         resps = await asyncio.gather(*tasks)
+        tasks = []
         print(idx, "casts finished")
-    resps = await asyncio.gather(*tasks)
+    if tasks:
+      resps = await asyncio.gather(*tasks)
     print(idx, "casts finished")
 
 async def write_movie_info(addr, raw_movies):
   idx = 0
   tasks = []
-  conn = aiohttp.TCPConnector(limit=200)
+  conn = aiohttp.TCPConnector(limit=50)
   async with aiohttp.ClientSession(connector=conn) as session:
     for raw_movie in raw_movies:
       movie = dict()
@@ -84,10 +86,12 @@ async def write_movie_info(addr, raw_movies):
       task = asyncio.ensure_future(register_movie(session, addr, movie))
       tasks.append(task)
       idx += 1
-      if idx % 200 == 0:
+      if idx % 50 == 0:
         resps = await asyncio.gather(*tasks)
+        tasks = []
         print(idx, "movies finished")
-    resps = await asyncio.gather(*tasks)
+    if tasks:
+      resps = await asyncio.gather(*tasks)
     print(idx, "movies finished")
 
 if __name__ == '__main__':

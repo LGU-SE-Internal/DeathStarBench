@@ -33,6 +33,18 @@ function _M.WriteMovieInfo()
   ngx.req.read_body()
   local data = ngx.req.get_body_data()
 
+  -- If body is not in memory, it might be in a temp file
+  if not data then
+    local body_file = ngx.req.get_body_file()
+    if body_file then
+      local file = io.open(body_file, "r")
+      if file then
+        data = file:read("*all")
+        file:close()
+      end
+    end
+  end
+
   if not data then
     ngx.status = ngx.HTTP_BAD_REQUEST
     ngx.say("Empty body")
@@ -55,7 +67,7 @@ function _M.WriteMovieInfo()
   local casts = {}
   for _,cast in ipairs(movie_info["casts"]) do
     local new_cast = Cast:new{}
-    new_cast["charactor"]=cast["charactor"]
+    new_cast["character"]=cast["character"]
     new_cast["cast_id"]=cast["cast_id"]
     new_cast["cast_info_id"]=cast["cast_info_id"]
     table.insert(casts, new_cast)

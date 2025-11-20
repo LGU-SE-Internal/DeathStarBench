@@ -66,8 +66,8 @@ spec:
           
           echo "Registering users..."
           # Register users in parallel batches for faster execution
-          for batch_start in $(seq 1 100 1000); do
-            batch_end=$((batch_start + 99))
+          for batch_start in $(seq 1 20 1000); do
+            batch_end=$((batch_start + 19))
             for i in $(seq $batch_start $batch_end); do
               curl -s -X POST \
                 -d "first_name=first_name_$i&last_name=last_name_$i&username=username_$i&password=password_$i" \
