@@ -44,7 +44,7 @@ global:
   nginx:
     resolverName: kube-dns.kube-system.svc.cluster.local
   otel:
-    endpoint: "opentelemetry-kube-stack-deployment-collector.monitoring:4317"
+    endpoint: "opentelemetry-kube-stack-deployment-collector.monitoring:4318"
     samplerParam: 1
     disabled: false
 
