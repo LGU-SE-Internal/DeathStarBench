@@ -1,33 +1,25 @@
 version: "3.8"
 
 services:
-  jaeger-agent:
-    image: jaegertracing/jaeger-agent:latest
-    hostname: jaeger-agent
-    command: ["--reporter.grpc.host-port=jaeger-collector:14250"]
-    # ports:
-    #   - target: 6831
-    #     published: 6831
-    #     protocol: udp
-    #     mode: host
-    #   - target: 5778
-    #     published: 5778
-    #     protocol: tcp
-    #     mode: host
-    #   - target: 14271
-    #     published: 14271
-    #     protocol: tcp
-    #     mode: host
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    hostname: otel-collector
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./config/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP HTTP receiver
     deploy:
       restart_policy:
         condition: any
     depends_on:
-      - jaeger-collector
+      - jaeger
 
   compose-post-service:
     depends_on:
-      - jaeger-agent
-      - jaeger-query
+      - otel-collector
+      - jaeger
     deploy:
       replicas: 1
       restart_policy:
@@ -39,12 +31,12 @@ services:
       - ./config:/social-network-microservices/config
       - ./keys:/keys
     environment:
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4318
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
 
   home-timeline-redis:
     depends_on:
-      - jaeger-agent
-      - jaeger-query
+      - otel-collector
+      - jaeger
     hostname: home-timeline-redis
     image: redis
     command: "redis-server /social-network-microservices/config/redis.conf"
@@ -54,8 +46,8 @@ services:
 
   home-timeline-service:
     depends_on:
-      - jaeger-agent
-      - jaeger-query
+      - otel-collector
+      - jaeger
     deploy:
       replicas: 1
       restart_policy:
@@ -67,12 +59,12 @@ services:
       - ./config:/social-network-microservices/config
       - ./keys:/keys
     environment:
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4318
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
 
   media-frontend:
     depends_on:
-      - jaeger-agent
-      - jaeger-query
+      - otel-collector
+      - jaeger
     deploy:
       replicas: 1
       restart_policy:
@@ -90,8 +82,8 @@ services:
 
   media-memcached:
     depends_on:
-      - jaeger-agent
-      - jaeger-query
+      - otel-collector
+      - jaeger
     hostname: media-memcached
     image: memcached
     command:
@@ -102,8 +94,8 @@ services:
 
   media-mongodb:
     depends_on:
-      - jaeger-agent
-      - jaeger-query
+      - otel-collector
+      - jaeger
     hostname: media-mongodb
     image: mongo:4.4.6
     command: "mongod --nojournal --quiet --config /social-network-microservices/config/mongod.conf"
@@ -115,8 +107,8 @@ services:
   media-service:
     depends_on:
       - media-mongodb
-      - jaeger-agent
-      - jaeger-query
+      - otel-collector
+      - jaeger
     deploy:
       replicas: 1
       restart_policy:
@@ -128,12 +120,12 @@ services:
       - ./config:/social-network-microservices/config
       - ./keys:/keys
     environment:
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4318
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
 
   nginx-web-server:
     depends_on:
-      - jaeger-agent
-      - jaeger-query
+      - otel-collector
+      - jaeger
     deploy:
       replicas: 1
       restart_policy:
@@ -153,8 +145,8 @@ services:
 
   post-storage-memcached:
     depends_on:
-      - jaeger-agent
-      - jaeger-query
+      - otel-collector
+      - jaeger
     hostname: post-storage-memcached
     image: memcached
     command:
@@ -165,8 +157,8 @@ services:
 
   post-storage-mongodb:
     depends_on:
-      - jaeger-agent
-      - jaeger-query
+      - otel-collector
+      - jaeger
     hostname: post-storage-mongodb
     image: mongo:4.4.6
     command: "mongod --nojournal --quiet --config /social-network-microservices/config/mongod.conf"
@@ -178,8 +170,8 @@ services:
   post-storage-service:
     depends_on:
       - post-storage-mongodb
-      - jaeger-agent
-      - jaeger-query
+      - otel-collector
+      - jaeger
     deploy:
       replicas: 1
       restart_policy:
@@ -191,12 +183,12 @@ services:
       - ./config:/social-network-microservices/config
       - ./keys:/keys
     environment:
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4318
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
 
   social-graph-mongodb:
     depends_on:
-      - jaeger-agent
-      - jaeger-query
+      - otel-collector
+      - jaeger
     hostname: social-graph-mongodb
     image: mongo:4.4.6
     command: "mongod --nojournal --quiet --config /social-network-microservices/config/mongod.conf"
@@ -207,8 +199,8 @@ services:
 
   social-graph-redis:
     depends_on:
-      - jaeger-agent
-      - jaeger-query
+      - otel-collector
+      - jaeger
     hostname: social-graph-redis
     image: redis
     command: "redis-server /social-network-microservices/config/redis.conf"
@@ -218,8 +210,8 @@ services:
 
   social-graph-service:
     depends_on:
-      - jaeger-agent
-      - jaeger-query
+      - otel-collector
+      - jaeger
       - social-graph-mongodb
     deploy:
       replicas: 1
@@ -232,12 +224,12 @@ services:
       - ./config:/social-network-microservices/config
       - ./keys:/keys
     environment:
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4318
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
 
   text-service:
     depends_on:
-      - jaeger-agent
-      - jaeger-query
+      - otel-collector
+      - jaeger
     deploy:
       replicas: 1
       restart_policy:
@@ -249,12 +241,12 @@ services:
       - ./config:/social-network-microservices/config
       - ./keys:/keys
     environment:
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4318
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
 
   unique-id-service:
     depends_on:
-      - jaeger-agent
-      - jaeger-query
+      - otel-collector
+      - jaeger
     deploy:
       replicas: 1
       restart_policy:
@@ -266,12 +258,12 @@ services:
       - ./config:/social-network-microservices/config
       - ./keys:/keys
     environment:
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4318
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
 
   url-shorten-memcached:
     depends_on:
-      - jaeger-agent
-      - jaeger-query
+      - otel-collector
+      - jaeger
     hostname: url-shorten-memcached
     image: memcached
     command:
@@ -282,8 +274,8 @@ services:
 
   url-shorten-mongodb:
     depends_on:
-      - jaeger-agent
-      - jaeger-query
+      - otel-collector
+      - jaeger
     hostname: url-shorten-mongodb
     image: mongo:4.4.6
     command: "mongod --nojournal --quiet --config /social-network-microservices/config/mongod.conf"
@@ -295,8 +287,8 @@ services:
   url-shorten-service:
     depends_on:
       - url-shorten-mongodb
-      - jaeger-agent
-      - jaeger-query
+      - otel-collector
+      - jaeger
     deploy:
       replicas: 1
       restart_policy:
@@ -308,12 +300,12 @@ services:
       - ./config:/social-network-microservices/config
       - ./keys:/keys
     environment:
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4318
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
 
   user-memcached:
     depends_on:
-      - jaeger-agent
-      - jaeger-query
+      - otel-collector
+      - jaeger
     hostname: user-memcached
     image: memcached
     command:
@@ -324,8 +316,8 @@ services:
 
   user-mention-service:
     depends_on:
-      - jaeger-agent
-      - jaeger-query
+      - otel-collector
+      - jaeger
     deploy:
       replicas: 1
       restart_policy:
@@ -337,12 +329,12 @@ services:
       - ./config:/social-network-microservices/config
       - ./keys:/keys
     environment:
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4318
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
 
   user-mongodb:
     depends_on:
-      - jaeger-agent
-      - jaeger-query
+      - otel-collector
+      - jaeger
     hostname: user-mongodb
     image: mongo:4.4.6
     command: "mongod --nojournal --quiet --config /social-network-microservices/config/mongod.conf"
@@ -354,8 +346,8 @@ services:
   user-service:
     depends_on:
       - user-mongodb
-      - jaeger-agent
-      - jaeger-query
+      - otel-collector
+      - jaeger
     deploy:
       replicas: 1
       restart_policy:
@@ -367,12 +359,12 @@ services:
       - ./config:/social-network-microservices/config
       - ./keys:/keys
     environment:
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4318
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
 
   user-timeline-mongodb:
     depends_on:
-      - jaeger-agent
-      - jaeger-query
+      - otel-collector
+      - jaeger
     hostname: user-timeline-mongodb
     image: mongo:4.4.6
     command: "mongod --nojournal --quiet --config /social-network-microservices/config/mongod.conf"
@@ -383,8 +375,8 @@ services:
 
   user-timeline-redis:
     depends_on:
-      - jaeger-agent
-      - jaeger-query
+      - otel-collector
+      - jaeger
     hostname: user-timeline-redis
     image: redis
     command: "redis-server /social-network-microservices/config/redis.conf"
@@ -395,7 +387,7 @@ services:
   user-timeline-service:
     depends_on:
       - user-timeline-mongodb
-      - jaeger-agent
+      - otel-collector
     deploy:
       replicas: 1
       restart_policy:
@@ -405,41 +397,18 @@ services:
     image: deathstarbench/social-network-microservices:latest
     volumes:
       - ./config:/social-network-microservices/config
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    hostname: jaeger
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "4317"         # OTLP gRPC receiver (internal)
+    deploy:
+      restart_policy:
+        condition: any
     environment:
-      - OTEL_EXPORTER_OTLP_ENDPOINT=http://jaeger-collector:4318
-
-  jaeger-collector:
-    image: jaegertracing/jaeger-collector
-    command:
-      [
-        "--cassandra.keyspace=jaeger_v1_dc1",
-        "--cassandra.servers=cassandra",
-        "--collector.zipkin.host-port=9411",
-        "--collector.num-workers=100",
-        "--collector.queue-size=100000",
-        "--collector.otlp.enabled=true"
-      ]
-    ports:
-      - "14269:14269"
-      - "4317:4317"  # OTLP gRPC receiver
-      - "4318:4318"  # OTLP HTTP receiver
-    deploy:
-      restart_policy:
-        condition: any
-    depends_on:
-      - cassandra-schema
-
-  jaeger-query:
-    image: jaegertracing/jaeger-query
-    command:
-      ["--cassandra.keyspace=jaeger_v1_dc1", "--cassandra.servers=cassandra"]
-    ports:
-      - "16686:16686"
-    deploy:
-      restart_policy:
-        condition: any
-    depends_on:
-      - cassandra-schema
+      - COLLECTOR_OTLP_ENABLED=true
 
   cassandra-schema:
     image: jaegertracing/jaeger-cassandra-schema
