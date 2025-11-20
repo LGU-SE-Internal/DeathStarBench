@@ -13,11 +13,12 @@ job:
   backoffLimit: 4
   ttlSecondsAfterFinished: 100
   restartPolicy: Never
-  activeDeadlineSeconds: 10000  # 25 minutes - Job timeout (should be less than hookTimeout)
-  hookTimeout: 10000  # 30 minutes - Helm hook timeout
+  activeDeadlineSeconds: 10000
+  hookTimeout: 10000
   
 # Server address for API calls (nginx service)
-serverAddress: "http://nginx-thrift.{{ .Release.Namespace }}.svc.cluster.local:8080"
+serverAddress: "nginx-thrift"
+serverPort: "8080"
 
 # Social graph to use for initialization
 # Options: socfb-Reed98 (default), ego-twitter, soc-twitter-follows-mun
@@ -27,4 +28,4 @@ graphName: "socfb-Reed98"
 composePosts: false
 
 # Enable or disable the data initialization job
-enabled: false
+enabled: true

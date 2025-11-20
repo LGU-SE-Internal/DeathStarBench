@@ -7,11 +7,9 @@ global:
     targetCPUUtilizationPercentage: '60'
   resources:
     limits:
-      cpu: 100m
-      memory: 128Mi
+      memory: 4Gi
     requests:
-      cpu: 100m
-      memory: 128Mi
+      memory: 2Gi
   replicas: 1
   imagePullPolicy: "IfNotPresent"
   restartPolicy: Always
