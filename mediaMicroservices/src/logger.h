@@ -18,6 +18,8 @@
 #include <string.h>
 #include <array>
 #include <iostream>
+#include <atomic>
+#include <mutex>
 
 namespace media_service {
 
@@ -49,17 +51,22 @@ namespace sinks = boost::log::sinks;
 
 class OtelOtlpSinkBackend : public sinks::basic_sink_backend<sinks::concurrent_feeding> {
 public:
-    OtelOtlpSinkBackend() : otel_logger_(nullptr) {
+    OtelOtlpSinkBackend() : otel_logger_(nullptr), initialized_(false) {
     }
 
     void consume(boost::log::record_view const& rec) {
-        // Lazy initialization of logger
-        if (!otel_logger_) {
-            auto provider = opentelemetry::logs::Provider::GetLoggerProvider();
-            if (!provider) return; // Provider not set up yet
-            otel_logger_ = provider->GetLogger("media_service_logger");
-            if (!otel_logger_) return;
+        // Lazy initialization of logger with thread safety
+        if (!initialized_.load(std::memory_order_acquire)) {
+            std::lock_guard<std::mutex> lock(init_mutex_);
+            if (!initialized_.load(std::memory_order_relaxed)) {
+                auto provider = opentelemetry::logs::Provider::GetLoggerProvider();
+                if (!provider) return; // Provider not set up yet
+                otel_logger_ = provider->GetLogger("media_service_logger");
+                initialized_.store(true, std::memory_order_release);
+            }
         }
+        
+        if (!otel_logger_) return;
 
         auto log_record = otel_logger_->CreateLogRecord();
         log_record->SetTimestamp(std::chrono::system_clock::now());
@@ -85,6 +92,8 @@ public:
 
 private:
     opentelemetry::nostd::shared_ptr<opentelemetry::logs::Logger> otel_logger_;
+    std::atomic<bool> initialized_;
+    std::mutex init_mutex_;
 
     opentelemetry::logs::Severity MapSeverity(boost::log::trivial::severity_level level) {
         using namespace opentelemetry::logs;
