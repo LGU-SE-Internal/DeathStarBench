@@ -6,7 +6,7 @@ ports:
 
 container:
   image: media-nginx
-  imageVersion: a404443
+  imageVersion: aabcc6c 
   name: nginx-web-server
   ports:
     - containerPort: 8080
