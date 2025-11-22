@@ -14,6 +14,11 @@
 #include <opentelemetry/exporters/otlp/otlp_http_exporter_factory.h>
 #include <opentelemetry/trace/provider.h>
 #include <opentelemetry/opentracingshim/tracer_shim.h>
+#include <opentelemetry/logs/provider.h>
+#include <opentelemetry/sdk/logs/logger_provider_factory.h>
+#include <opentelemetry/sdk/logs/simple_log_record_processor_factory.h>
+#include <opentelemetry/exporters/otlp/otlp_http_log_record_exporter_factory.h>
+#include "logger.h"
 
 namespace media_service {
 
@@ -53,6 +58,32 @@ class TextMapWriter : public opentracing::TextMapWriter {
   std::map<std::string, std::string>& _text_map;
 };
 
+void SetUpLogProvider(const std::string &service) {
+  // 1. Get OTLP Endpoint (reuse environment variable logic)
+  const char* otlp_endpoint_env = std::getenv("OTEL_EXPORTER_OTLP_ENDPOINT");
+  std::string otlp_endpoint = otlp_endpoint_env != nullptr ? otlp_endpoint_env : "http://localhost:4318";
+
+  // 2. Configure Log Exporter
+  opentelemetry::exporter::otlp::OtlpHttpLogRecordExporterOptions otlp_options;
+  otlp_options.url = otlp_endpoint + "/v1/logs";
+  auto exporter = opentelemetry::exporter::otlp::OtlpHttpLogRecordExporterFactory::Create(otlp_options);
+
+  // 3. Create Processor
+  auto processor = opentelemetry::sdk::logs::SimpleLogRecordProcessorFactory::Create(std::move(exporter));
+
+  // 4. Create Resource (keep consistent with Trace)
+  auto resource_attributes = opentelemetry::sdk::resource::ResourceAttributes{
+    {"service.name", service}
+  };
+  auto resource = opentelemetry::sdk::resource::Resource::Create(resource_attributes);
+
+  // 5. Create and set global Provider
+  auto provider = opentelemetry::sdk::logs::LoggerProviderFactory::Create(
+    std::move(processor), resource);
+  
+  opentelemetry::logs::Provider::SetLoggerProvider(provider);
+}
+
 void SetUpTracer(const std::string &service) {
   
   std::vector<std::unique_ptr<opentelemetry::sdk::trace::SpanProcessor>> processors;
@@ -86,6 +117,9 @@ void SetUpTracer(const std::string &service) {
   // Create OpenTracing shim
   auto tracer_shim = opentelemetry::opentracingshim::TracerShim::createTracerShim();
   opentracing::Tracer::InitGlobal(tracer_shim);
+  
+  // Initialize Log Provider
+  SetUpLogProvider(service);
 }
 
 
