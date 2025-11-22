@@ -49,14 +49,17 @@ namespace sinks = boost::log::sinks;
 
 class OtelOtlpSinkBackend : public sinks::basic_sink_backend<sinks::concurrent_feeding> {
 public:
-    OtelOtlpSinkBackend() {
-        // Get global Logger
-        auto provider = opentelemetry::logs::Provider::GetLoggerProvider();
-        otel_logger_ = provider->GetLogger("media_service_logger");
+    OtelOtlpSinkBackend() : otel_logger_(nullptr) {
     }
 
     void consume(boost::log::record_view const& rec) {
-        if (!otel_logger_) return;
+        // Lazy initialization of logger
+        if (!otel_logger_) {
+            auto provider = opentelemetry::logs::Provider::GetLoggerProvider();
+            if (!provider) return; // Provider not set up yet
+            otel_logger_ = provider->GetLogger("media_service_logger");
+            if (!otel_logger_) return;
+        }
 
         auto log_record = otel_logger_->CreateLogRecord();
         log_record->SetTimestamp(std::chrono::system_clock::now());
