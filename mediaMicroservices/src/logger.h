@@ -23,8 +23,10 @@ namespace media_service {
 
 // --- 1. Console helper: get TraceID/SpanID ---
 std::string get_current_trace_id() {
+    // GetCurrentSpan() always returns a valid span object, but it may represent an invalid/no-op span
     auto span = opentelemetry::trace::Tracer::GetCurrentSpan();
     auto ctx = span->GetContext();
+    // Check if we're in an active trace context
     if (ctx.IsValid()) {
         char trace_id_hex[33];
         ctx.trace_id().ToLowerBase16(trace_id_hex);
@@ -35,8 +37,10 @@ std::string get_current_trace_id() {
 }
 
 std::string get_current_span_id() {
+    // GetCurrentSpan() always returns a valid span object, but it may represent an invalid/no-op span
     auto span = opentelemetry::trace::Tracer::GetCurrentSpan();
     auto ctx = span->GetContext();
+    // Check if we're in an active trace context
     if (ctx.IsValid()) {
         char span_id_hex[17];
         ctx.span_id().ToLowerBase16(span_id_hex);
