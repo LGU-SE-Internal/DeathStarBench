@@ -16,8 +16,6 @@
 #include <opentelemetry/logs/logger.h>
 
 #include <string.h>
-#include <array>
-#include <iostream>
 #include <atomic>
 #include <mutex>
 
@@ -30,6 +28,7 @@ std::string get_current_trace_id() {
     if (ctx.IsValid()) {
         char trace_id_hex[33];
         ctx.trace_id().ToLowerBase16(trace_id_hex);
+        trace_id_hex[32] = '\0';
         return std::string(trace_id_hex, 32);
     }
     return "00000000000000000000000000000000";
@@ -41,6 +40,7 @@ std::string get_current_span_id() {
     if (ctx.IsValid()) {
         char span_id_hex[17];
         ctx.span_id().ToLowerBase16(span_id_hex);
+        span_id_hex[16] = '\0';
         return std::string(span_id_hex, 16);
     }
     return "0000000000000000";
