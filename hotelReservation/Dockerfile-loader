@@ -30,6 +30,7 @@ RUN apt-get update && \
         ca-certificates \
         libsasl2-2 \
         lua-socket \
+        netcat \
         openssl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
