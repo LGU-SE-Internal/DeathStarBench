@@ -18,8 +18,8 @@ loadTest:
   targetPort: 8080
   # Workload script to use
   # Options: compose-post.lua, read-home-timeline.lua, read-user-timeline.lua, mixed-workload.lua
-  script: "compose-post.lua"
-  # Endpoint path
+  script: "mixed-workload.lua"
+  # Endpoint path (not used for mixed-workload.lua, script handles endpoints internally)
   endpoint: "/wrk2-api/post/compose"
   # Number of threads
   threads: 2
