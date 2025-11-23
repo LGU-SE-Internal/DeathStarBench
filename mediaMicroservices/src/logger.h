@@ -14,6 +14,7 @@
 #include <opentelemetry/trace/tracer.h>
 #include <opentelemetry/logs/provider.h>
 #include <opentelemetry/logs/logger.h>
+#include <opentelemetry/nostd/span.h>
 
 #include <string.h>
 #include <atomic>
@@ -28,9 +29,8 @@ std::string get_current_trace_id() {
     auto ctx = span->GetContext();
     // Check if we're in an active trace context
     if (ctx.IsValid()) {
-        char trace_id_hex[33];
-        ctx.trace_id().ToLowerBase16(trace_id_hex);
-        trace_id_hex[32] = '\0';
+        char trace_id_hex[32];
+        ctx.trace_id().ToLowerBase16(opentelemetry::nostd::span<char, 32>(trace_id_hex));
         return std::string(trace_id_hex, 32);
     }
     return "00000000000000000000000000000000";
@@ -42,9 +42,8 @@ std::string get_current_span_id() {
     auto ctx = span->GetContext();
     // Check if we're in an active trace context
     if (ctx.IsValid()) {
-        char span_id_hex[17];
-        ctx.span_id().ToLowerBase16(span_id_hex);
-        span_id_hex[16] = '\0';
+        char span_id_hex[16];
+        ctx.span_id().ToLowerBase16(opentelemetry::nostd::span<char, 16>(span_id_hex));
         return std::string(span_id_hex, 16);
     }
     return "0000000000000000";
