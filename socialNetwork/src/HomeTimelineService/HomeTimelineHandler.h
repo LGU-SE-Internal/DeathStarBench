@@ -106,6 +106,7 @@ void HomeTimelineHandler::WriteHomeTimeline(
   auto parent_span = opentracing::Tracer::Global()->Extract(reader);
   auto span = opentracing::Tracer::Global()->StartSpan(
       "write_home_timeline_server", {opentracing::ChildOf(parent_span->get())});
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
 
   // Find followers of the user
   auto followers_span = opentracing::Tracer::Global()->StartSpan(
