@@ -75,7 +75,10 @@ void MovieInfoHandler::WriteMovieInfo(
 
   TextMapCarrier carrier_reader(carrier_copy);
 
-  auto parent_ctx = propagator->Extract(carrier_reader, opentelemetry::context::RuntimeContext::GetCurrent());
+  auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
+
+
+  auto parent_ctx = propagator->Extract(carrier_reader, current_ctx);
 
   
 
@@ -214,7 +217,10 @@ void MovieInfoHandler::ReadMovieInfo(
 
   TextMapCarrier carrier_reader(carrier_copy);
 
-  auto parent_ctx = propagator->Extract(carrier_reader, opentelemetry::context::RuntimeContext::GetCurrent());
+  auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
+
+
+  auto parent_ctx = propagator->Extract(carrier_reader, current_ctx);
 
   
 
@@ -424,7 +430,10 @@ void MovieInfoHandler::UpdateRating(
 
   TextMapCarrier carrier_reader(carrier_copy);
 
-  auto parent_ctx = propagator->Extract(carrier_reader, opentelemetry::context::RuntimeContext::GetCurrent());
+  auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
+
+
+  auto parent_ctx = propagator->Extract(carrier_reader, current_ctx);
 
   
 

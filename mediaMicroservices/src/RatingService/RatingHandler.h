@@ -55,7 +55,10 @@ void RatingHandler::UploadRating(
 
   TextMapCarrier carrier_reader(carrier_copy);
 
-  auto parent_ctx = propagator->Extract(carrier_reader, opentelemetry::context::RuntimeContext::GetCurrent());
+  auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
+
+
+  auto parent_ctx = propagator->Extract(carrier_reader, current_ctx);
 
   
 

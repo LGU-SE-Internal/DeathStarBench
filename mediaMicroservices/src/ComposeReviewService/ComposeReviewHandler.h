@@ -270,7 +270,10 @@ void ComposeReviewHandler::UploadMovieId(
 
   TextMapCarrier carrier_reader(carrier_copy);
 
-  auto parent_ctx = propagator->Extract(carrier_reader, opentelemetry::context::RuntimeContext::GetCurrent());
+  auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
+
+
+  auto parent_ctx = propagator->Extract(carrier_reader, current_ctx);
 
   
 
@@ -406,7 +409,10 @@ void ComposeReviewHandler::UploadUserId(
 
   TextMapCarrier carrier_reader(carrier_copy);
 
-  auto parent_ctx = propagator->Extract(carrier_reader, opentelemetry::context::RuntimeContext::GetCurrent());
+  auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
+
+
+  auto parent_ctx = propagator->Extract(carrier_reader, current_ctx);
 
   
 
@@ -544,7 +550,10 @@ void ComposeReviewHandler::UploadUniqueId(
 
   TextMapCarrier carrier_reader(carrier_copy);
 
-  auto parent_ctx = propagator->Extract(carrier_reader, opentelemetry::context::RuntimeContext::GetCurrent());
+  auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
+
+
+  auto parent_ctx = propagator->Extract(carrier_reader, current_ctx);
 
   
 
@@ -684,7 +693,10 @@ void ComposeReviewHandler::UploadText(
 
   TextMapCarrier carrier_reader(carrier_copy);
 
-  auto parent_ctx = propagator->Extract(carrier_reader, opentelemetry::context::RuntimeContext::GetCurrent());
+  auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
+
+
+  auto parent_ctx = propagator->Extract(carrier_reader, current_ctx);
 
   
 
@@ -818,7 +830,10 @@ void ComposeReviewHandler::UploadRating(
 
   TextMapCarrier carrier_reader(carrier_copy);
 
-  auto parent_ctx = propagator->Extract(carrier_reader, opentelemetry::context::RuntimeContext::GetCurrent());
+  auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
+
+
+  auto parent_ctx = propagator->Extract(carrier_reader, current_ctx);
 
   
 
