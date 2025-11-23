@@ -44,27 +44,26 @@ loadTest:
   targetUrl: "http://nginx-thrift:8080"
   targetHost: "nginx-thrift"
   targetPort: 8080
-  script: "compose-post.lua"
-  endpoint: "/wrk2-api/post/compose"
+  script: "mixed-workload.lua"  # Default: comprehensive mixed workload
+  endpoint: "/wrk2-api/post/compose"  # Not used by mixed-workload.lua
   threads: 2
   connections: 2
-  duration: "30s"
+  duration: "0"  # Use "0" for infinite continuous mode, or "30s", "5m", etc. for finite duration
   rate: 10
   additionalArgs: "-D exp -L"
-  continuous: false  # Set to true for continuous load testing
 ```
 
 ### Available Scripts
 
-- `compose-post.lua` - Test composing posts
-- `read-home-timeline.lua` - Test reading home timeline
-- `read-user-timeline.lua` - Test reading user timeline
-- `mixed-workload.lua` - **Comprehensive mixed workload** with 5 operations covering 9+ microservices:
+- `mixed-workload.lua` - **Recommended (Default)** - Comprehensive mixed workload covering 9+ microservices:
   - 50% Read home timeline (HomeTimelineService, PostStorageService, SocialGraphService)
   - 25% Read user timeline (UserTimelineService, PostStorageService)
   - 10% Compose post (ComposePostService, TextService, MediaService, UserMentionService, UrlShortenService, UniqueIdService, WriteHomeTimelineService, UserTimelineService)
   - 10% Follow user (SocialGraphService, UserService)
   - 5% Unfollow user (SocialGraphService, UserService)
+- `compose-post.lua` - Write-only workload for composing posts
+- `read-home-timeline.lua` - Read-only workload for home timeline
+- `read-user-timeline.lua` - Read-only workload for user timeline
 
 ### Configuration Parameters
 
@@ -73,28 +72,30 @@ loadTest:
 - `targetHost`: Target service hostname for health checks
 - `targetPort`: Target service port for health checks
 - `script`: Lua script to use for load generation
-- `endpoint`: API endpoint path
+- `endpoint`: API endpoint path (only used by single-operation scripts like compose-post.lua)
 - `threads`: Number of threads for wrk2
 - `connections`: Number of connections to keep open
-- `duration`: Duration of each test cycle (e.g., 30s, 5m, 1h)
+- `duration`: Duration of the test. Use `"0"` for infinite continuous mode (modified wrk2), or specify duration like `"30s"`, `"5m"`, `"1h"` for finite tests
 - `rate`: Requests per second
 - `additionalArgs`: Additional arguments to pass to wrk2
-- `continuous`: If true, runs load test continuously in a loop with automatic restarts on failure. If false, runs once then sleeps.
 
 ## Customizing the Load Test
 
-To change the workload script and parameters:
+### Using Mixed Workload (Recommended)
+
+The default configuration uses the comprehensive mixed workload. To customize parameters:
 
 ```bash
 helm upgrade socialnetwork ./helm-chart/socialnetwork -n socialnetwork \
-  --set load-generator.loadTest.script=mixed-workload.lua \
   --set load-generator.loadTest.threads=10 \
   --set load-generator.loadTest.connections=100 \
   --set load-generator.loadTest.rate=100 \
-  --set load-generator.loadTest.duration=5m
+  --set load-generator.loadTest.duration=0  # 0 for infinite, or specify like "5m"
 ```
 
-For read-home-timeline:
+### Using Single-Operation Scripts
+
+To switch to a single-operation script like read-home-timeline:
 
 ```bash
 helm upgrade socialnetwork ./helm-chart/socialnetwork -n socialnetwork \
@@ -104,19 +105,17 @@ helm upgrade socialnetwork ./helm-chart/socialnetwork -n socialnetwork \
 
 ### Enable Continuous Load Testing
 
-To run the load test continuously (it will keep running and restart automatically on failure):
+The modified wrk2 supports native continuous mode. Set `duration: "0"` for infinite running:
 
 ```bash
 helm upgrade socialnetwork ./helm-chart/socialnetwork -n socialnetwork \
-  --set load-generator.loadTest.continuous=true
+  --set load-generator.loadTest.duration=0
 ```
 
-In continuous mode:
-- The load test runs in an infinite loop
-- Each cycle runs for the specified `duration`
-- If a cycle fails, it waits 5 seconds before restarting
-- If a cycle succeeds, it immediately starts the next cycle
-- The pod will automatically restart if it crashes
+With `duration: "0"`:
+- wrk2 runs continuously without stopping
+- Single process handles infinite load generation
+- Pod will automatically restart if it crashes (Kubernetes deployment behavior)
 
 ## Viewing Logs
 
