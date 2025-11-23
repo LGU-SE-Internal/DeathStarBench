@@ -17,8 +17,9 @@ loadTest:
   targetHost: "nginx-web-server"
   targetPort: 8080
   # Workload script to use
-  script: "compose-review.lua"
-  # Endpoint path
+  # Options: compose-review.lua (write-only), mixed-workload.lua (50% read page, 30% read info, 20% write)
+  script: "mixed-workload.lua"
+  # Endpoint path (not used for mixed-workload.lua, script handles endpoints internally)
   endpoint: "/wrk2-api/review/compose"
   # Number of threads
   threads: 2

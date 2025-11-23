@@ -44,19 +44,22 @@ loadTest:
   targetUrl: "http://nginx-web-server:8080"
   targetHost: "nginx-web-server"
   targetPort: 8080
-  script: "compose-review.lua"
+  script: "mixed-workload.lua"  # or "compose-review.lua"
   endpoint: "/wrk2-api/review/compose"
   threads: 2
   connections: 2
-  duration: "30s"
+  duration: "0"  # Use 0 for infinite continuous mode
   rate: 10
   additionalArgs: "-D exp -L"
-  continuous: false  # Set to true for continuous load testing
 ```
 
 ### Available Scripts
 
-- `compose-review.lua` - Test composing movie reviews
+- `mixed-workload.lua` - **Recommended** - Mixed read/write workload covering multiple services:
+  - 50% Read movie page (with reviews) - tests PageService, MovieReviewService, ReviewStorageService
+  - 30% Read movie info - tests MovieInfoService, CastInfoService, PlotService
+  - 20% Compose review (write) - tests ComposeReviewService, TextService, RatingService, UserService, MovieIdService, UniqueIdService
+- `compose-review.lua` - Write-only workload for composing movie reviews
 
 ### Configuration Parameters
 
@@ -65,13 +68,12 @@ loadTest:
 - `targetHost`: Target service hostname for health checks
 - `targetPort`: Target service port for health checks
 - `script`: Lua script to use for load generation
-- `endpoint`: API endpoint path
+- `endpoint`: API endpoint path (not used for mixed-workload.lua)
 - `threads`: Number of threads for wrk2
 - `connections`: Number of connections to keep open
-- `duration`: Duration of each test cycle (e.g., 30s, 5m, 1h)
+- `duration`: Duration of the test (e.g., 30s, 5m, 1h, or 0 for infinite with modified wrk2)
 - `rate`: Requests per second
 - `additionalArgs`: Additional arguments to pass to wrk2
-- `continuous`: If true, runs load test continuously in a loop with automatic restarts on failure. If false, runs once then sleeps.
 
 ## Customizing the Load Test
 
