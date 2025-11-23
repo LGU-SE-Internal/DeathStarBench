@@ -81,7 +81,9 @@ void SetUpLogProvider(const std::string &service) {
   auto provider = opentelemetry::sdk::logs::LoggerProviderFactory::Create(
     std::move(processor), resource);
   
-  opentelemetry::logs::Provider::SetLoggerProvider(provider);
+  // Convert unique_ptr to shared_ptr for SetLoggerProvider
+  opentelemetry::logs::Provider::SetLoggerProvider(
+    opentelemetry::nostd::shared_ptr<opentelemetry::logs::LoggerProvider>(std::move(provider)));
 }
 
 void SetUpTracer(const std::string &service) {
