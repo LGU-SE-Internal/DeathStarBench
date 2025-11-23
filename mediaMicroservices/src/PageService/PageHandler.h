@@ -82,7 +82,8 @@ void PageHandler::ReadPage(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("ReadPage", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("ReadPage", options);
 
   auto scope = tracer->WithActiveSpan(span);
 

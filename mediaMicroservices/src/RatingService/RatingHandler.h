@@ -68,7 +68,8 @@ void RatingHandler::UploadRating(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("UploadRating", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("UploadRating", options);
 
   auto scope = tracer->WithActiveSpan(span);
 

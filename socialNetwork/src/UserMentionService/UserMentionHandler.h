@@ -67,7 +67,8 @@ void UserMentionHandler::ComposeUserMentions(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("compose_user_mentions_server", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("compose_user_mentions_server", options);
 
   auto scope = tracer->WithActiveSpan(span);
 

@@ -88,7 +88,8 @@ void MovieInfoHandler::WriteMovieInfo(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("WriteMovieInfo", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("WriteMovieInfo", options);
 
   auto scope = tracer->WithActiveSpan(span);
 
@@ -230,7 +231,8 @@ void MovieInfoHandler::ReadMovieInfo(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("ReadMovieInfo", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("ReadMovieInfo", options);
 
   auto scope = tracer->WithActiveSpan(span);
 
@@ -443,7 +445,8 @@ void MovieInfoHandler::UpdateRating(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("UpdateRating", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("UpdateRating", options);
 
   auto scope = tracer->WithActiveSpan(span);
 

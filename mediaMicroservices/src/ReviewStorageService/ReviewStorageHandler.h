@@ -70,7 +70,8 @@ void ReviewStorageHandler::StoreReview(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("StoreReview", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("StoreReview", options);
 
   auto scope = tracer->WithActiveSpan(span);
 
@@ -169,7 +170,8 @@ void ReviewStorageHandler::ReadReviews(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("ReadReviews", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("ReadReviews", options);
 
   auto scope = tracer->WithActiveSpan(span);
 

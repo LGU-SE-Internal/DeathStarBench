@@ -99,7 +99,8 @@ void UrlShortenHandler::ComposeUrls(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("compose_urls_server", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("compose_urls_server", options);
 
   auto scope = tracer->WithActiveSpan(span);
 

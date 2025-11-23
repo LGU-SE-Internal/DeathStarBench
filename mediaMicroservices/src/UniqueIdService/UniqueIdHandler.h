@@ -102,7 +102,8 @@ void UniqueIdHandler::UploadUniqueId(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("UploadUniqueId", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("UploadUniqueId", options);
 
   auto scope = tracer->WithActiveSpan(span);
 

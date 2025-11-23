@@ -61,7 +61,8 @@ void TextHandler::UploadText(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("UploadText", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("UploadText", options);
 
   auto scope = tracer->WithActiveSpan(span);
 

@@ -79,7 +79,8 @@ void CastInfoHandler::WriteCastInfo(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("WriteCastInfo", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("WriteCastInfo", options);
 
   auto scope = tracer->WithActiveSpan(span);
 
@@ -174,7 +175,8 @@ void CastInfoHandler::ReadCastInfo(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("ReadCastInfo", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("ReadCastInfo", options);
 
   auto scope = tracer->WithActiveSpan(span);
 

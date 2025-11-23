@@ -72,7 +72,8 @@ void PlotHandler::ReadPlot(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("ReadPlot", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("ReadPlot", options);
 
   auto scope = tracer->WithActiveSpan(span);
 
@@ -250,7 +251,8 @@ void PlotHandler::WritePlot(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("WritePlot", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("WritePlot", options);
 
   auto scope = tracer->WithActiveSpan(span);
 

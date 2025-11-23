@@ -79,7 +79,8 @@ void MovieReviewHandler::UploadMovieReview(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("UploadMovieReview", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("UploadMovieReview", options);
 
   auto scope = tracer->WithActiveSpan(span);
 
@@ -255,7 +256,8 @@ void MovieReviewHandler::ReadMovieReviews(
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
   
-  auto span = tracer->StartSpan("ReadMovieReviews", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("ReadMovieReviews", options);
 
   
   auto scope = tracer->WithActiveSpan(span);

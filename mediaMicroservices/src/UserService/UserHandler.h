@@ -163,7 +163,8 @@ void UserHandler::RegisterUser(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("RegisterUser", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("RegisterUser", options);
 
   auto scope = tracer->WithActiveSpan(span);
 
@@ -323,7 +324,8 @@ void UserHandler::RegisterUserWithId(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("RegisterUserWithId", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("RegisterUserWithId", options);
 
   auto scope = tracer->WithActiveSpan(span);
 

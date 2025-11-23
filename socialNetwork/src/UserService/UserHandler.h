@@ -146,7 +146,8 @@ void UserHandler::RegisterUserWithId(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("register_user_withid_server", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("register_user_withid_server", options);
 
   auto scope = tracer->WithActiveSpan(span);
 

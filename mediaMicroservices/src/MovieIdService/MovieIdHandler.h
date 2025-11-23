@@ -85,7 +85,8 @@ void MovieIdHandler::UploadMovieId(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("UploadMovieId", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("UploadMovieId", options);
 
   auto scope = tracer->WithActiveSpan(span);
 
@@ -316,7 +317,8 @@ void MovieIdHandler::RegisterMovieId (
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("RegisterMovieId", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("RegisterMovieId", options);
 
   auto scope = tracer->WithActiveSpan(span);
 

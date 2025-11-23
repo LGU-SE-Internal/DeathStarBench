@@ -79,7 +79,8 @@ void UserReviewHandler::UploadUserReview(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("UploadUserReview", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("UploadUserReview", options);
 
   auto scope = tracer->WithActiveSpan(span);
 
@@ -242,7 +243,8 @@ void UserReviewHandler::ReadUserReviews(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("ReadUserReviews", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("ReadUserReviews", options);
 
   auto scope = tracer->WithActiveSpan(span);
 

@@ -375,7 +375,8 @@ void PostStorageHandler::ReadPosts(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("post_storage_read_posts_server", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("post_storage_read_posts_server", options);
 
   auto scope = tracer->WithActiveSpan(span);
 

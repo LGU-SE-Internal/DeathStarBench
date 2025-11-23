@@ -283,7 +283,8 @@ void ComposeReviewHandler::UploadMovieId(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("UploadMovieId", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("UploadMovieId", options);
 
   auto scope = tracer->WithActiveSpan(span);
 
@@ -422,7 +423,8 @@ void ComposeReviewHandler::UploadUserId(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("UploadUserId", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("UploadUserId", options);
 
   auto scope = tracer->WithActiveSpan(span);
 
@@ -563,7 +565,8 @@ void ComposeReviewHandler::UploadUniqueId(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("UploadUniqueId", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("UploadUniqueId", options);
 
   auto scope = tracer->WithActiveSpan(span);
 
@@ -706,7 +709,8 @@ void ComposeReviewHandler::UploadText(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("UploadText", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("UploadText", options);
 
   auto scope = tracer->WithActiveSpan(span);
 
@@ -843,7 +847,8 @@ void ComposeReviewHandler::UploadRating(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("UploadRating", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("UploadRating", options);
 
   auto scope = tracer->WithActiveSpan(span);
 

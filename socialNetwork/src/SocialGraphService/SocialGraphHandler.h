@@ -832,7 +832,8 @@ void SocialGraphHandler::FollowWithUsername(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("follow_with_username_server", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("follow_with_username_server", options);
 
   auto scope = tracer->WithActiveSpan(span);
 
@@ -937,7 +938,8 @@ void SocialGraphHandler::UnfollowWithUsername(
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-  auto span = tracer->StartSpan("unfollow_with_username_server", options, parent_ctx);
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("unfollow_with_username_server", options);
 
   auto scope = tracer->WithActiveSpan(span);
 
