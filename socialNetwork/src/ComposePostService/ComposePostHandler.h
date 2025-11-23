@@ -150,7 +150,8 @@ Creator ComposePostHandler::_ComposeCreaterHelper(
 TextServiceReturn ComposePostHandler::_ComposeTextHelper(
     int64_t req_id, const std::string &text,
     const std::map<std::string, std::string> &carrier) {
-  
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
   
   auto span = tracer->StartSpan("compose_text_client");
   std::map<std::string, std::string> writer_text_map;
@@ -187,7 +188,8 @@ std::vector<Media> ComposePostHandler::_ComposeMediaHelper(
     int64_t req_id, const std::vector<std::string> &media_types,
     const std::vector<int64_t> &media_ids,
     const std::map<std::string, std::string> &carrier) {
-  
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
   
   auto span = tracer->StartSpan("compose_media_client");
   std::map<std::string, std::string> writer_text_map;
@@ -224,7 +226,8 @@ std::vector<Media> ComposePostHandler::_ComposeMediaHelper(
 int64_t ComposePostHandler::_ComposeUniqueIdHelper(
     int64_t req_id, const PostType::type post_type,
     const std::map<std::string, std::string> &carrier) {
-  
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
   
   auto span = tracer->StartSpan("compose_unique_id_client");
   std::map<std::string, std::string> writer_text_map;
@@ -260,7 +263,8 @@ int64_t ComposePostHandler::_ComposeUniqueIdHelper(
 void ComposePostHandler::_UploadPostHelper(
     int64_t req_id, const Post &post,
     const std::map<std::string, std::string> &carrier) {
-  
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
   
   auto span = tracer->StartSpan("store_post_client");
   std::map<std::string, std::string> writer_text_map;
@@ -292,7 +296,8 @@ void ComposePostHandler::_UploadPostHelper(
 void ComposePostHandler::_UploadUserTimelineHelper(
     int64_t req_id, int64_t post_id, int64_t user_id, int64_t timestamp,
     const std::map<std::string, std::string> &carrier) {
-  
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
   
   auto span = tracer->StartSpan("write_user_timeline_client");
   std::map<std::string, std::string> writer_text_map;
@@ -325,7 +330,8 @@ void ComposePostHandler::_UploadHomeTimelineHelper(
     int64_t req_id, int64_t post_id, int64_t user_id, int64_t timestamp,
     const std::vector<int64_t> &user_mentions_id,
     const std::map<std::string, std::string> &carrier) {
-  
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
   
   auto span = tracer->StartSpan("write_home_timeline_client");
   std::map<std::string, std::string> writer_text_map;
@@ -360,7 +366,8 @@ void ComposePostHandler::ComposePost(
     const std::string &text, const std::vector<int64_t> &media_ids,
     const std::vector<std::string> &media_types, const PostType::type post_type,
     const std::map<std::string, std::string> &carrier) {
-  
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
   
   auto span = tracer->StartSpan("compose_post_server");
   std::map<std::string, std::string> writer_text_map;
