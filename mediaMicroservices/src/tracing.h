@@ -6,56 +6,49 @@
 #include <string>
 #include <cstdlib>
 #include <map>
+#include <vector>
+#include <iostream>
 
-#include <opentracing/propagation.h>
+// OTel SDK Includes
 #include <opentelemetry/sdk/trace/tracer_provider_factory.h>
 #include <opentelemetry/sdk/trace/simple_processor_factory.h>
 #include <opentelemetry/sdk/resource/resource.h>
 #include <opentelemetry/exporters/otlp/otlp_http_exporter_factory.h>
 #include <opentelemetry/trace/provider.h>
-#include <opentelemetry/opentracingshim/tracer_shim.h>
+#include <opentelemetry/context/propagation/global_propagator.h>
+#include <opentelemetry/context/propagation/text_map_propagator.h>
+#include <opentelemetry/trace/propagation/http_trace_context.h>
+#include <opentelemetry/context/runtime_context.h>
+
+// OTel Logs Includes
 #include <opentelemetry/logs/provider.h>
 #include <opentelemetry/sdk/logs/logger_provider_factory.h>
 #include <opentelemetry/sdk/logs/simple_log_record_processor_factory.h>
 #include <opentelemetry/exporters/otlp/otlp_http_log_record_exporter_factory.h>
-#include "logger.h"
 
 namespace media_service {
 
-using opentracing::expected;
-using opentracing::string_view;
-
-class TextMapReader : public opentracing::TextMapReader {
- public:
-  explicit TextMapReader(const std::map<std::string, std::string> &text_map)
-      : _text_map(text_map) {}
-
-  expected<void> ForeachKey(
-      std::function<expected<void>(string_view key, string_view value)> f)
-  const override {
-    for (const auto& key_value : _text_map) {
-      auto result = f(key_value.first, key_value.second);
-      if (!result) return result;
+// --- OTel Carrier Implementation for Context Propagation ---
+class TextMapCarrier : public opentelemetry::context::propagation::TextMapCarrier {
+public:
+    explicit TextMapCarrier(std::map<std::string, std::string>& headers) : headers_(headers) {}
+    
+    // Get (used for Extract)
+    opentelemetry::nostd::string_view Get(opentelemetry::nostd::string_view key) const noexcept override {
+        auto it = headers_.find(std::string(key));
+        if (it != headers_.end()) {
+            return opentelemetry::nostd::string_view(it->second);
+        }
+        return "";
     }
-    return {};
-  }
 
- private:
-  const std::map<std::string, std::string>& _text_map;
-};
+    // Set (used for Inject)
+    void Set(opentelemetry::nostd::string_view key, opentelemetry::nostd::string_view value) noexcept override {
+        headers_[std::string(key)] = std::string(value);
+    }
 
-class TextMapWriter : public opentracing::TextMapWriter {
- public:
-  explicit TextMapWriter(std::map<std::string, std::string> &text_map)
-    : _text_map(text_map) {}
-
-  expected<void> Set(string_view key, string_view value) const override {
-    _text_map[key] = value;
-    return {};
-  }
-
- private:
-  std::map<std::string, std::string>& _text_map;
+private:
+    std::map<std::string, std::string>& headers_;
 };
 
 void SetUpLogProvider(const std::string &service) {
@@ -117,11 +110,13 @@ void SetUpTracer(const std::string &service) {
     std::move(processors), resource);
   
   // Set the global tracer provider
-  opentelemetry::trace::Provider::SetTracerProvider(std::shared_ptr<opentelemetry::trace::TracerProvider>(std::move(provider)));
+  opentelemetry::trace::Provider::SetTracerProvider(
+    std::shared_ptr<opentelemetry::trace::TracerProvider>(std::move(provider)));
   
-  // Create OpenTracing shim
-  auto tracer_shim = opentelemetry::opentracingshim::TracerShim::createTracerShim();
-  opentracing::Tracer::InitGlobal(tracer_shim);
+  // Set the global propagator for context propagation (W3C Trace Context)
+  opentelemetry::context::propagation::GlobalTextMapPropagator::SetGlobalPropagator(
+    opentelemetry::nostd::shared_ptr<opentelemetry::context::propagation::TextMapPropagator>(
+      new opentelemetry::trace::propagation::HttpTraceContext()));
   
   // Initialize Log Provider
   SetUpLogProvider(service);

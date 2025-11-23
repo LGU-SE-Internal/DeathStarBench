@@ -18,6 +18,7 @@
 #include "../ThriftClient.h"
 #include "../logger.h"
 #include "../tracing.h"
+#include "../context_helper.h"
 
 namespace media_service {
 #define NUM_COMPONENTS 5
@@ -46,7 +47,6 @@ class ComposeReviewHandler : public ComposeReviewServiceIf {
                      const std::map<std::string, std::string> &) override;
   void UploadUserId(int64_t, int64_t,
       const std::map<std::string, std::string> &) override;
-
 
  private:
   memcached_pool_st *_memcached_client_pool;
@@ -256,15 +256,47 @@ void ComposeReviewHandler::UploadMovieId(
     const std::string &movie_id,
     const std::map<std::string, std::string> & carrier) {
 
-  // Initialize a span
-  TextMapReader reader(carrier);
+  // Get tracer and propagator
+
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("media_service");
+
+  auto propagator = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
+
+  
+
+  // Extract context from carrier
+
+  std::map<std::string, std::string> carrier_copy = carrier;
+
+  TextMapCarrier carrier_reader(carrier_copy);
+
+  auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
+
+
+  auto parent_ctx = propagator->Extract(carrier_reader, current_ctx);
+
+  
+
+  // Start span with extracted context as parent
+
+  opentelemetry::trace::StartSpanOptions options;
+
+  options.kind = opentelemetry::trace::SpanKind::kServer;
+
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("UploadMovieId", options);
+
+  auto scope = tracer->WithActiveSpan(span);
+
+  
+
+  // Inject context for downstream services
+
   std::map<std::string, std::string> writer_text_map;
-  TextMapWriter writer(writer_text_map);
-  auto parent_span = opentracing::Tracer::Global()->Extract(reader);
-  auto span = opentracing::Tracer::Global()->StartSpan(
-      "UploadMovieId",
-      { opentracing::ChildOf(parent_span->get()) });
-  opentracing::Tracer::Global()->Inject(span->context(), writer);
+
+  TextMapCarrier writer_carrier(writer_text_map);
+
+  propagator->Inject(writer_carrier, opentelemetry::context::RuntimeContext::GetCurrent());
 
   memcached_return_t memcached_rc;
   std::string key_counter = std::to_string(req_id) + ":counter";
@@ -357,22 +389,54 @@ void ComposeReviewHandler::UploadMovieId(
   if (counter_value == NUM_COMPONENTS) {
     _ComposeAndUpload(req_id, writer_text_map);
   }
-  span->Finish();
+  span->End();
 }
 
 void ComposeReviewHandler::UploadUserId(
     int64_t req_id, int64_t user_id,
     const std::map<std::string, std::string> & carrier) {
 
-  // Initialize a span
-  TextMapReader reader(carrier);
+  // Get tracer and propagator
+
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("media_service");
+
+  auto propagator = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
+
+  
+
+  // Extract context from carrier
+
+  std::map<std::string, std::string> carrier_copy = carrier;
+
+  TextMapCarrier carrier_reader(carrier_copy);
+
+  auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
+
+
+  auto parent_ctx = propagator->Extract(carrier_reader, current_ctx);
+
+  
+
+  // Start span with extracted context as parent
+
+  opentelemetry::trace::StartSpanOptions options;
+
+  options.kind = opentelemetry::trace::SpanKind::kServer;
+
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("UploadUserId", options);
+
+  auto scope = tracer->WithActiveSpan(span);
+
+  
+
+  // Inject context for downstream services
+
   std::map<std::string, std::string> writer_text_map;
-  TextMapWriter writer(writer_text_map);
-  auto parent_span = opentracing::Tracer::Global()->Extract(reader);
-  auto span = opentracing::Tracer::Global()->StartSpan(
-      "UploadUserId",
-      { opentracing::ChildOf(parent_span->get()) });
-  opentracing::Tracer::Global()->Inject(span->context(), writer);
+
+  TextMapCarrier writer_carrier(writer_text_map);
+
+  propagator->Inject(writer_carrier, opentelemetry::context::RuntimeContext::GetCurrent());
 
   memcached_return_t memcached_rc;
   std::string key_counter = std::to_string(req_id) + ":counter";
@@ -467,22 +531,54 @@ void ComposeReviewHandler::UploadUserId(
   if (counter_value == NUM_COMPONENTS) {
     _ComposeAndUpload(req_id, writer_text_map);
   }
-  span->Finish();
+  span->End();
 }
 
 void ComposeReviewHandler::UploadUniqueId(
     int64_t req_id, int64_t review_id,
     const std::map<std::string, std::string> & carrier) {
 
-  // Initialize a span
-  TextMapReader reader(carrier);
+  // Get tracer and propagator
+
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("media_service");
+
+  auto propagator = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
+
+  
+
+  // Extract context from carrier
+
+  std::map<std::string, std::string> carrier_copy = carrier;
+
+  TextMapCarrier carrier_reader(carrier_copy);
+
+  auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
+
+
+  auto parent_ctx = propagator->Extract(carrier_reader, current_ctx);
+
+  
+
+  // Start span with extracted context as parent
+
+  opentelemetry::trace::StartSpanOptions options;
+
+  options.kind = opentelemetry::trace::SpanKind::kServer;
+
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("UploadUniqueId", options);
+
+  auto scope = tracer->WithActiveSpan(span);
+
+  
+
+  // Inject context for downstream services
+
   std::map<std::string, std::string> writer_text_map;
-  TextMapWriter writer(writer_text_map);
-  auto parent_span = opentracing::Tracer::Global()->Extract(reader);
-  auto span = opentracing::Tracer::Global()->StartSpan(
-      "UploadUniqueId",
-      { opentracing::ChildOf(parent_span->get()) });
-  opentracing::Tracer::Global()->Inject(span->context(), writer);
+
+  TextMapCarrier writer_carrier(writer_text_map);
+
+  propagator->Inject(writer_carrier, opentelemetry::context::RuntimeContext::GetCurrent());
 
   memcached_return_t memcached_rc;
   std::string key_counter = std::to_string(req_id) + ":counter";
@@ -578,7 +674,7 @@ void ComposeReviewHandler::UploadUniqueId(
   if (counter_value == NUM_COMPONENTS) {
     _ComposeAndUpload(req_id, writer_text_map);
   }
-  span->Finish();
+  span->End();
 }
 
 void ComposeReviewHandler::UploadText(
@@ -586,15 +682,47 @@ void ComposeReviewHandler::UploadText(
     const std::string &text,
     const std::map<std::string, std::string> & carrier) {
 
-  // Initialize a span
-  TextMapReader reader(carrier);
+  // Get tracer and propagator
+
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("media_service");
+
+  auto propagator = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
+
+  
+
+  // Extract context from carrier
+
+  std::map<std::string, std::string> carrier_copy = carrier;
+
+  TextMapCarrier carrier_reader(carrier_copy);
+
+  auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
+
+
+  auto parent_ctx = propagator->Extract(carrier_reader, current_ctx);
+
+  
+
+  // Start span with extracted context as parent
+
+  opentelemetry::trace::StartSpanOptions options;
+
+  options.kind = opentelemetry::trace::SpanKind::kServer;
+
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("UploadText", options);
+
+  auto scope = tracer->WithActiveSpan(span);
+
+  
+
+  // Inject context for downstream services
+
   std::map<std::string, std::string> writer_text_map;
-  TextMapWriter writer(writer_text_map);
-  auto parent_span = opentracing::Tracer::Global()->Extract(reader);
-  auto span = opentracing::Tracer::Global()->StartSpan(
-      "UploadText",
-      { opentracing::ChildOf(parent_span->get()) });
-  opentracing::Tracer::Global()->Inject(span->context(), writer);
+
+  TextMapCarrier writer_carrier(writer_text_map);
+
+  propagator->Inject(writer_carrier, opentelemetry::context::RuntimeContext::GetCurrent());
 
   memcached_return_t memcached_rc;
   std::string key_counter = std::to_string(req_id) + ":counter";
@@ -686,21 +814,53 @@ void ComposeReviewHandler::UploadText(
   if (counter_value == NUM_COMPONENTS) {
     _ComposeAndUpload(req_id, writer_text_map);
   }
-  span->Finish();
+  span->End();
 }
 
 void ComposeReviewHandler::UploadRating(
     int64_t req_id, int32_t rating, const std::map<std::string, std::string> & carrier) {
 
-  // Initialize a span
-  TextMapReader reader(carrier);
+  // Get tracer and propagator
+
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("media_service");
+
+  auto propagator = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
+
+  
+
+  // Extract context from carrier
+
+  std::map<std::string, std::string> carrier_copy = carrier;
+
+  TextMapCarrier carrier_reader(carrier_copy);
+
+  auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
+
+
+  auto parent_ctx = propagator->Extract(carrier_reader, current_ctx);
+
+  
+
+  // Start span with extracted context as parent
+
+  opentelemetry::trace::StartSpanOptions options;
+
+  options.kind = opentelemetry::trace::SpanKind::kServer;
+
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("UploadRating", options);
+
+  auto scope = tracer->WithActiveSpan(span);
+
+  
+
+  // Inject context for downstream services
+
   std::map<std::string, std::string> writer_text_map;
-  TextMapWriter writer(writer_text_map);
-  auto parent_span = opentracing::Tracer::Global()->Extract(reader);
-  auto span = opentracing::Tracer::Global()->StartSpan(
-      "UploadRating",
-      { opentracing::ChildOf(parent_span->get()) });
-  opentracing::Tracer::Global()->Inject(span->context(), writer);
+
+  TextMapCarrier writer_carrier(writer_text_map);
+
+  propagator->Inject(writer_carrier, opentelemetry::context::RuntimeContext::GetCurrent());
 
   memcached_return_t memcached_rc;
   std::string key_counter = std::to_string(req_id) + ":counter";
@@ -792,10 +952,8 @@ void ComposeReviewHandler::UploadRating(
   if (counter_value == NUM_COMPONENTS) {
     _ComposeAndUpload(req_id, writer_text_map);
   }
-  span->Finish();
+  span->End();
 }
-
 } // namespace media_service
-
 
 #endif //MEDIA_MICROSERVICES_COMPOSEREVIEWHANDLER_H

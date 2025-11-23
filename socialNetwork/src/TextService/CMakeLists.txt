@@ -1,27 +1,27 @@
 add_executable(
-    TextService
-    TextService.cpp
-    ${THRIFT_GEN_CPP_DIR}/TextService.cpp
-    ${THRIFT_GEN_CPP_DIR}/UserMentionService.cpp
-    ${THRIFT_GEN_CPP_DIR}/UrlShortenService.cpp
-    ${THRIFT_GEN_CPP_DIR}/social_network_types.cpp
+ TextService
+ TextService.cpp
+ ${THRIFT_GEN_CPP_DIR}/TextService.cpp
+ ${THRIFT_GEN_CPP_DIR}/UserMentionService.cpp
+ ${THRIFT_GEN_CPP_DIR}/UrlShortenService.cpp
+ ${THRIFT_GEN_CPP_DIR}/social_network_types.cpp
 )
 
 target_include_directories(
-    TextService PRIVATE
-    /usr/local/include/opentelemetry
+ TextService PRIVATE
+ /usr/local/include/opentelemetry
 )
 
 target_link_libraries(
-    TextService
-    nlohmann_json::nlohmann_json
-    ${THRIFT_LIB}
-    ${CMAKE_THREAD_LIBS_INIT}
-    ${Boost_LIBRARIES}
-    Boost::log
-    Boost::log_setup
-    opentelemetry_trace opentelemetry_exporter_otlp_http opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable opentelemetry_opentracing_shim opentracing yaml-cpp
-    opentelemetry_logs opentelemetry_exporter_otlp_http_log
+ TextService
+ nlohmann_json::nlohmann_json
+ ${THRIFT_LIB}
+ ${CMAKE_THREAD_LIBS_INIT}
+ ${Boost_LIBRARIES}
+ Boost::log
+ Boost::log_setup
+ opentelemetry_trace opentelemetry_exporter_otlp_http opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable yaml-cpp
+ opentelemetry_logs opentelemetry_exporter_otlp_http_log
 )
 
 install(TARGETS TextService DESTINATION ./)

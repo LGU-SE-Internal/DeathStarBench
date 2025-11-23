@@ -1,34 +1,34 @@
 add_executable(
-    ComposePostService
-    ComposePostService.cpp
-    ${THRIFT_GEN_CPP_DIR}/ComposePostService.cpp
-    ${THRIFT_GEN_CPP_DIR}/PostStorageService.cpp
-    ${THRIFT_GEN_CPP_DIR}/UserTimelineService.cpp
-    ${THRIFT_GEN_CPP_DIR}/UserService.cpp
-    ${THRIFT_GEN_CPP_DIR}/UniqueIdService.cpp
-    ${THRIFT_GEN_CPP_DIR}/MediaService.cpp
-    ${THRIFT_GEN_CPP_DIR}/TextService.cpp
-    ${THRIFT_GEN_CPP_DIR}/HomeTimelineService.cpp
-    ${THRIFT_GEN_CPP_DIR}/social_network_types.cpp
+ ComposePostService
+ ComposePostService.cpp
+ ${THRIFT_GEN_CPP_DIR}/ComposePostService.cpp
+ ${THRIFT_GEN_CPP_DIR}/PostStorageService.cpp
+ ${THRIFT_GEN_CPP_DIR}/UserTimelineService.cpp
+ ${THRIFT_GEN_CPP_DIR}/UserService.cpp
+ ${THRIFT_GEN_CPP_DIR}/UniqueIdService.cpp
+ ${THRIFT_GEN_CPP_DIR}/MediaService.cpp
+ ${THRIFT_GEN_CPP_DIR}/TextService.cpp
+ ${THRIFT_GEN_CPP_DIR}/HomeTimelineService.cpp
+ ${THRIFT_GEN_CPP_DIR}/social_network_types.cpp
 )
 
 target_include_directories(
-    ComposePostService PRIVATE
-    /usr/local/include/opentelemetry
+ ComposePostService PRIVATE
+ /usr/local/include/opentelemetry
 )
 
 target_link_libraries(
-    ComposePostService
-    ${THRIFT_LIB}
-    ${CMAKE_THREAD_LIBS_INIT}
-    ${Boost_LIBRARIES}
-    nlohmann_json::nlohmann_json
-    Boost::log
-    Boost::log_setup
-    OpenSSL::SSL
-    opentelemetry_trace opentelemetry_exporter_otlp_http opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable opentelemetry_opentracing_shim opentracing yaml-cpp
-    opentelemetry_logs opentelemetry_exporter_otlp_http_log
-    /usr/local/lib/libSimpleAmqpClient.so
+ ComposePostService
+ ${THRIFT_LIB}
+ ${CMAKE_THREAD_LIBS_INIT}
+ ${Boost_LIBRARIES}
+ nlohmann_json::nlohmann_json
+ Boost::log
+ Boost::log_setup
+ OpenSSL::SSL
+ opentelemetry_trace opentelemetry_exporter_otlp_http opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable yaml-cpp
+ opentelemetry_logs opentelemetry_exporter_otlp_http_log
+ /usr/local/lib/libSimpleAmqpClient.so
 
 )
 

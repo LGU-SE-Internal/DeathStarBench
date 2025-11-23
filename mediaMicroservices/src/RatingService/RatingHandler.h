@@ -5,7 +5,6 @@
 #include <string>
 #include <future>
 
-
 #include "../../gen-cpp/RatingService.h"
 #include "../../gen-cpp/ComposeReviewService.h"
 #include "../ClientPool.h"
@@ -13,7 +12,7 @@
 #include "../RedisClient.h"
 #include "../logger.h"
 #include "../tracing.h"
-
+#include "../context_helper.h"
 
 namespace media_service {
 class RatingHandler : public RatingServiceIf {
@@ -42,15 +41,47 @@ void RatingHandler::UploadRating(
     int32_t rating,
     const std::map<std::string, std::string> & carrier) {
 
-  // Initialize a span
-  TextMapReader reader(carrier);
+  // Get tracer and propagator
+
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("media_service");
+
+  auto propagator = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
+
+  
+
+  // Extract context from carrier
+
+  std::map<std::string, std::string> carrier_copy = carrier;
+
+  TextMapCarrier carrier_reader(carrier_copy);
+
+  auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
+
+
+  auto parent_ctx = propagator->Extract(carrier_reader, current_ctx);
+
+  
+
+  // Start span with extracted context as parent
+
+  opentelemetry::trace::StartSpanOptions options;
+
+  options.kind = opentelemetry::trace::SpanKind::kServer;
+
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("UploadRating", options);
+
+  auto scope = tracer->WithActiveSpan(span);
+
+  
+
+  // Inject context for downstream services
+
   std::map<std::string, std::string> writer_text_map;
-  TextMapWriter writer(writer_text_map);
-  auto parent_span = opentracing::Tracer::Global()->Extract(reader);
-  auto span = opentracing::Tracer::Global()->StartSpan(
-      "UploadRating",
-      { opentracing::ChildOf(parent_span->get()) });
-  opentracing::Tracer::Global()->Inject(span->context(), writer);
+
+  TextMapCarrier writer_carrier(writer_text_map);
+
+  propagator->Inject(writer_carrier, opentelemetry::context::RuntimeContext::GetCurrent());
 
   std::future<void> upload_future;
   std::future<void> redis_future;
@@ -83,12 +114,11 @@ void RatingHandler::UploadRating(
       throw se;
     }
     auto redis_client = redis_client_wrapper->GetClient();
-    auto redis_span = opentracing::Tracer::Global()->StartSpan(
-        "RedisInsert", {opentracing::ChildOf(&span->context())});
+    auto redis_span = tracer->StartSpan("RedisInsert");
     redis_client->incrby(movie_id + ":uncommit_sum", rating);
     redis_client->incr(movie_id + ":uncommit_num");
     redis_client->sync_commit();
-    redis_span->Finish();
+    redis_span->End();
     _redis_client_pool->Push(redis_client_wrapper);
   });
 
@@ -105,10 +135,8 @@ void RatingHandler::UploadRating(
     LOG(error) << "Failed to update rating to rating-redis";
     throw;
   }
-  span->Finish();
+  span->End();
 }
-
-
 } // namespace media_service
 
 #endif //MEDIA_MICROSERVICES_RATINGHANDLER_H

@@ -1,30 +1,30 @@
 add_executable(
-    ComposeReviewService
-    ComposeReviewService.cpp
-    ${THRIFT_GEN_CPP_DIR}/ComposeReviewService.cpp
-    ${THRIFT_GEN_CPP_DIR}/media_service_types.cpp
-    ${THRIFT_GEN_CPP_DIR}/ReviewStorageService.cpp
-    ${THRIFT_GEN_CPP_DIR}/UserReviewService.cpp
-    ${THRIFT_GEN_CPP_DIR}/MovieReviewService.cpp
+ ComposeReviewService
+ ComposeReviewService.cpp
+ ${THRIFT_GEN_CPP_DIR}/ComposeReviewService.cpp
+ ${THRIFT_GEN_CPP_DIR}/media_service_types.cpp
+ ${THRIFT_GEN_CPP_DIR}/ReviewStorageService.cpp
+ ${THRIFT_GEN_CPP_DIR}/UserReviewService.cpp
+ ${THRIFT_GEN_CPP_DIR}/MovieReviewService.cpp
 )
 
 target_include_directories(
-    ComposeReviewService PRIVATE
-    ${LIBMEMCACHED_INCLUDE_DIR}
-    /usr/local/include/opentelemetry
+ ComposeReviewService PRIVATE
+ ${LIBMEMCACHED_INCLUDE_DIR}
+ /usr/local/include/opentelemetry
 )
 
 target_link_libraries(
-    ComposeReviewService
-    ${LIBMEMCACHED_LIBRARIES}
-    nlohmann_json::nlohmann_json
-    ${THRIFT_LIB}
-    ${CMAKE_THREAD_LIBS_INIT}
-    ${Boost_LIBRARIES}
-    Boost::log
-    Boost::log_setup
-    opentelemetry_trace opentelemetry_exporter_otlp_http opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable opentelemetry_opentracing_shim opentracing yaml-cpp
-    opentelemetry_logs opentelemetry_exporter_otlp_http_log
+ ComposeReviewService
+ ${LIBMEMCACHED_LIBRARIES}
+ nlohmann_json::nlohmann_json
+ ${THRIFT_LIB}
+ ${CMAKE_THREAD_LIBS_INIT}
+ ${Boost_LIBRARIES}
+ Boost::log
+ Boost::log_setup
+ opentelemetry_trace opentelemetry_exporter_otlp_http opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable yaml-cpp
+ opentelemetry_logs opentelemetry_exporter_otlp_http_log
 )
 
 install(TARGETS ComposeReviewService DESTINATION ./)

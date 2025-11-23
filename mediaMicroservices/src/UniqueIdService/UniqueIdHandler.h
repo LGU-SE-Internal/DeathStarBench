@@ -75,15 +75,47 @@ void UniqueIdHandler::UploadUniqueId(
     int64_t req_id,
     const std::map<std::string, std::string> & carrier) {
 
-  // Initialize a span
-  TextMapReader reader(carrier);
+  // Get tracer and propagator
+
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("media_service");
+
+  auto propagator = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
+
+  
+
+  // Extract context from carrier
+
+  std::map<std::string, std::string> carrier_copy = carrier;
+
+  TextMapCarrier carrier_reader(carrier_copy);
+
+  auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
+
+
+  auto parent_ctx = propagator->Extract(carrier_reader, current_ctx);
+
+  
+
+  // Start span with extracted context as parent
+
+  opentelemetry::trace::StartSpanOptions options;
+
+  options.kind = opentelemetry::trace::SpanKind::kServer;
+
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("UploadUniqueId", options);
+
+  auto scope = tracer->WithActiveSpan(span);
+
+  
+
+  // Inject context for downstream services
+
   std::map<std::string, std::string> writer_text_map;
-  TextMapWriter writer(writer_text_map);
-  auto parent_span = opentracing::Tracer::Global()->Extract(reader);
-  auto span = opentracing::Tracer::Global()->StartSpan(
-      "UploadUniqueId",
-      { opentracing::ChildOf(parent_span->get()) });
-  opentracing::Tracer::Global()->Inject(span->context(), writer);
+
+  TextMapCarrier writer_carrier(writer_text_map);
+
+  propagator->Inject(writer_carrier, opentelemetry::context::RuntimeContext::GetCurrent());
 
   _thread_lock->lock();
   int64_t timestamp = duration_cast<milliseconds>(
@@ -136,7 +168,7 @@ void UniqueIdHandler::UploadUniqueId(
   }
   _compose_client_pool->Push(compose_client_wrapper);
 
-  span->Finish();
+  span->End();
 }
 
 /*
@@ -205,7 +237,6 @@ int GetMachineId (std::string *mac_hash) {
   }
   return 0;
 }
-
 } // namespace media_service
 
 #endif //MEDIA_MICROSERVICES_UNIQUEIDHANDLER_H

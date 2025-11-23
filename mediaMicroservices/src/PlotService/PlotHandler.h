@@ -45,15 +45,47 @@ void PlotHandler::ReadPlot(
     int64_t plot_id,
     const std::map<std::string, std::string> & carrier) {
 
-  // Initialize a span
-  TextMapReader reader(carrier);
+  // Get tracer and propagator
+
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("media_service");
+
+  auto propagator = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
+
+  
+
+  // Extract context from carrier
+
+  std::map<std::string, std::string> carrier_copy = carrier;
+
+  TextMapCarrier carrier_reader(carrier_copy);
+
+  auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
+
+
+  auto parent_ctx = propagator->Extract(carrier_reader, current_ctx);
+
+  
+
+  // Start span with extracted context as parent
+
+  opentelemetry::trace::StartSpanOptions options;
+
+  options.kind = opentelemetry::trace::SpanKind::kServer;
+
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("ReadPlot", options);
+
+  auto scope = tracer->WithActiveSpan(span);
+
+  
+
+  // Inject context for downstream services
+
   std::map<std::string, std::string> writer_text_map;
-  TextMapWriter writer(writer_text_map);
-  auto parent_span = opentracing::Tracer::Global()->Extract(reader);
-  auto span = opentracing::Tracer::Global()->StartSpan(
-      "ReadPlot",
-      { opentracing::ChildOf(parent_span->get()) });
-  opentracing::Tracer::Global()->Inject(span->context(), writer);
+
+  TextMapCarrier writer_carrier(writer_text_map);
+
+  propagator->Inject(writer_carrier, opentelemetry::context::RuntimeContext::GetCurrent());
 
   memcached_return_t memcached_rc;
   memcached_st *memcached_client = memcached_pool_pop(
@@ -69,8 +101,7 @@ void PlotHandler::ReadPlot(
   uint32_t memcached_flags;
 
   // Look for the movie id from memcached
-  auto get_span = opentracing::Tracer::Global()->StartSpan(
-      "MmcGetPlot", { opentracing::ChildOf(&span->context()) });
+  auto get_span = tracer->StartSpan("MmcGetPlot");
   auto plot_id_str = std::to_string(plot_id);
 
   char* plot_mmc = memcached_get(
@@ -87,7 +118,7 @@ void PlotHandler::ReadPlot(
     memcached_pool_push(_memcached_client_pool, memcached_client);
     throw se;
   }
-  get_span->Finish();
+  get_span->End();
   memcached_pool_push(_memcached_client_pool, memcached_client);
 
   // If cached in memcached
@@ -121,13 +152,12 @@ void PlotHandler::ReadPlot(
     bson_t *query = bson_new();
     BSON_APPEND_INT64(query, "plot_id", plot_id);
 
-    auto find_span = opentracing::Tracer::Global()->StartSpan(
-        "MongoFindPlot", { opentracing::ChildOf(&span->context()) });
+    auto find_span = tracer->StartSpan("MongoFindPlot");
     mongoc_cursor_t *cursor = mongoc_collection_find_with_opts(
         collection, query, nullptr, nullptr);
     const bson_t *doc;
     bool found = mongoc_cursor_next(cursor, &doc);
-    find_span->Finish();
+    find_span->End();
 
     if (found) {
       bson_iter_t iter;
@@ -144,8 +174,7 @@ void PlotHandler::ReadPlot(
             _memcached_client_pool, true, &memcached_rc);
 
         // Upload the plot to memcached
-        auto set_span = opentracing::Tracer::Global()->StartSpan(
-            "MmcSetPlot", { opentracing::ChildOf(&span->context()) });
+        auto set_span = tracer->StartSpan("MmcSetPlot");
         memcached_rc = memcached_set(
             memcached_client,
             plot_id_str.c_str(),
@@ -155,7 +184,7 @@ void PlotHandler::ReadPlot(
             static_cast<time_t>(0),
             static_cast<uint32_t>(0)
         );
-        set_span->Finish();
+        set_span->End();
 
         if (memcached_rc != MEMCACHED_SUCCESS) {
           LOG(warning) << "Failed to set plot to Memcached: "
@@ -187,7 +216,7 @@ void PlotHandler::ReadPlot(
       throw se;
     }
   }
-  span->Finish();
+  span->End();
 }
 
 void PlotHandler::WritePlot(
@@ -195,15 +224,47 @@ void PlotHandler::WritePlot(
     int64_t plot_id,
     const std::string &plot,
     const std::map<std::string, std::string> &carrier) {
-  // Initialize a span
-  TextMapReader reader(carrier);
+  // Get tracer and propagator
+
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("media_service");
+
+  auto propagator = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
+
+  
+
+  // Extract context from carrier
+
+  std::map<std::string, std::string> carrier_copy = carrier;
+
+  TextMapCarrier carrier_reader(carrier_copy);
+
+  auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
+
+
+  auto parent_ctx = propagator->Extract(carrier_reader, current_ctx);
+
+  
+
+  // Start span with extracted context as parent
+
+  opentelemetry::trace::StartSpanOptions options;
+
+  options.kind = opentelemetry::trace::SpanKind::kServer;
+
+  options.parent = parent_ctx;
+  auto span = tracer->StartSpan("WritePlot", options);
+
+  auto scope = tracer->WithActiveSpan(span);
+
+  
+
+  // Inject context for downstream services
+
   std::map<std::string, std::string> writer_text_map;
-  TextMapWriter writer(writer_text_map);
-  auto parent_span = opentracing::Tracer::Global()->Extract(reader);
-  auto span = opentracing::Tracer::Global()->StartSpan(
-      "WritePlot",
-      { opentracing::ChildOf(parent_span->get()) });
-  opentracing::Tracer::Global()->Inject(span->context(), writer);
+
+  TextMapCarrier writer_carrier(writer_text_map);
+
+  propagator->Inject(writer_carrier, opentelemetry::context::RuntimeContext::GetCurrent());
 
   bson_t *new_doc = bson_new();
   BSON_APPEND_INT64(new_doc, "plot_id", plot_id);
@@ -227,11 +288,10 @@ void PlotHandler::WritePlot(
     throw se;
   }
   bson_error_t error;
-  auto insert_span = opentracing::Tracer::Global()->StartSpan(
-      "MongoInsertPlot", { opentracing::ChildOf(&span->context()) });
+  auto insert_span = tracer->StartSpan("MongoInsertPlot");
   bool plotinsert = mongoc_collection_insert_one (
       collection, new_doc, nullptr, nullptr, &error);
-  insert_span->Finish();
+  insert_span->End();
   if (!plotinsert) {
     LOG(error) << "Error: Failed to insert plot to MongoDB: "
                << error.message;
@@ -248,9 +308,8 @@ void PlotHandler::WritePlot(
   mongoc_collection_destroy(collection);
   mongoc_client_pool_push(_mongodb_client_pool, mongodb_client);
 
-  span->Finish();
+  span->End();
 }
-
 } // namespace media_service
 
 #endif //MEDIA_MICROSERVICES_PLOTHANDLER_H

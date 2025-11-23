@@ -1,35 +1,35 @@
 add_executable(
-    UserTimelineService
-    UserTimelineService.cpp
-    ${THRIFT_GEN_CPP_DIR}/UserTimelineService.cpp
-    ${THRIFT_GEN_CPP_DIR}/social_network_types.cpp
-    ${THRIFT_GEN_CPP_DIR}/PostStorageService.cpp
+ UserTimelineService
+ UserTimelineService.cpp
+ ${THRIFT_GEN_CPP_DIR}/UserTimelineService.cpp
+ ${THRIFT_GEN_CPP_DIR}/social_network_types.cpp
+ ${THRIFT_GEN_CPP_DIR}/PostStorageService.cpp
 )
 
 target_include_directories(
-    UserTimelineService PRIVATE
-    ${MONGOC_INCLUDE_DIRS}
-    /usr/local/include/opentelemetry
-    /usr/local/include/hiredis
-    /usr/local/include/sw
+ UserTimelineService PRIVATE
+ ${MONGOC_INCLUDE_DIRS}
+ /usr/local/include/opentelemetry
+ /usr/local/include/hiredis
+ /usr/local/include/sw
 )
 
 target_link_libraries(
-    UserTimelineService
-    ${MONGOC_LIBRARIES}
-    nlohmann_json::nlohmann_json
-    ${THRIFT_LIB}
-    ${CMAKE_THREAD_LIBS_INIT}
-    ${Boost_LIBRARIES}
-    Boost::log
-    Boost::log_setup
-    Boost::program_options
-    opentelemetry_trace opentelemetry_exporter_otlp_http opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable opentelemetry_opentracing_shim opentracing yaml-cpp
-    opentelemetry_logs opentelemetry_exporter_otlp_http_log
-    /usr/local/lib/libhiredis.a
-    /usr/local/lib/libhiredis_ssl.a
-    /usr/local/lib/libredis++.a
-    OpenSSL::SSL
+ UserTimelineService
+ ${MONGOC_LIBRARIES}
+ nlohmann_json::nlohmann_json
+ ${THRIFT_LIB}
+ ${CMAKE_THREAD_LIBS_INIT}
+ ${Boost_LIBRARIES}
+ Boost::log
+ Boost::log_setup
+ Boost::program_options
+ opentelemetry_trace opentelemetry_exporter_otlp_http opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable yaml-cpp
+ opentelemetry_logs opentelemetry_exporter_otlp_http_log
+ /usr/local/lib/libhiredis.a
+ /usr/local/lib/libhiredis_ssl.a
+ /usr/local/lib/libredis++.a
+ OpenSSL::SSL
 )
 
 install(TARGETS UserTimelineService DESTINATION ./)

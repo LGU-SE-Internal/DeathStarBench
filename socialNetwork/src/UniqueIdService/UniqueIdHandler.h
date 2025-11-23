@@ -61,14 +61,14 @@ UniqueIdHandler::UniqueIdHandler(std::mutex *thread_lock,
 int64_t UniqueIdHandler::ComposeUniqueId(
     int64_t req_id, PostType::type post_type,
     const std::map<std::string, std::string> &carrier) {
-  // Initialize a span
-  TextMapReader reader(carrier);
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
+  auto propagator = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
+  
   std::map<std::string, std::string> writer_text_map;
-  TextMapWriter writer(writer_text_map);
-  auto parent_span = opentracing::Tracer::Global()->Extract(reader);
-  auto span = opentracing::Tracer::Global()->StartSpan(
-      "compose_unique_id_server", {opentracing::ChildOf(parent_span->get())});
-  opentracing::Tracer::Global()->Inject(span->context(), writer);
+  
+  auto span = tracer->StartSpan("compose_unique_id_server");
+  auto scope = tracer->WithActiveSpan(span);
 
   _thread_lock->lock();
   int64_t timestamp =
@@ -104,7 +104,7 @@ int64_t UniqueIdHandler::ComposeUniqueId(
   int64_t post_id = stoul(post_id_str, nullptr, 16) & 0x7FFFFFFFFFFFFFFF;
   LOG(debug) << "The post_id of the request " << req_id << " is " << post_id;
 
-  span->Finish();
+  span->End();
   return post_id;
 }
 
@@ -154,7 +154,6 @@ std::string GetMachineId(std::string &netif) {
   }
   return mac_hash;
 }
-
 }  // namespace social_network
 
 #endif  // SOCIAL_NETWORK_MICROSERVICES_UNIQUEIDHANDLER_H
