@@ -25,7 +25,7 @@ spec:
         - -c
         - |
           echo "Waiting for nginx-thrift service to be ready..."
-          until nc -z {{ .Values.loadTest.targetUrl | replace "http://" "" | replace ":8080" "" }} 8080; do
+          until nc -z {{ .Values.loadTest.targetHost }} {{ .Values.loadTest.targetPort }}; do
             echo "Waiting for nginx-thrift..."
             sleep 5
           done

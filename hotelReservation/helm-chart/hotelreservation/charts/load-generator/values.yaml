@@ -14,6 +14,8 @@ loadTest:
   enabled: true
   # Target service (frontend service)
   targetUrl: "http://frontend:5000"
+  targetHost: "frontend"
+  targetPort: 5000
   # Workload script to use
   # Options: mixed-workload_type_1.lua, mixed-workload_type_1_with_attractions.lua
   script: "mixed-workload_type_1_with_attractions.lua"

@@ -14,6 +14,8 @@ loadTest:
   enabled: true
   # Target service (nginx-web-server service)
   targetUrl: "http://nginx-web-server:8080"
+  targetHost: "nginx-web-server"
+  targetPort: 8080
   # Workload script to use
   script: "compose-review.lua"
   # Endpoint path
