@@ -11,12 +11,32 @@ This Helm chart deploys a load generator for the Social Network microservices us
 
 ## Building the Load Generator Image
 
-The Social Network already has a Dockerfile-loader. Build and push the image:
+### Option 1: Standard Build (with shell loop continuous mode)
 
 ```bash
 cd socialNetwork
 docker build -f Dockerfile-loader -t 10.10.10.240/library/socialnetwork-loader:latest .
 docker push 10.10.10.240/library/socialnetwork-loader:latest
+```
+
+### Option 2: Custom wrk2 with Native Continuous Mode
+
+If you need wrk2 to run natively without a shell wrapper:
+
+1. Build custom wrk2 binary with infinite mode support (see `/CUSTOM_WRK2.md` in repo root)
+2. Place binary at `wrk2-custom/wrk`
+3. Build with custom Dockerfile:
+
+```bash
+cd socialNetwork
+docker build -f Dockerfile-loader-custom -t 10.10.10.240/library/socialnetwork-loader:custom .
+docker push 10.10.10.240/library/socialnetwork-loader:custom
+```
+
+4. Update values.yaml to use custom image:
+```yaml
+container:
+  imageVersion: "custom"
 ```
 
 ## Installation
