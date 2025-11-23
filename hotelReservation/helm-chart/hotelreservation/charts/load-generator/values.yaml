@@ -1,0 +1,32 @@
+name: load-generator
+
+global:
+  replicas: 1
+  imagePullPolicy: "IfNotPresent"
+
+container:
+  name: load-generator
+  image: 10.10.10.240/library/hotelreservation-loader
+  imageVersion: "latest"
+
+# Load test configuration
+loadTest:
+  enabled: true
+  # Target service (frontend service)
+  targetUrl: "http://frontend:5000"
+  # Workload script to use
+  # Options: mixed-workload_type_1.lua, mixed-workload_type_1_with_attractions.lua
+  script: "mixed-workload_type_1_with_attractions.lua"
+  # Number of threads
+  threads: 2
+  # Number of connections
+  connections: 2
+  # Duration of the test (e.g., 30s, 5m, 1h)
+  duration: "30s"
+  # Requests per second
+  rate: 10
+  # Additional wrk2 arguments
+  additionalArgs: "-D exp -L"
+
+# Whether to enable the load generator
+enabled: true
