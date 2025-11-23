@@ -303,13 +303,12 @@ void SocialGraphHandler::Follow(
 void SocialGraphHandler::Unfollow(
     int64_t req_id, int64_t user_id, int64_t followee_id,
     const std::map<std::string, std::string> &carrier) {
-  // Initialize a span
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
   
   std::map<std::string, std::string> writer_text_map;
   
-  
   auto span = tracer->StartSpan("unfollow_server");
-  
 
   std::future<void> mongo_update_follower_future =
       std::async(std::launch::async, [&]() {
@@ -482,13 +481,12 @@ void SocialGraphHandler::Unfollow(
 void SocialGraphHandler::GetFollowers(
     std::vector<int64_t> &_return, const int64_t req_id, const int64_t user_id,
     const std::map<std::string, std::string> &carrier) {
-  // Initialize a span
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
   
   std::map<std::string, std::string> writer_text_map;
   
-  
   auto span = tracer->StartSpan("get_followers_server");
-  
 
   auto redis_span = tracer->StartSpan("social_graph_redis_get_client");
 
@@ -613,13 +611,12 @@ void SocialGraphHandler::GetFollowers(
 void SocialGraphHandler::GetFollowees(
     std::vector<int64_t> &_return, const int64_t req_id, const int64_t user_id,
     const std::map<std::string, std::string> &carrier) {
-  // Initialize a span
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
   
   std::map<std::string, std::string> writer_text_map;
   
-  
   auto span = tracer->StartSpan("get_followees_server");
-  
 
   auto redis_span = tracer->StartSpan("social_graph_redis_get_client");
 
@@ -751,13 +748,12 @@ void SocialGraphHandler::GetFollowees(
 void SocialGraphHandler::InsertUser(
     int64_t req_id, int64_t user_id,
     const std::map<std::string, std::string> &carrier) {
-  // Initialize a span
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
   
   std::map<std::string, std::string> writer_text_map;
   
-  
   auto span = tracer->StartSpan("insert_user_server");
-  
 
   mongoc_client_t *mongodb_client =
       mongoc_client_pool_pop(_mongodb_client_pool);

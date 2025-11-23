@@ -208,13 +208,12 @@ void HomeTimelineHandler::WriteHomeTimeline(
 void HomeTimelineHandler::ReadHomeTimeline(
     std::vector<Post> &_return, int64_t req_id, int64_t user_id, int start_idx,
     int stop_idx, const std::map<std::string, std::string> &carrier) {
-  // Initialize a span
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
   
   std::map<std::string, std::string> writer_text_map;
   
-  
   auto span = tracer->StartSpan("read_home_timeline_server");
-  
 
   if (stop_idx <= start_idx || start_idx < 0) {
     return;

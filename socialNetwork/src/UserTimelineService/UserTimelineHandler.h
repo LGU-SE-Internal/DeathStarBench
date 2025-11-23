@@ -182,13 +182,12 @@ void UserTimelineHandler::WriteUserTimeline(
 void UserTimelineHandler::ReadUserTimeline(
     std::vector<Post> &_return, int64_t req_id, int64_t user_id, int start,
     int stop, const std::map<std::string, std::string> &carrier) {
-  // Initialize a span
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
   
   std::map<std::string, std::string> writer_text_map;
   
-  
   auto span = tracer->StartSpan("read_user_timeline_server");
-  
 
   if (stop <= start || start < 0) {
     return;
