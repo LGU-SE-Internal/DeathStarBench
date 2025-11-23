@@ -111,9 +111,12 @@ ComposePostHandler::ComposePostHandler(
 Creator ComposePostHandler::_ComposeCreaterHelper(
     int64_t req_id, int64_t user_id, const std::string &username,
     const std::map<std::string, std::string> &carrier) {
-  
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
+  auto propagator = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
   
   auto span = tracer->StartSpan("compose_creator_client");
+  auto scope = tracer->WithActiveSpan(span);
   std::map<std::string, std::string> writer_text_map;
   
   

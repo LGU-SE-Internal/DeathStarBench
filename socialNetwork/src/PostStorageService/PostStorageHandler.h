@@ -49,13 +49,14 @@ PostStorageHandler::PostStorageHandler(
 void PostStorageHandler::StorePost(
     int64_t req_id, const social_network::Post &post,
     const std::map<std::string, std::string> &carrier) {
-  // Initialize a span
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
+  auto propagator = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
   
   std::map<std::string, std::string> writer_text_map;
   
-  
   auto span = tracer->StartSpan("store_post_server");
-  
+  auto scope = tracer->WithActiveSpan(span);
 
   mongoc_client_t *mongodb_client =
       mongoc_client_pool_pop(_mongodb_client_pool);
@@ -162,13 +163,14 @@ void PostStorageHandler::StorePost(
 void PostStorageHandler::ReadPost(
     Post &_return, int64_t req_id, int64_t post_id,
     const std::map<std::string, std::string> &carrier) {
-  // Initialize a span
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
+  auto propagator = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
   
   std::map<std::string, std::string> writer_text_map;
   
-  
   auto span = tracer->StartSpan("read_post_server");
-  
+  auto scope = tracer->WithActiveSpan(span);
 
   std::string post_id_str = std::to_string(post_id);
 
