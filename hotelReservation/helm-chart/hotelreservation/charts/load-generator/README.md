@@ -10,7 +10,9 @@ This Helm chart deploys a load generator for the Hotel Reservation microservices
 
 ## Building the Load Generator Image
 
-### Option 1: Standard Build (with shell loop continuous mode)
+## Building the Load Generator Image
+
+The Dockerfile builds a modified wrk2 with native continuous mode support (duration=0 for infinite running).
 
 ```bash
 cd hotelReservation
@@ -18,25 +20,7 @@ docker build -f Dockerfile-loader -t 10.10.10.240/library/hotelreservation-loade
 docker push 10.10.10.240/library/hotelreservation-loader:latest
 ```
 
-### Option 2: Custom wrk2 with Native Continuous Mode
-
-If you need wrk2 to run natively without a shell wrapper:
-
-1. Build custom wrk2 binary with infinite mode support (see `/CUSTOM_WRK2.md` in repo root)
-2. Place binary at `wrk2-custom/wrk`
-3. Build with custom Dockerfile:
-
-```bash
-cd hotelReservation
-docker build -f Dockerfile-loader-custom -t 10.10.10.240/library/hotelreservation-loader:custom .
-docker push 10.10.10.240/library/hotelreservation-loader:custom
-```
-
-4. Update values.yaml to use custom image:
-```yaml
-container:
-  imageVersion: "custom"
-```
+**Note:** The wrk2 source in this repository has been modified to support infinite duration when `duration: "0"` is set. See `/CUSTOM_WRK2.md` for details on the modifications.
 
 ## Installation
 
