@@ -24,11 +24,15 @@ loadTest:
   # Number of connections
   connections: 2
   # Duration of the test (e.g., 30s, 5m, 1h)
+  # When continuous is true, this is the duration of each test cycle before restarting
   duration: "30s"
   # Requests per second
   rate: 10
   # Additional wrk2 arguments
   additionalArgs: "-D exp -L"
+  # Continuous mode: if true, the load test will run in a loop and restart automatically
+  # If false, it runs once with the specified duration then sleeps
+  continuous: false
 
 # Whether to enable the load generator
 enabled: true

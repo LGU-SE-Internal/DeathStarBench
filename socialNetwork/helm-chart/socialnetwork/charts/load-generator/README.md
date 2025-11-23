@@ -40,6 +40,8 @@ The load generator can be configured through the `values.yaml` file:
 loadTest:
   enabled: true
   targetUrl: "http://nginx-thrift:8080"
+  targetHost: "nginx-thrift"
+  targetPort: 8080
   script: "compose-post.lua"
   endpoint: "/wrk2-api/post/compose"
   threads: 2
@@ -47,6 +49,7 @@ loadTest:
   duration: "30s"
   rate: 10
   additionalArgs: "-D exp -L"
+  continuous: false  # Set to true for continuous load testing
 ```
 
 ### Available Scripts
@@ -60,13 +63,16 @@ loadTest:
 
 - `enabled`: Enable/disable the load generator
 - `targetUrl`: Target service URL (nginx-thrift service)
+- `targetHost`: Target service hostname for health checks
+- `targetPort`: Target service port for health checks
 - `script`: Lua script to use for load generation
 - `endpoint`: API endpoint path
 - `threads`: Number of threads for wrk2
 - `connections`: Number of connections to keep open
-- `duration`: Duration of the test (e.g., 30s, 5m, 1h)
+- `duration`: Duration of each test cycle (e.g., 30s, 5m, 1h)
 - `rate`: Requests per second
 - `additionalArgs`: Additional arguments to pass to wrk2
+- `continuous`: If true, runs load test continuously in a loop with automatic restarts on failure. If false, runs once then sleeps.
 
 ## Customizing the Load Test
 
@@ -88,6 +94,22 @@ helm upgrade socialnetwork ./helm-chart/socialnetwork -n socialnetwork \
   --set load-generator.loadTest.script=read-home-timeline.lua \
   --set load-generator.loadTest.endpoint=/wrk2-api/home-timeline/read
 ```
+
+### Enable Continuous Load Testing
+
+To run the load test continuously (it will keep running and restart automatically on failure):
+
+```bash
+helm upgrade socialnetwork ./helm-chart/socialnetwork -n socialnetwork \
+  --set load-generator.loadTest.continuous=true
+```
+
+In continuous mode:
+- The load test runs in an infinite loop
+- Each cycle runs for the specified `duration`
+- If a cycle fails, it waits 5 seconds before restarting
+- If a cycle succeeds, it immediately starts the next cycle
+- The pod will automatically restart if it crashes
 
 ## Viewing Logs
 

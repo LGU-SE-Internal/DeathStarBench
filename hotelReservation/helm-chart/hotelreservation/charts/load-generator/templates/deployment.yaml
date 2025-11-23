@@ -30,6 +30,27 @@ spec:
             sleep 5
           done
           echo "Frontend is ready. Starting load test..."
+          {{- if .Values.loadTest.continuous }}
+          # Continuous mode: run load test in a loop
+          while true; do
+            echo "Starting load test cycle at $(date)"
+            wrk {{ .Values.loadTest.additionalArgs }} \
+              -t {{ .Values.loadTest.threads }} \
+              -c {{ .Values.loadTest.connections }} \
+              -d {{ .Values.loadTest.duration }} \
+              -s /hotel-reservation/wrk2/scripts/hotel-reservation/{{ .Values.loadTest.script }} \
+              {{ .Values.loadTest.targetUrl }} \
+              -R {{ .Values.loadTest.rate }}
+            EXIT_CODE=$?
+            if [ $EXIT_CODE -ne 0 ]; then
+              echo "Load test failed with exit code $EXIT_CODE, restarting in 5 seconds..."
+              sleep 5
+            else
+              echo "Load test cycle completed successfully, restarting immediately..."
+            fi
+          done
+          {{- else }}
+          # Single run mode
           wrk {{ .Values.loadTest.additionalArgs }} \
             -t {{ .Values.loadTest.threads }} \
             -c {{ .Values.loadTest.connections }} \
@@ -39,6 +60,7 @@ spec:
             -R {{ .Values.loadTest.rate }}
           echo "Load test completed. Sleeping..."
           sleep infinity
+          {{- end }}
         {{- else }}
         command:
         - /bin/sh
