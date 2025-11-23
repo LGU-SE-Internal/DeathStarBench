@@ -32,13 +32,14 @@ void MediaHandler::ComposeMedia(
     const std::vector<std::string> &media_types,
     const std::vector<int64_t> &media_ids,
     const std::map<std::string, std::string> &carrier) {
-  // Initialize a span
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
+  auto propagator = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
   
   std::map<std::string, std::string> writer_text_map;
   
-  
   auto span = tracer->StartSpan("compose_media_server");
-  
+  auto scope = tracer->WithActiveSpan(span);
 
   if (media_types.size() != media_ids.size()) {
     ServiceException se;

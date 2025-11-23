@@ -106,10 +106,7 @@ void HomeTimelineHandler::WriteHomeTimeline(
   // Find followers of the user
   auto followers_span = tracer->StartSpan("get_followers_client");
   std::map<std::string, std::string> writer_text_map;
-  
-  TextMapCarrier writer_carrier(writer);
-
-  
+  TextMapCarrier writer_carrier(writer_text_map);
   propagator->Inject(writer_carrier, opentelemetry::context::RuntimeContext::GetCurrent());
 
   auto social_graph_client_wrapper = _social_graph_client_pool->Pop();

@@ -415,12 +415,14 @@ void UserHandler::UploadUserWithUsername(
     const std::string &username,
     const std::map<std::string, std::string> & carrier) {
 
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("media_service");
+  auto propagator = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
   
   std::map<std::string, std::string> writer_text_map;
   
-  
   auto span = tracer->StartSpan("UploadUserWithUsername");
-  
+  auto scope = tracer->WithActiveSpan(span);
 
   size_t user_id_size;
   uint32_t memcached_flags;
@@ -598,12 +600,14 @@ void UserHandler::UploadUserWithUserId(
     int64_t user_id,
     const std::map<std::string, std::string> &carrier) {
 
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("media_service");
+  auto propagator = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
   
   std::map<std::string, std::string> writer_text_map;
   
-  
   auto span = tracer->StartSpan("UploadUserWithUserId");
-  
+  auto scope = tracer->WithActiveSpan(span);
 
   auto compose_client_wrapper = _compose_client_pool->Pop();
   if (!compose_client_wrapper) {
@@ -632,12 +636,14 @@ void UserHandler::Login(
     const std::string &password,
     const std::map<std::string, std::string> &carrier) {
 
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("media_service");
+  auto propagator = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
   
   std::map<std::string, std::string> writer_text_map;
   
-  
   auto span = tracer->StartSpan("Login");
-  
+  auto scope = tracer->WithActiveSpan(span);
 
   size_t password_size;
   size_t salt_size;

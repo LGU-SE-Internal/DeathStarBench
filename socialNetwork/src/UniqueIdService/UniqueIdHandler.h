@@ -61,13 +61,14 @@ UniqueIdHandler::UniqueIdHandler(std::mutex *thread_lock,
 int64_t UniqueIdHandler::ComposeUniqueId(
     int64_t req_id, PostType::type post_type,
     const std::map<std::string, std::string> &carrier) {
-  // Initialize a span
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
+  auto propagator = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
   
   std::map<std::string, std::string> writer_text_map;
   
-  
   auto span = tracer->StartSpan("compose_unique_id_server");
-  
+  auto scope = tracer->WithActiveSpan(span);
 
   _thread_lock->lock();
   int64_t timestamp =

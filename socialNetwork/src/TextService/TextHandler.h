@@ -74,8 +74,7 @@ void TextHandler::ComposeText(
     auto url_span = tracer->StartSpan("compose_urls_client");
 
     std::map<std::string, std::string> url_writer_text_map;
-    TextMapCarrier url_writer_carrier(url_writer);
-
+    TextMapCarrier url_writer_carrier(url_writer_text_map);
     propagator->Inject(url_writer_carrier, opentelemetry::context::RuntimeContext::GetCurrent());
 
     auto url_client_wrapper = _url_client_pool->Pop();
@@ -102,8 +101,7 @@ void TextHandler::ComposeText(
     auto user_mention_span = tracer->StartSpan("compose_user_mentions_client");
 
     std::map<std::string, std::string> user_mention_writer_text_map;
-    TextMapCarrier user_mention_writer_carrier(user_mention_writer);
-
+    TextMapCarrier user_mention_writer_carrier(user_mention_writer_text_map);
     propagator->Inject(user_mention_writer_carrier, opentelemetry::context::RuntimeContext::GetCurrent());
 
     auto user_mention_client_wrapper = _user_mention_client_pool->Pop();
