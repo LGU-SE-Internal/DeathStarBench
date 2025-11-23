@@ -444,7 +444,6 @@ void MovieReviewHandler::ReadMovieReviews(
   span->End();
   
 }
-
 } // namespace media_service
 
 #endif //MEDIA_MICROSERVICES_MOVIEREVIEWHANDLER_H

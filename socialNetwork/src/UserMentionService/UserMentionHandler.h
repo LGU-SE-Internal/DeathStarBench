@@ -253,7 +253,6 @@ void UserMentionHandler::ComposeUserMentions(
   _return = user_mentions;
   span->End();
 }
-
 }  // namespace social_network
 
 #endif  // SOCIAL_NETWORK_MICROSERVICES_SRC_USERMENTIONSERVICE_USERMENTIONHANDLER_H_

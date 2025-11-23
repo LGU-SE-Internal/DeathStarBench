@@ -176,7 +176,6 @@ void UrlShortenHandler::ComposeUrls(
           mongoc_client_pool_push(_mongodb_client_pool, mongodb_client);
           mongo_span->End();
         });
-
   }
 
   if (!urls.empty()) {
@@ -190,7 +189,6 @@ void UrlShortenHandler::ComposeUrls(
 
   _return = target_urls;
   span->End();
-
 }
 
 void UrlShortenHandler::GetExtendedUrls(
@@ -201,7 +199,6 @@ void UrlShortenHandler::GetExtendedUrls(
 
   // TODO: Implement GetExtendedUrls
 }
-
 }
 
 #endif //SOCIAL_NETWORK_MICROSERVICES_SRC_URLSHORTENSERVICE_URLSHORTENHANDLER_H_

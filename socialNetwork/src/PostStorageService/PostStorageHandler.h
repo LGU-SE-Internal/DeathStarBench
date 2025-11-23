@@ -646,7 +646,6 @@ void PostStorageHandler::ReadPosts(
     LOG(warning) << "Failed to set posts to memcached";
   }
 }
-
 }  // namespace social_network
 
 #endif  // SOCIAL_NETWORK_MICROSERVICES_POSTSTORAGEHANDLER_H

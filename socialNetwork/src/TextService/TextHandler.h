@@ -165,7 +165,6 @@ void TextHandler::ComposeText(
   _return.urls = target_urls;
   span->End();
 }
-
 }  // namespace social_network
 
 #endif  // SOCIAL_NETWORK_MICROSERVICES_TEXTHANDLER_H

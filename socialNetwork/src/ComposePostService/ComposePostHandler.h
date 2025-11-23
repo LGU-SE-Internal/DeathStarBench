@@ -432,7 +432,6 @@ void ComposePostHandler::ComposePost(
   // }
   span->End();
 }
-
 }  // namespace social_network
 
 #endif  // SOCIAL_NETWORK_MICROSERVICES_SRC_COMPOSEPOSTSERVICE_COMPOSEPOSTHANDLER_H_

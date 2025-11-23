@@ -110,7 +110,6 @@ class UserHandler : public UserServiceIf {
   memcached_pool_st *_memcached_client_pool;
   mongoc_client_pool_t *_mongodb_client_pool;
   ClientPool<ThriftClient<ComposeReviewServiceClient>> *_compose_client_pool;
-
 };
 
 UserHandler::UserHandler(
@@ -624,7 +623,6 @@ void UserHandler::UploadUserWithUserId(
   _compose_client_pool->Push(compose_client_wrapper);
 
   span->End();
-
 }
 
 void UserHandler::Login(
@@ -876,7 +874,6 @@ void UserHandler::Login(
           })
       };
       _return = obj.signature();
-
     } else {
       ServiceException se;
       se.errorCode = ErrorCode::SE_UNAUTHORIZED;

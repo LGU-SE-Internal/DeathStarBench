@@ -57,7 +57,6 @@ void MediaHandler::ComposeMedia(
 
   span->End();
 }
-
 }  // namespace social_network
 
 #endif  // SOCIAL_NETWORK_MICROSERVICES_SRC_MEDIASERVICE_MEDIAHANDLER_H_

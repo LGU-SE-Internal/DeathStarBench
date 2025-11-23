@@ -403,7 +403,6 @@ void CastInfoHandler::ReadCastInfo(
     LOG(warning) << "Failed to set cast-info to memcached";
   }
 }
-
 } // namespace media_service
 
 #endif //MEDIA_MICROSERVICES_CASTINFOHANDLER_H

@@ -133,7 +133,6 @@ void RatingHandler::UploadRating(
   }
   span->End();
 }
-
 } // namespace media_service
 
 #endif //MEDIA_MICROSERVICES_RATINGHANDLER_H

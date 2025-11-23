@@ -540,7 +540,6 @@ void MovieInfoHandler::UpdateRating(
 
   span->End();
 }
-
 } // namespace media_service
 
 #endif //MEDIA_MICROSERVICES_SRC_MOVIEINFOSERVICE_MOVIEINFOHANDLER_H_

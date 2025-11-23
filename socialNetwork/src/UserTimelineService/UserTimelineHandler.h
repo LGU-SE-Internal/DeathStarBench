@@ -170,7 +170,6 @@ void UserTimelineHandler::WriteUserTimeline(
     else
       _redis_cluster_client_pool->zadd(std::to_string(user_id), std::to_string(post_id),
                               timestamp, UpdateType::NOT_EXIST);
-
   } catch (const Error &err) {
     LOG(error) << err.what();
     throw err;
@@ -330,7 +329,6 @@ void UserTimelineHandler::ReadUserTimeline(
         _redis_cluster_client_pool->zadd(std::to_string(user_id),
                                redis_update_map.begin(),
                                redis_update_map.end());
-
     } catch (const Error &err) {
       LOG(error) << err.what();
       throw err;
@@ -346,7 +344,6 @@ void UserTimelineHandler::ReadUserTimeline(
   }
   span->End();
 }
-
 }  // namespace social_network
 
 #endif  // SOCIAL_NETWORK_MICROSERVICES_SRC_USERTIMELINESERVICE_USERTIMELINEHANDLER_H_

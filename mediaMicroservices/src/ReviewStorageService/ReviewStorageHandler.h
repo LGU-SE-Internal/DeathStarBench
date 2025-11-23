@@ -403,7 +403,6 @@ void ReviewStorageHandler::ReadReviews(
   }
   
 }
-
 } // namespace media_service
 
 #endif //MEDIA_MICROSERVICES_REVIEWSTOREHANDLER_H

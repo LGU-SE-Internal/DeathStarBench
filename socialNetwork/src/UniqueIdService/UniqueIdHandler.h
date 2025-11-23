@@ -153,7 +153,6 @@ std::string GetMachineId(std::string &netif) {
   }
   return mac_hash;
 }
-
 }  // namespace social_network
 
 #endif  // SOCIAL_NETWORK_MICROSERVICES_UNIQUEIDHANDLER_H

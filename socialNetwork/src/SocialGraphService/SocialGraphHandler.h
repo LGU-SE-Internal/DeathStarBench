@@ -998,7 +998,6 @@ void SocialGraphHandler::UnfollowWithUsername(
   }
   span->End();
 }
-
 }  // namespace social_network
 
 #endif  // SOCIAL_NETWORK_MICROSERVICES_SOCIALGRAPHHANDLER_H

@@ -77,57 +77,39 @@ void UniqueIdHandler::UploadUniqueId(
 
   // Get tracer and propagator
 
-
   auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("media_service");
-
 
   auto propagator = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
 
-
   
-
 
   // Extract context from carrier
 
-
   std::map<std::string, std::string> carrier_copy = carrier;
-
 
   TextMapCarrier carrier_reader(carrier_copy);
 
-
   auto parent_ctx = propagator->Extract(carrier_reader, opentelemetry::context::RuntimeContext::GetCurrent());
 
-
   
-
 
   // Start span with extracted context as parent
 
-
   opentelemetry::trace::StartSpanOptions options;
-
 
   options.kind = opentelemetry::trace::SpanKind::kServer;
 
-
   auto span = tracer->StartSpan("UploadUniqueId", options, parent_ctx);
-
 
   auto scope = tracer->WithActiveSpan(span);
 
-
   
-
 
   // Inject context for downstream services
 
-
   std::map<std::string, std::string> writer_text_map;
 
-
   TextMapCarrier writer_carrier(writer_text_map);
-
 
   propagator->Inject(writer_carrier, opentelemetry::context::RuntimeContext::GetCurrent());
 
@@ -251,7 +233,6 @@ int GetMachineId (std::string *mac_hash) {
   }
   return 0;
 }
-
 } // namespace media_service
 
 #endif //MEDIA_MICROSERVICES_UNIQUEIDHANDLER_H

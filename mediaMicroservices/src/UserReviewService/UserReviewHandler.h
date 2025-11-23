@@ -423,9 +423,7 @@ void UserReviewHandler::ReadUserReviews(
   }
 
   span->End();
-
 }
-
 }// namespace media_service
 
 #endif //MEDIA_MICROSERVICES_USERREVIEWHANDLER_H

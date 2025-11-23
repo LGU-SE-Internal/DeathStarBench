@@ -197,7 +197,6 @@ void HomeTimelineHandler::WriteHomeTimeline(
           auto _pipe = it.second.get();
           _pipe->exec();
         }
-
       } catch (const Error &err) {
         LOG(error) << err.what();
         throw err;
@@ -271,7 +270,6 @@ void HomeTimelineHandler::ReadHomeTimeline(
   _post_client_pool->Keepalive(post_client_wrapper);
   span->End();
 }
-
 }  // namespace social_network
 
 #endif  // SOCIAL_NETWORK_MICROSERVICES_SRC_HOMETIMELINESERVICE_HOMETIMELINEHANDLER_H_

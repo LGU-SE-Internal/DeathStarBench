@@ -302,7 +302,6 @@ void PlotHandler::WritePlot(
 
   span->End();
 }
-
 } // namespace media_service
 
 #endif //MEDIA_MICROSERVICES_PLOTHANDLER_H
