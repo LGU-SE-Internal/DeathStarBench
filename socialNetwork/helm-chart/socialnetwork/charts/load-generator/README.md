@@ -59,7 +59,12 @@ loadTest:
 - `compose-post.lua` - Test composing posts
 - `read-home-timeline.lua` - Test reading home timeline
 - `read-user-timeline.lua` - Test reading user timeline
-- `mixed-workload.lua` - Mixed workload with multiple operations
+- `mixed-workload.lua` - **Comprehensive mixed workload** with 5 operations covering 9+ microservices:
+  - 50% Read home timeline (HomeTimelineService, PostStorageService, SocialGraphService)
+  - 25% Read user timeline (UserTimelineService, PostStorageService)
+  - 10% Compose post (ComposePostService, TextService, MediaService, UserMentionService, UrlShortenService, UniqueIdService, WriteHomeTimelineService, UserTimelineService)
+  - 10% Follow user (SocialGraphService, UserService)
+  - 5% Unfollow user (SocialGraphService, UserService)
 
 ### Configuration Parameters
 
