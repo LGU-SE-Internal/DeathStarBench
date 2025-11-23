@@ -13,6 +13,7 @@
 #include "../../gen-cpp/ReviewStorageService.h"
 #include "../logger.h"
 #include "../tracing.h"
+#include "../context_helper.h"
 
 namespace media_service {
 
@@ -42,15 +43,43 @@ void ReviewStorageHandler::StoreReview(
     const Review &review,
     const std::map<std::string, std::string> & carrier) {
 
-  // Initialize a span
-  TextMapReader reader(carrier);
+  // Get tracer and propagator
+
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("media_service");
+
+  auto propagator = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
+
+  
+
+  // Extract context from carrier
+
+  std::map<std::string, std::string> carrier_copy = carrier;
+
+  TextMapCarrier carrier_reader(carrier_copy);
+
+  auto parent_ctx = propagator->Extract(carrier_reader, opentelemetry::context::RuntimeContext::GetCurrent());
+
+  
+
+  // Start span with extracted context as parent
+
+  opentelemetry::trace::StartSpanOptions options;
+
+  options.kind = opentelemetry::trace::SpanKind::kServer;
+
+  auto span = tracer->StartSpan("StoreReview", options, parent_ctx);
+
+  auto scope = tracer->WithActiveSpan(span);
+
+  
+
+  // Inject context for downstream services
+
   std::map<std::string, std::string> writer_text_map;
-  TextMapWriter writer(writer_text_map);
-  auto parent_span = opentracing::Tracer::Global()->Extract(reader);
-  auto span = opentracing::Tracer::Global()->StartSpan(
-      "StoreReview",
-      { opentracing::ChildOf(parent_span->get()) });
-  opentracing::Tracer::Global()->Inject(span->context(), writer);
+
+  TextMapCarrier writer_carrier(writer_text_map);
+
+  propagator->Inject(writer_carrier, opentelemetry::context::RuntimeContext::GetCurrent());
 
   mongoc_client_t *mongodb_client = mongoc_client_pool_pop(
       _mongodb_client_pool);
@@ -81,11 +110,10 @@ void ReviewStorageHandler::StoreReview(
   BSON_APPEND_INT64(new_doc, "req_id", review.req_id);
   bson_error_t error;
 
-  auto insert_span = opentracing::Tracer::Global()->StartSpan(
-      "MongoInsertReview", { opentracing::ChildOf(&span->context()) });
+  auto insert_span = tracer->StartSpan("MongoInsertReview");
   bool plotinsert = mongoc_collection_insert_one (
       collection, new_doc, nullptr, nullptr, &error);
-  insert_span->Finish();
+  insert_span->End();
 
   if (!plotinsert) {
     LOG(error) << "Error: Failed to insert review to MongoDB: "
@@ -103,7 +131,7 @@ void ReviewStorageHandler::StoreReview(
   mongoc_collection_destroy(collection);
   mongoc_client_pool_push(_mongodb_client_pool, mongodb_client);
 
-  span->Finish();
+  span->End();
 }
 void ReviewStorageHandler::ReadReviews(
     std::vector<Review> & _return,
@@ -111,15 +139,43 @@ void ReviewStorageHandler::ReadReviews(
     const std::vector<int64_t> &review_ids,
     const std::map<std::string, std::string> &carrier) {
 
-  // Initialize a span
-  TextMapReader reader(carrier);
+  // Get tracer and propagator
+
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("media_service");
+
+  auto propagator = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
+
+  
+
+  // Extract context from carrier
+
+  std::map<std::string, std::string> carrier_copy = carrier;
+
+  TextMapCarrier carrier_reader(carrier_copy);
+
+  auto parent_ctx = propagator->Extract(carrier_reader, opentelemetry::context::RuntimeContext::GetCurrent());
+
+  
+
+  // Start span with extracted context as parent
+
+  opentelemetry::trace::StartSpanOptions options;
+
+  options.kind = opentelemetry::trace::SpanKind::kServer;
+
+  auto span = tracer->StartSpan("ReadReviews", options, parent_ctx);
+
+  auto scope = tracer->WithActiveSpan(span);
+
+  
+
+  // Inject context for downstream services
+
   std::map<std::string, std::string> writer_text_map;
-  TextMapWriter writer(writer_text_map);
-  auto parent_span = opentracing::Tracer::Global()->Extract(reader);
-  auto span = opentracing::Tracer::Global()->StartSpan(
-      "ReadReviews",
-      { opentracing::ChildOf(parent_span->get()) });
-  opentracing::Tracer::Global()->Inject(span->context(), writer);
+
+  TextMapCarrier writer_carrier(writer_text_map);
+
+  propagator->Inject(writer_carrier, opentelemetry::context::RuntimeContext::GetCurrent());
 
   if (review_ids.empty()) {
     return;
@@ -172,8 +228,7 @@ void ReviewStorageHandler::ReadReviews(
   char *return_value;
   size_t return_value_length;
   uint32_t flags;
-  auto get_span = opentracing::Tracer::Global()->StartSpan(
-      "MemcachedMget", { opentracing::ChildOf(&span->context()) });
+  auto get_span = tracer->StartSpan("MemcachedMget");
 
   while (true) {
     return_value =
@@ -208,7 +263,7 @@ void ReviewStorageHandler::ReadReviews(
     free(return_value);
     LOG(debug) << "Review: " << new_review.review_id << " found in memcached";
   }
-  get_span->Finish();
+  get_span->End();
   memcached_quit(memcached_client);
   memcached_pool_push(_memcached_client_pool, memcached_client);
   for (int i = 0; i < review_ids.size(); ++i) {
@@ -257,8 +312,7 @@ void ReviewStorageHandler::ReadReviews(
     mongoc_cursor_t *cursor = mongoc_collection_find_with_opts(
         collection, query, nullptr, nullptr);
     const bson_t *doc;
-    auto find_span = opentracing::Tracer::Global()->StartSpan(
-        "MongoFindPosts", {opentracing::ChildOf(&span->context())});
+    auto find_span = tracer->StartSpan("MongoFindPosts");
     while (true) {
       bool found = mongoc_cursor_next(cursor, &doc);
       if (!found) {
@@ -278,7 +332,7 @@ void ReviewStorageHandler::ReadReviews(
       return_map.insert({new_review.review_id, new_review});
       bson_free(review_json_char);
     }
-    find_span->Finish();
+    find_span->End();
     bson_error_t error;
     if (mongoc_cursor_error(cursor, &error)) {
       LOG(warning) << error.message;
@@ -308,8 +362,7 @@ void ReviewStorageHandler::ReadReviews(
         se.message = "Failed to pop a client from memcached pool";
         throw se;
       }
-      auto set_span = opentracing::Tracer::Global()->StartSpan(
-          "MmcSetPost", {opentracing::ChildOf(&span->context())});
+      auto set_span = tracer->StartSpan("MmcSetPost");
       for (auto & it : review_json_map) {
         std::string id_str = std::to_string(it.first);
         _rc = memcached_set(
@@ -322,7 +375,7 @@ void ReviewStorageHandler::ReadReviews(
             static_cast<uint32_t>(0));
       }
       memcached_pool_push(_memcached_client_pool, _memcached_client);
-      set_span->Finish();
+      set_span->End();
     }));
   }
 
@@ -352,6 +405,5 @@ void ReviewStorageHandler::ReadReviews(
 }
 
 } // namespace media_service
-
 
 #endif //MEDIA_MICROSERVICES_REVIEWSTOREHANDLER_H

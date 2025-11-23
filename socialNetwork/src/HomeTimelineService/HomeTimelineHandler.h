@@ -23,11 +23,9 @@ class HomeTimelineHandler : public HomeTimelineServiceIf {
                       ClientPool<ThriftClient<PostStorageServiceClient>> *,
                       ClientPool<ThriftClient<SocialGraphServiceClient>> *);
 
-
   HomeTimelineHandler(Redis *,Redis *,
       ClientPool<ThriftClient<PostStorageServiceClient>>*,
       ClientPool<ThriftClient<SocialGraphServiceClient>>*);
-
 
   HomeTimelineHandler(RedisCluster *,
                       ClientPool<ThriftClient<PostStorageServiceClient>> *,
@@ -101,17 +99,18 @@ void HomeTimelineHandler::WriteHomeTimeline(
     const std::vector<int64_t> &user_mentions_id,
     const std::map<std::string, std::string> &carrier) {
   // Initialize a span
-  TextMapReader reader(carrier);
-  auto parent_span = opentracing::Tracer::Global()->Extract(reader);
-  auto span = opentracing::Tracer::Global()->StartSpan(
-      "write_home_timeline_server", {opentracing::ChildOf(parent_span->get())});
+  
+  
+  auto span = tracer->StartSpan("write_home_timeline_server");
 
   // Find followers of the user
-  auto followers_span = opentracing::Tracer::Global()->StartSpan(
-      "get_followers_client", {opentracing::ChildOf(&span->context())});
+  auto followers_span = tracer->StartSpan("get_followers_client");
   std::map<std::string, std::string> writer_text_map;
-  TextMapWriter writer(writer_text_map);
-  opentracing::Tracer::Global()->Inject(followers_span->context(), writer);
+  
+  TextMapCarrier writer_carrier(writer);
+
+  
+  propagator->Inject(writer_carrier, opentelemetry::context::RuntimeContext::GetCurrent());
 
   auto social_graph_client_wrapper = _social_graph_client_pool->Pop();
   if (!social_graph_client_wrapper) {
@@ -131,16 +130,14 @@ void HomeTimelineHandler::WriteHomeTimeline(
     throw;
   }
   _social_graph_client_pool->Keepalive(social_graph_client_wrapper);
-  followers_span->Finish();
+  followers_span->End();
 
   std::set<int64_t> followers_id_set(followers_id.begin(), followers_id.end());
   followers_id_set.insert(user_mentions_id.begin(), user_mentions_id.end());
 
   // Update Redis ZSet
   // Zset key: follower_id, Zset value: post_id_str, Zset score: timestamp_str
-  auto redis_span = opentracing::Tracer::Global()->StartSpan(
-      "write_home_timeline_redis_update_client",
-      {opentracing::ChildOf(&span->context())});
+  auto redis_span = tracer->StartSpan("write_home_timeline_redis_update_client");
   std::string post_id_str = std::to_string(post_id);
 
   {
@@ -207,29 +204,25 @@ void HomeTimelineHandler::WriteHomeTimeline(
       }
     }
   }
-  redis_span->Finish();
+  redis_span->End();
 }
-
 
 void HomeTimelineHandler::ReadHomeTimeline(
     std::vector<Post> &_return, int64_t req_id, int64_t user_id, int start_idx,
     int stop_idx, const std::map<std::string, std::string> &carrier) {
   // Initialize a span
-  TextMapReader reader(carrier);
+  
   std::map<std::string, std::string> writer_text_map;
-  TextMapWriter writer(writer_text_map);
-  auto parent_span = opentracing::Tracer::Global()->Extract(reader);
-  auto span = opentracing::Tracer::Global()->StartSpan(
-      "read_home_timeline_server", {opentracing::ChildOf(parent_span->get())});
-  opentracing::Tracer::Global()->Inject(span->context(), writer);
+  
+  
+  auto span = tracer->StartSpan("read_home_timeline_server");
+  
 
   if (stop_idx <= start_idx || start_idx < 0) {
     return;
   }
 
-  auto redis_span = opentracing::Tracer::Global()->StartSpan(
-      "read_home_timeline_redis_find_client",
-      {opentracing::ChildOf(&span->context())});
+  auto redis_span = tracer->StartSpan("read_home_timeline_redis_find_client");
 
   std::vector<std::string> post_ids_str;
   try {
@@ -253,7 +246,7 @@ void HomeTimelineHandler::ReadHomeTimeline(
     LOG(error) << err.what();
     throw err;
   }
-  redis_span->Finish();
+  redis_span->End();
 
   std::vector<int64_t> post_ids;
   for (auto &post_id_str : post_ids_str) {
@@ -276,7 +269,7 @@ void HomeTimelineHandler::ReadHomeTimeline(
     throw;
   }
   _post_client_pool->Keepalive(post_client_wrapper);
-  span->Finish();
+  span->End();
 }
 
 }  // namespace social_network
