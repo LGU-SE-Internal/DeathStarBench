@@ -3,24 +3,27 @@
 
 #include <opentelemetry/trace/tracer.h>
 #include <opentelemetry/trace/scope.h>
+#include <opentelemetry/context/runtime_context.h>
 #include <functional>
 
 namespace media_service {
 
 /**
- * Wraps a function/Lambda to automatically activate the current Span Context when executed.
+ * Wraps a function/Lambda to automatically propagate the current OpenTelemetry Context when executed.
  * Used for std::thread, std::async, thread pools, etc.
- * Note: Capturing invalid/no-op spans is safe - they simply result in no active trace context.
+ * This captures the full Context (not just Span), ensuring proper trace propagation across threads.
  */
 template<typename Function>
 auto WrapAsync(Function&& func) {
-    // 1. Capture current Span in the main thread (always returns a valid span object)
-    auto current_span = opentelemetry::trace::Tracer::GetCurrentSpan();
+    // 1. Capture current Context in the main thread (includes active span, baggage, etc.)
+    auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
 
-    // 2. Return a new Lambda that holds the span and activates it during execution
-    return [current_span, func = std::forward<Function>(func)]() mutable {
-        // 3. Activate Scope in the sub-thread (safe even if span represents no-op/invalid context)
-        opentelemetry::trace::Scope scope(current_span);
+    // 2. Return a new Lambda that holds the context and activates it during execution
+    return [current_ctx, func = std::forward<Function>(func)]() mutable {
+        // 3. Attach the captured Context in the sub-thread
+        // Token ensures Context is restored when it goes out of scope
+        auto token = opentelemetry::context::RuntimeContext::Attach(current_ctx);
+        
         // 4. Execute the original function
         return func();
     };
