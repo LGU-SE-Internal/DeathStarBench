@@ -71,6 +71,10 @@ void TextHandler::ComposeText(
   }
 
   auto shortened_urls_future = std::async(std::launch::async, [&]() {
+    // Get tracer
+    auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
+    auto propagator = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
+
     auto url_span = tracer->StartSpan("compose_urls_client");
 
     std::map<std::string, std::string> url_writer_text_map;
@@ -98,6 +102,10 @@ void TextHandler::ComposeText(
   });
 
   auto user_mention_future = std::async(std::launch::async, [&]() {
+    // Get tracer
+    auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
+    auto propagator = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
+
     auto user_mention_span = tracer->StartSpan("compose_user_mentions_client");
 
     std::map<std::string, std::string> user_mention_writer_text_map;

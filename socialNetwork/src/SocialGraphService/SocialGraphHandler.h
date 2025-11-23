@@ -228,6 +228,10 @@ void SocialGraphHandler::Follow(
       });
 
   std::future<void> redis_update_future = std::async(std::launch::async, [&]() {
+    // Get tracer
+    auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
+    auto propagator = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
+
     auto redis_span = tracer->StartSpan("social_graph_redis_update_client");
 
     {
@@ -411,6 +415,10 @@ void SocialGraphHandler::Unfollow(
       });
 
   std::future<void> redis_update_future = std::async(std::launch::async, [&]() {
+    // Get tracer
+    auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
+    auto propagator = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
+
     auto redis_span = tracer->StartSpan("social_graph_redis_update_client");
     {
       if (_redis_client_pool) {
