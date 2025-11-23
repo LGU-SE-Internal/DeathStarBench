@@ -265,13 +265,12 @@ void UserHandler::RegisterUser(
     const std::string &last_name, const std::string &username,
     const std::string &password,
     const std::map<std::string, std::string> &carrier) {
-  // Initialize a span
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
   
   std::map<std::string, std::string> writer_text_map;
   
-  
   auto span = tracer->StartSpan("register_user_server");
-  
 
   // Compose user_id
   _thread_lock->lock();
@@ -409,12 +408,12 @@ void UserHandler::RegisterUser(
 void UserHandler::ComposeCreatorWithUsername(
     Creator &_return, const int64_t req_id, const std::string &username,
     const std::map<std::string, std::string> &carrier) {
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
   
   std::map<std::string, std::string> writer_text_map;
   
-  
   auto span = tracer->StartSpan("compose_creator_server");
-  
 
   size_t user_id_size;
   uint32_t memcached_flags;
@@ -564,12 +563,12 @@ void UserHandler::ComposeCreatorWithUserId(
     Creator &_return, int64_t req_id, int64_t user_id,
     const std::string &username,
     const std::map<std::string, std::string> &carrier) {
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
   
   std::map<std::string, std::string> writer_text_map;
   
-  
   auto span = tracer->StartSpan("compose_creator_server");
-  
 
   Creator creator;
   creator.username = username;
@@ -584,12 +583,12 @@ void UserHandler::Login(std::string &_return, int64_t req_id,
                         const std::string &username,
                         const std::string &password,
                         const std::map<std::string, std::string> &carrier) {
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
   
   std::map<std::string, std::string> writer_text_map;
   
-  
   auto span = tracer->StartSpan("login_server");
-  
 
   size_t login_size;
   uint32_t memcached_flags;
@@ -769,12 +768,12 @@ void UserHandler::Login(std::string &_return, int64_t req_id,
 int64_t UserHandler::GetUserId(
     int64_t req_id, const std::string &username,
     const std::map<std::string, std::string> &carrier) {
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
   
   std::map<std::string, std::string> writer_text_map;
   
-  
   auto span = tracer->StartSpan("get_user_id_server");
-  
 
   size_t user_id_size;
   uint32_t memcached_flags;
