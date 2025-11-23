@@ -98,10 +98,12 @@ void HomeTimelineHandler::WriteHomeTimeline(
     int64_t req_id, int64_t post_id, int64_t user_id, int64_t timestamp,
     const std::vector<int64_t> &user_mentions_id,
     const std::map<std::string, std::string> &carrier) {
-  // Initialize a span
-  
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
+  auto propagator = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
   
   auto span = tracer->StartSpan("write_home_timeline_server");
+  auto scope = tracer->WithActiveSpan(span);
 
   // Find followers of the user
   auto followers_span = tracer->StartSpan("get_followers_client");

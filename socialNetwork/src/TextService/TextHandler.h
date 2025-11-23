@@ -42,13 +42,14 @@ TextHandler::TextHandler(
 void TextHandler::ComposeText(
     TextServiceReturn &_return, int64_t req_id, const std::string &text,
     const std::map<std::string, std::string> &carrier) {
-  // Initialize a span
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
+  auto propagator = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
   
   std::map<std::string, std::string> writer_text_map;
   
-  
   auto span = tracer->StartSpan("compose_text_server");
-  
+  auto scope = tracer->WithActiveSpan(span);
 
   std::vector<std::string> mention_usernames;
   std::smatch m;

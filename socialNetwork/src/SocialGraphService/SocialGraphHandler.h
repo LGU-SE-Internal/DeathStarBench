@@ -104,13 +104,14 @@ bool SocialGraphHandler::IsRedisReplicationEnabled() {
 void SocialGraphHandler::Follow(
     int64_t req_id, int64_t user_id, int64_t followee_id,
     const std::map<std::string, std::string> &carrier) {
-  // Initialize a span
+  // Get tracer
+  auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
+  auto propagator = opentelemetry::context::propagation::GlobalTextMapPropagator::GetGlobalPropagator();
   
   std::map<std::string, std::string> writer_text_map;
   
-  
   auto span = tracer->StartSpan("follow_server");
-  
+  auto scope = tracer->WithActiveSpan(span);
 
   int64_t timestamp =
       duration_cast<milliseconds>(system_clock::now().time_since_epoch())
