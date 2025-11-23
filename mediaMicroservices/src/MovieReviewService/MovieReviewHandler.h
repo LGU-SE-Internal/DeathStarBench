@@ -199,11 +199,11 @@ void MovieReviewHandler::UploadMovieReview(
   auto num_reviews = redis_client->zcard(movie_id);
   redis_client->sync_commit();
   auto num_reviews_reply = num_reviews.get();
-  std::vector<std::string> options{"NX"};
+  std::vector<std::string> redis_options{"NX"};
   if (num_reviews_reply.ok() && num_reviews_reply.as_integer()) {
     std::multimap<std::string, std::string> value = {{
       std::to_string(timestamp), std::to_string(review_id)}};
-    redis_client->zadd(movie_id, options, value);
+    redis_client->zadd(movie_id, redis_options, value);
     redis_client->sync_commit();
   }
   _redis_client_pool->Push(redis_client_wrapper);
@@ -417,9 +417,9 @@ void MovieReviewHandler::ReadMovieReviews(
     redis_client = redis_client_wrapper->GetClient();
     auto redis_update_span = tracer->StartSpan("RedisUpdate");
     redis_client->del(std::vector<std::string>{movie_id});
-    std::vector<std::string> options{"NX"};
+    std::vector<std::string> redis_options{"NX"};
     zadd_reply_future = redis_client->zadd(
-        movie_id, options, redis_update_map);
+        movie_id, redis_options, redis_update_map);
     redis_client->commit();
     redis_update_span->End();
   }
