@@ -1,29 +1,29 @@
 add_executable(
-    PostStorageService
-    PostStorageService.cpp
-    ${THRIFT_GEN_CPP_DIR}/PostStorageService.cpp
-    ${THRIFT_GEN_CPP_DIR}/social_network_types.cpp
+ PostStorageService
+ PostStorageService.cpp
+ ${THRIFT_GEN_CPP_DIR}/PostStorageService.cpp
+ ${THRIFT_GEN_CPP_DIR}/social_network_types.cpp
 )
 
 target_include_directories(
-    PostStorageService PRIVATE
-    ${LIBMEMCACHED_INCLUDE_DIR}
-    ${MONGOC_INCLUDE_DIRS}
-    /usr/local/include/opentelemetry
+ PostStorageService PRIVATE
+ ${LIBMEMCACHED_INCLUDE_DIR}
+ ${MONGOC_INCLUDE_DIRS}
+ /usr/local/include/opentelemetry
 )
 
 target_link_libraries(
-    PostStorageService
-    ${MONGOC_LIBRARIES}
-    ${LIBMEMCACHED_LIBRARIES}
-    nlohmann_json::nlohmann_json
-    ${THRIFT_LIB}
-    ${CMAKE_THREAD_LIBS_INIT}
-    ${Boost_LIBRARIES}
-    Boost::log
-    Boost::log_setup
-    opentelemetry_trace opentelemetry_exporter_otlp_http opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable opentelemetry_opentracing_shim opentracing yaml-cpp
-    opentelemetry_logs opentelemetry_exporter_otlp_http_log
+ PostStorageService
+ ${MONGOC_LIBRARIES}
+ ${LIBMEMCACHED_LIBRARIES}
+ nlohmann_json::nlohmann_json
+ ${THRIFT_LIB}
+ ${CMAKE_THREAD_LIBS_INIT}
+ ${Boost_LIBRARIES}
+ Boost::log
+ Boost::log_setup
+ opentelemetry_trace opentelemetry_exporter_otlp_http opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable yaml-cpp
+ opentelemetry_logs opentelemetry_exporter_otlp_http_log
 )
 
 install(TARGETS PostStorageService DESTINATION ./)

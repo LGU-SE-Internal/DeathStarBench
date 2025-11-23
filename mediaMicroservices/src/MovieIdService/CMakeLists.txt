@@ -1,36 +1,36 @@
 add_executable(
-    MovieIdService
-    MovieIdService.cpp
-    ${THRIFT_GEN_CPP_DIR}/MovieIdService.cpp
-    ${THRIFT_GEN_CPP_DIR}/RatingService.cpp
-    ${THRIFT_GEN_CPP_DIR}/ComposeReviewService.cpp
-    ${THRIFT_GEN_CPP_DIR}/media_service_types.cpp
+ MovieIdService
+ MovieIdService.cpp
+ ${THRIFT_GEN_CPP_DIR}/MovieIdService.cpp
+ ${THRIFT_GEN_CPP_DIR}/RatingService.cpp
+ ${THRIFT_GEN_CPP_DIR}/ComposeReviewService.cpp
+ ${THRIFT_GEN_CPP_DIR}/media_service_types.cpp
 )
 
 target_include_directories(
-    MovieIdService PRIVATE
-    ${LIBMEMCACHED_INCLUDE_DIR}
-    ${MONGOC_INCLUDE_DIRS}
-    /usr/local/include/opentelemetry
+ MovieIdService PRIVATE
+ ${LIBMEMCACHED_INCLUDE_DIR}
+ ${MONGOC_INCLUDE_DIRS}
+ /usr/local/include/opentelemetry
 )
 
 target_link_libraries(
-    MovieIdService
-    ${MONGOC_LIBRARIES}
-    ${LIBMEMCACHED_LIBRARIES}
-    nlohmann_json::nlohmann_json
-    ${THRIFT_LIB}
-    ${CMAKE_THREAD_LIBS_INIT}
-    ${Boost_LIBRARIES}
-    Boost::log
-    Boost::log_setup
-    opentelemetry_trace opentelemetry_exporter_otlp_http opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable opentelemetry_opentracing_shim opentracing yaml-cpp
-    opentelemetry_logs opentelemetry_exporter_otlp_http_log
+ MovieIdService
+ ${MONGOC_LIBRARIES}
+ ${LIBMEMCACHED_LIBRARIES}
+ nlohmann_json::nlohmann_json
+ ${THRIFT_LIB}
+ ${CMAKE_THREAD_LIBS_INIT}
+ ${Boost_LIBRARIES}
+ Boost::log
+ Boost::log_setup
+ opentelemetry_trace opentelemetry_exporter_otlp_http opentelemetry_resources opentelemetry_common opentelemetry_otlp_recordable yaml-cpp
+ opentelemetry_logs opentelemetry_exporter_otlp_http_log
 )
 
 target_compile_definitions (
-    MovieIdService PRIVATE
-    "${MONGOC_DEFINITIONS}"
+ MovieIdService PRIVATE
+ "${MONGOC_DEFINITIONS}"
 )
 
 install(TARGETS MovieIdService DESTINATION ./)
