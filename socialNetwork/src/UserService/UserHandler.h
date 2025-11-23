@@ -21,6 +21,7 @@
 #include "../ThriftClient.h"
 #include "../logger.h"
 #include "../tracing.h"
+#include "../context_helper.h"
 
 // Custom Epoch (January 1, 2018 Midnight GMT = 2018-01-01T00:00:00Z)
 #define CUSTOM_EPOCH 1514764800000
@@ -127,6 +128,7 @@ void UserHandler::RegisterUserWithId(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "register_user_withid_server",
       {opentracing::ChildOf(parent_span->get())});
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   // Store user info into mongodb
@@ -241,6 +243,7 @@ void UserHandler::RegisterUser(
   auto parent_span = opentracing::Tracer::Global()->Extract(reader);
   auto span = opentracing::Tracer::Global()->StartSpan(
       "register_user_server", {opentracing::ChildOf(parent_span->get())});
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   // Compose user_id
@@ -386,6 +389,7 @@ void UserHandler::ComposeCreatorWithUsername(
   auto parent_span = opentracing::Tracer::Global()->Extract(reader);
   auto span = opentracing::Tracer::Global()->StartSpan(
       "compose_creator_server", {opentracing::ChildOf(parent_span->get())});
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   size_t user_id_size;
@@ -545,6 +549,7 @@ void UserHandler::ComposeCreatorWithUserId(
   auto parent_span = opentracing::Tracer::Global()->Extract(reader);
   auto span = opentracing::Tracer::Global()->StartSpan(
       "compose_creator_server", {opentracing::ChildOf(parent_span->get())});
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   Creator creator;
@@ -566,6 +571,7 @@ void UserHandler::Login(std::string &_return, int64_t req_id,
   auto parent_span = opentracing::Tracer::Global()->Extract(reader);
   auto span = opentracing::Tracer::Global()->StartSpan(
       "login_server", {opentracing::ChildOf(parent_span->get())});
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   size_t login_size;
@@ -755,6 +761,7 @@ int64_t UserHandler::GetUserId(
   auto parent_span = opentracing::Tracer::Global()->Extract(reader);
   auto span = opentracing::Tracer::Global()->StartSpan(
       "get_user_id_server", {opentracing::ChildOf(parent_span->get())});
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   size_t user_id_size;

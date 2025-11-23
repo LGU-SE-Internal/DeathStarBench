@@ -14,6 +14,7 @@
 #include "../../gen-cpp/social_network_types.h"
 #include "../logger.h"
 #include "../tracing.h"
+#include "../context_helper.h"
 
 #define HOSTNAME "http://short-url/"
 
@@ -79,6 +80,7 @@ void UrlShortenHandler::ComposeUrls(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "compose_urls_server",
       { opentracing::ChildOf(parent_span->get()) });
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   std::vector<Url> target_urls;

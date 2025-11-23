@@ -11,6 +11,7 @@
 #include "../../gen-cpp/ReviewStorageService.h"
 #include "../logger.h"
 #include "../tracing.h"
+#include "../context_helper.h"
 #include "../ClientPool.h"
 #include "../RedisClient.h"
 #include "../ThriftClient.h"
@@ -59,6 +60,7 @@ void MovieReviewHandler::UploadMovieReview(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "UploadMovieReview",
       { opentracing::ChildOf(parent_span->get()) });
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   mongoc_client_t *mongodb_client = mongoc_client_pool_pop(
@@ -195,6 +197,7 @@ void MovieReviewHandler::ReadMovieReviews(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "ReadMovieReviews",
       { opentracing::ChildOf(parent_span->get()) });
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   if (stop <= start || start < 0) {

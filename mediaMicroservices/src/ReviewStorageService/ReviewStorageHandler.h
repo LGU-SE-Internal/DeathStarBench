@@ -13,6 +13,7 @@
 #include "../../gen-cpp/ReviewStorageService.h"
 #include "../logger.h"
 #include "../tracing.h"
+#include "../context_helper.h"
 
 namespace media_service {
 
@@ -50,6 +51,7 @@ void ReviewStorageHandler::StoreReview(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "StoreReview",
       { opentracing::ChildOf(parent_span->get()) });
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   mongoc_client_t *mongodb_client = mongoc_client_pool_pop(
@@ -119,6 +121,7 @@ void ReviewStorageHandler::ReadReviews(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "ReadReviews",
       { opentracing::ChildOf(parent_span->get()) });
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   if (review_ids.empty()) {
@@ -297,7 +300,7 @@ void ReviewStorageHandler::ReadReviews(
     mongoc_client_pool_push(_mongodb_client_pool, mongodb_client);
 
     // upload reviews to memcached
-    set_futures.emplace_back(std::async(std::launch::async, [&]() {
+    set_futures.emplace_back(std::async(std::launch::async, WrapAsync([&]() {
       memcached_return_t _rc;
       auto _memcached_client = memcached_pool_pop(
           _memcached_client_pool, true, &_rc);

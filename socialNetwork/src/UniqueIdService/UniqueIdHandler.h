@@ -12,6 +12,7 @@
 #include "../../gen-cpp/social_network_types.h"
 #include "../logger.h"
 #include "../tracing.h"
+#include "../context_helper.h"
 
 // Custom Epoch (January 1, 2018 Midnight GMT = 2018-01-01T00:00:00Z)
 #define CUSTOM_EPOCH 1514764800000
@@ -68,6 +69,7 @@ int64_t UniqueIdHandler::ComposeUniqueId(
   auto parent_span = opentracing::Tracer::Global()->Extract(reader);
   auto span = opentracing::Tracer::Global()->StartSpan(
       "compose_unique_id_server", {opentracing::ChildOf(parent_span->get())});
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   _thread_lock->lock();

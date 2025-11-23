@@ -18,6 +18,7 @@
 #include "../ThriftClient.h"
 #include "../logger.h"
 #include "../tracing.h"
+#include "../context_helper.h"
 
 namespace media_service {
 #define NUM_COMPONENTS 5
@@ -183,7 +184,7 @@ void ComposeReviewHandler::_ComposeAndUpload(
   std::future<void> user_review_future;
   std::future<void> movie_review_future;
   
-  review_future = std::async(std::launch::async, [&](){
+  review_future = std::async(std::launch::async, WrapAsync([&](){
     auto review_storage_client_wrapper = _review_storage_client_pool->Pop();
     if (!review_storage_client_wrapper) {
       ServiceException se;
@@ -200,9 +201,9 @@ void ComposeReviewHandler::_ComposeAndUpload(
       throw;
     }
     _review_storage_client_pool->Push(review_storage_client_wrapper);
-  });
+  }));
 
-  user_review_future = std::async(std::launch::async, [&](){
+  user_review_future = std::async(std::launch::async, WrapAsync([&](){
     auto user_review_client_wrapper = _user_review_client_pool->Pop();
     if (!user_review_client_wrapper) {
       ServiceException se;
@@ -220,9 +221,9 @@ void ComposeReviewHandler::_ComposeAndUpload(
       throw;
     }
     _user_review_client_pool->Push(user_review_client_wrapper);
-  });
+  }));
 
-  movie_review_future = std::async(std::launch::async, [&](){
+  movie_review_future = std::async(std::launch::async, WrapAsync([&](){
     auto movie_review_client_wrapper = _movie_review_client_pool->Pop();
     if (!movie_review_client_wrapper) {
       ServiceException se;
@@ -240,7 +241,7 @@ void ComposeReviewHandler::_ComposeAndUpload(
       throw;
     }
     _movie_review_client_pool->Push(movie_review_client_wrapper);
-  });
+  }));
   
   try {
     review_future.get();
@@ -264,6 +265,7 @@ void ComposeReviewHandler::UploadMovieId(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "UploadMovieId",
       { opentracing::ChildOf(parent_span->get()) });
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   memcached_return_t memcached_rc;
@@ -372,6 +374,7 @@ void ComposeReviewHandler::UploadUserId(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "UploadUserId",
       { opentracing::ChildOf(parent_span->get()) });
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   memcached_return_t memcached_rc;
@@ -482,6 +485,7 @@ void ComposeReviewHandler::UploadUniqueId(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "UploadUniqueId",
       { opentracing::ChildOf(parent_span->get()) });
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   memcached_return_t memcached_rc;
@@ -594,6 +598,7 @@ void ComposeReviewHandler::UploadText(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "UploadText",
       { opentracing::ChildOf(parent_span->get()) });
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   memcached_return_t memcached_rc;
@@ -700,6 +705,7 @@ void ComposeReviewHandler::UploadRating(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "UploadRating",
       { opentracing::ChildOf(parent_span->get()) });
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   memcached_return_t memcached_rc;

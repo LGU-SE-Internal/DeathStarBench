@@ -11,6 +11,7 @@
 #include "../ClientPool.h"
 #include "../logger.h"
 #include "../tracing.h"
+#include "../context_helper.h"
 #include "../utils.h"
 
 namespace social_network {
@@ -48,6 +49,7 @@ void UserMentionHandler::ComposeUserMentions(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "compose_user_mentions_server",
       {opentracing::ChildOf(parent_span->get())});
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   std::vector<UserMention> user_mentions;

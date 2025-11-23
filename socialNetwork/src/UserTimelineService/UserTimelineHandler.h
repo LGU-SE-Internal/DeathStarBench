@@ -15,6 +15,7 @@
 #include "../ThriftClient.h"
 #include "../logger.h"
 #include "../tracing.h"
+#include "../context_helper.h"
 
 using namespace sw::redis;
 
@@ -97,6 +98,7 @@ void UserTimelineHandler::WriteUserTimeline(
   auto parent_span = opentracing::Tracer::Global()->Extract(reader);
   auto span = opentracing::Tracer::Global()->StartSpan(
       "write_user_timeline_server", {opentracing::ChildOf(parent_span->get())});
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   mongoc_client_t *mongodb_client =
@@ -193,6 +195,7 @@ void UserTimelineHandler::ReadUserTimeline(
   auto parent_span = opentracing::Tracer::Global()->Extract(reader);
   auto span = opentracing::Tracer::Global()->StartSpan(
       "read_user_timeline_server", {opentracing::ChildOf(parent_span->get())});
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   if (stop <= start || start < 0) {
@@ -301,7 +304,7 @@ void UserTimelineHandler::ReadUserTimeline(
   }
 
   std::future<std::vector<Post>> post_future =
-      std::async(std::launch::async, [&]() {
+      std::async(std::launch::async, WrapAsync([&]() {
         auto post_client_wrapper = _post_client_pool->Pop();
         if (!post_client_wrapper) {
           ServiceException se;
@@ -321,7 +324,7 @@ void UserTimelineHandler::ReadUserTimeline(
         }
         _post_client_pool->Keepalive(post_client_wrapper);
         return _return_posts;
-      });
+      }));
 
   if (redis_update_map.size() > 0) {
     auto redis_update_span = opentracing::Tracer::Global()->StartSpan(

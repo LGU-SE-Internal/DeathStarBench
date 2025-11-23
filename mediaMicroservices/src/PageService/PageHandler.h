@@ -12,6 +12,7 @@
 #include "../../gen-cpp/PlotService.h"
 #include "../logger.h"
 #include "../tracing.h"
+#include "../context_helper.h"
 #include "../ClientPool.h"
 #include "../ThriftClient.h"
 
@@ -63,6 +64,7 @@ void PageHandler::ReadPage(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "ReadPage",
       { opentracing::ChildOf(parent_span->get()) });
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   std::future<std::vector<Review>> movie_review_future;
@@ -70,7 +72,7 @@ void PageHandler::ReadPage(
   std::future<std::vector<CastInfo>> cast_info_future;
   std::future<std::string> plot_future;
 
-  movie_info_future = std::async(std::launch::async, [&](){
+  movie_info_future = std::async(std::launch::async, WrapAsync([&](){
     MovieInfo _reture_movie_info;
     auto movie_info_client_wrapper = _movie_info_client_pool->Pop();
     if (!movie_info_client_wrapper) {
@@ -90,9 +92,9 @@ void PageHandler::ReadPage(
     }
     _movie_info_client_pool->Push(movie_info_client_wrapper);
     return _reture_movie_info;
-  });
+  }));
 
-  movie_review_future = std::async(std::launch::async, [&](){
+  movie_review_future = std::async(std::launch::async, WrapAsync([&](){
     std::vector<Review> _return_movie_reviews;
     auto movie_review_client_wrapper = _movie_review_client_pool->Pop();
     if (!movie_review_client_wrapper) {
@@ -112,7 +114,7 @@ void PageHandler::ReadPage(
     }
     _movie_review_client_pool->Push(movie_review_client_wrapper);
     return _return_movie_reviews;
-  });
+  }));
 
   try {
     _return.movie_info = movie_info_future.get();
@@ -125,7 +127,7 @@ void PageHandler::ReadPage(
     cast_info_ids.emplace_back(cast.cast_info_id);
   }
 
-  cast_info_future = std::async(std::launch::async, [&](){
+  cast_info_future = std::async(std::launch::async, WrapAsync([&](){
     std::vector<CastInfo> _return_cast_infos;
     auto cast_info_client_wrapper = _cast_info_client_pool->Pop();
     if (!cast_info_client_wrapper) {
@@ -145,9 +147,9 @@ void PageHandler::ReadPage(
     }
     _cast_info_client_pool->Push(cast_info_client_wrapper);
     return _return_cast_infos;
-  });
+  }));
 
-  plot_future = std::async(std::launch::async, [&](){
+  plot_future = std::async(std::launch::async, WrapAsync([&](){
     std::string _return_plot;
     auto plot_client_wrapper = _plot_client_pool->Pop();
     if (!plot_client_wrapper) {
@@ -167,7 +169,7 @@ void PageHandler::ReadPage(
     }
     _plot_client_pool->Push(plot_client_wrapper);
     return _return_plot;
-  });
+  }));
 
   try {
     _return.reviews = movie_review_future.get();

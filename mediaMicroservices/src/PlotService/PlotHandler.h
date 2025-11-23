@@ -12,6 +12,7 @@
 #include "../../gen-cpp/PlotService.h"
 #include "../logger.h"
 #include "../tracing.h"
+#include "../context_helper.h"
 
 namespace media_service {
 
@@ -53,6 +54,7 @@ void PlotHandler::ReadPlot(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "ReadPlot",
       { opentracing::ChildOf(parent_span->get()) });
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   memcached_return_t memcached_rc;
@@ -203,6 +205,7 @@ void PlotHandler::WritePlot(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "WritePlot",
       { opentracing::ChildOf(parent_span->get()) });
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   bson_t *new_doc = bson_new();

@@ -21,6 +21,7 @@
 #include "../ThriftClient.h"
 #include "../logger.h"
 #include "../tracing.h"
+#include "../context_helper.h"
 
 namespace social_network {
 using json = nlohmann::json;

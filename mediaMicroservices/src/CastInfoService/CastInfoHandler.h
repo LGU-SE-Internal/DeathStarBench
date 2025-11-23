@@ -15,6 +15,7 @@
 #include "../ThriftClient.h"
 #include "../logger.h"
 #include "../tracing.h"
+#include "../context_helper.h"
 
 namespace media_service {
 
@@ -59,6 +60,7 @@ void CastInfoHandler::WriteCastInfo(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "WriteCastInfo",
       { opentracing::ChildOf(parent_span->get()) });
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   bson_t *new_doc = bson_new();
@@ -124,6 +126,7 @@ void CastInfoHandler::ReadCastInfo(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "ReadCastInfo",
       { opentracing::ChildOf(parent_span->get()) });
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   if (cast_info_ids.empty()) {
@@ -298,7 +301,7 @@ void CastInfoHandler::ReadCastInfo(
     mongoc_client_pool_push(_mongodb_client_pool, mongodb_client);
 
     // Upload cast-info to memcached
-    set_futures.emplace_back(std::async(std::launch::async, [&]() {
+    set_futures.emplace_back(std::async(std::launch::async, WrapAsync([&]() {
       memcached_return_t _rc;
       auto _memcached_client = memcached_pool_pop(
           _memcached_client_pool, true, &_rc);

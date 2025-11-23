@@ -13,6 +13,7 @@
 #include "../../gen-cpp/MovieInfoService.h"
 #include "../logger.h"
 #include "../tracing.h"
+#include "../context_helper.h"
 
 namespace media_service {
 using json = nlohmann::json;
@@ -70,6 +71,7 @@ void MovieInfoHandler::WriteMovieInfo(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "WriteMovieInfo",
       { opentracing::ChildOf(parent_span->get()) });
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   bson_t *new_doc = bson_new();
@@ -182,6 +184,7 @@ void MovieInfoHandler::ReadMovieInfo(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "ReadMovieInfo",
       { opentracing::ChildOf(parent_span->get()) });
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
   
   memcached_return_t memcached_rc;
@@ -367,6 +370,7 @@ void MovieInfoHandler::UpdateRating(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "UpdateRating",
       { opentracing::ChildOf(parent_span->get()) });
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   bson_t *query = bson_new();

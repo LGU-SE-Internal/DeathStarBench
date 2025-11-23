@@ -13,6 +13,7 @@
 #include "../ThriftClient.h"
 #include "../logger.h"
 #include "../tracing.h"
+#include "../context_helper.h"
 
 namespace social_network {
 
@@ -48,6 +49,7 @@ void TextHandler::ComposeText(
   auto parent_span = opentracing::Tracer::Global()->Extract(reader);
   auto span = opentracing::Tracer::Global()->StartSpan(
       "compose_text_server", {opentracing::ChildOf(parent_span->get())});
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   std::vector<std::string> mention_usernames;
@@ -70,7 +72,7 @@ void TextHandler::ComposeText(
     s = m.suffix().str();
   }
 
-  auto shortened_urls_future = std::async(std::launch::async, [&]() {
+  auto shortened_urls_future = std::async(std::launch::async, WrapAsync([&]() {
     auto url_span = opentracing::Tracer::Global()->StartSpan(
         "compose_urls_client", {opentracing::ChildOf(&span->context())});
 
@@ -96,9 +98,9 @@ void TextHandler::ComposeText(
     }
     _url_client_pool->Keepalive(url_client_wrapper);
     return _return_urls;
-  });
+  }));
 
-  auto user_mention_future = std::async(std::launch::async, [&]() {
+  auto user_mention_future = std::async(std::launch::async, WrapAsync([&]() {
     auto user_mention_span = opentracing::Tracer::Global()->StartSpan(
         "compose_user_mentions_client",
         {opentracing::ChildOf(&span->context())});
@@ -129,7 +131,7 @@ void TextHandler::ComposeText(
 
     _user_mention_client_pool->Keepalive(user_mention_client_wrapper);
     return _return_user_mentions;
-  });
+  }));
 
   std::vector<Url> target_urls;
   try {

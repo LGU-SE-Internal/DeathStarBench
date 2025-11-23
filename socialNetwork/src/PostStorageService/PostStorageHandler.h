@@ -14,6 +14,7 @@
 #include "../../gen-cpp/PostStorageService.h"
 #include "../logger.h"
 #include "../tracing.h"
+#include "../context_helper.h"
 
 namespace social_network {
 using json = nlohmann::json;
@@ -55,6 +56,7 @@ void PostStorageHandler::StorePost(
   auto parent_span = opentracing::Tracer::Global()->Extract(reader);
   auto span = opentracing::Tracer::Global()->StartSpan(
       "store_post_server", {opentracing::ChildOf(parent_span->get())});
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   mongoc_client_t *mongodb_client =
@@ -171,6 +173,7 @@ void PostStorageHandler::ReadPost(
   auto parent_span = opentracing::Tracer::Global()->Extract(reader);
   auto span = opentracing::Tracer::Global()->StartSpan(
       "read_post_server", {opentracing::ChildOf(parent_span->get())});
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   std::string post_id_str = std::to_string(post_id);
@@ -362,6 +365,7 @@ void PostStorageHandler::ReadPosts(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "post_storage_read_posts_server",
       {opentracing::ChildOf(parent_span->get())});
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   if (post_ids.empty()) {
@@ -578,7 +582,7 @@ void PostStorageHandler::ReadPosts(
     mongoc_client_pool_push(_mongodb_client_pool, mongodb_client);
 
     // upload posts to memcached
-    set_futures.emplace_back(std::async(std::launch::async, [&]() {
+    set_futures.emplace_back(std::async(std::launch::async, WrapAsync([&]() {
       memcached_return_t _rc;
       auto _memcached_client =
           memcached_pool_pop(_memcached_client_pool, true, &_rc);

@@ -18,6 +18,7 @@
 #include "../ThriftClient.h"
 #include "../logger.h"
 #include "../tracing.h"
+#include "../context_helper.h"
 
 using namespace sw::redis;
 
@@ -110,6 +111,7 @@ void SocialGraphHandler::Follow(
   auto parent_span = opentracing::Tracer::Global()->Extract(reader);
   auto span = opentracing::Tracer::Global()->StartSpan(
       "follow_server", {opentracing::ChildOf(parent_span->get())});
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   int64_t timestamp =
@@ -117,7 +119,7 @@ void SocialGraphHandler::Follow(
           .count();
 
   std::future<void> mongo_update_follower_future =
-      std::async(std::launch::async, [&]() {
+      std::async(std::launch::async, WrapAsync([&]() {
         mongoc_client_t *mongodb_client =
             mongoc_client_pool_pop(_mongodb_client_pool);
         if (!mongodb_client) {
@@ -171,10 +173,10 @@ void SocialGraphHandler::Follow(
         bson_destroy(search_not_exist);
         mongoc_collection_destroy(collection);
         mongoc_client_pool_push(_mongodb_client_pool, mongodb_client);
-      });
+      }));
 
   std::future<void> mongo_update_followee_future =
-      std::async(std::launch::async, [&]() {
+      std::async(std::launch::async, WrapAsync([&]() {
         mongoc_client_t *mongodb_client =
             mongoc_client_pool_pop(_mongodb_client_pool);
         if (!mongodb_client) {
@@ -228,9 +230,9 @@ void SocialGraphHandler::Follow(
         bson_destroy(search_not_exist);
         mongoc_collection_destroy(collection);
         mongoc_client_pool_push(_mongodb_client_pool, mongodb_client);
-      });
+      }));
 
-  std::future<void> redis_update_future = std::async(std::launch::async, [&]() {
+  std::future<void> redis_update_future = std::async(std::launch::async, WrapAsync([&]() {
     auto redis_span = opentracing::Tracer::Global()->StartSpan(
         "social_graph_redis_update_client",
         {opentracing::ChildOf(&span->context())});
@@ -284,7 +286,7 @@ void SocialGraphHandler::Follow(
       }
     }
     redis_span->Finish();
-  });
+  }));
 
   try {
     redis_update_future.get();
@@ -310,10 +312,11 @@ void SocialGraphHandler::Unfollow(
   auto parent_span = opentracing::Tracer::Global()->Extract(reader);
   auto span = opentracing::Tracer::Global()->StartSpan(
       "unfollow_server", {opentracing::ChildOf(parent_span->get())});
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   std::future<void> mongo_update_follower_future =
-      std::async(std::launch::async, [&]() {
+      std::async(std::launch::async, WrapAsync([&]() {
         mongoc_client_t *mongodb_client =
             mongoc_client_pool_pop(_mongodb_client_pool);
         if (!mongodb_client) {
@@ -364,10 +367,10 @@ void SocialGraphHandler::Unfollow(
         bson_destroy(&reply);
         mongoc_collection_destroy(collection);
         mongoc_client_pool_push(_mongodb_client_pool, mongodb_client);
-      });
+      }));
 
   std::future<void> mongo_update_followee_future =
-      std::async(std::launch::async, [&]() {
+      std::async(std::launch::async, WrapAsync([&]() {
         mongoc_client_t *mongodb_client =
             mongoc_client_pool_pop(_mongodb_client_pool);
         if (!mongodb_client) {
@@ -418,9 +421,9 @@ void SocialGraphHandler::Unfollow(
         bson_destroy(&reply);
         mongoc_collection_destroy(collection);
         mongoc_client_pool_push(_mongodb_client_pool, mongodb_client);
-      });
+      }));
 
-  std::future<void> redis_update_future = std::async(std::launch::async, [&]() {
+  std::future<void> redis_update_future = std::async(std::launch::async, WrapAsync([&]() {
     auto redis_span = opentracing::Tracer::Global()->StartSpan(
         "social_graph_redis_update_client",
         {opentracing::ChildOf(&span->context())});
@@ -469,7 +472,7 @@ void SocialGraphHandler::Unfollow(
       }
     }
     redis_span->Finish();
-  });
+  }));
 
   try {
     redis_update_future.get();
@@ -492,6 +495,7 @@ void SocialGraphHandler::GetFollowers(
   auto parent_span = opentracing::Tracer::Global()->Extract(reader);
   auto span = opentracing::Tracer::Global()->StartSpan(
       "get_followers_server", {opentracing::ChildOf(parent_span->get())});
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   auto redis_span = opentracing::Tracer::Global()->StartSpan(
@@ -630,6 +634,7 @@ void SocialGraphHandler::GetFollowees(
   auto parent_span = opentracing::Tracer::Global()->Extract(reader);
   auto span = opentracing::Tracer::Global()->StartSpan(
       "get_followees_server", {opentracing::ChildOf(parent_span->get())});
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   auto redis_span = opentracing::Tracer::Global()->StartSpan(
@@ -775,6 +780,7 @@ void SocialGraphHandler::InsertUser(
   auto parent_span = opentracing::Tracer::Global()->Extract(reader);
   auto span = opentracing::Tracer::Global()->StartSpan(
       "insert_user_server", {opentracing::ChildOf(parent_span->get())});
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   mongoc_client_t *mongodb_client =
@@ -833,9 +839,10 @@ void SocialGraphHandler::FollowWithUsername(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "follow_with_username_server",
       {opentracing::ChildOf(parent_span->get())});
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
-  std::future<int64_t> user_id_future = std::async(std::launch::async, [&]() {
+  std::future<int64_t> user_id_future = std::async(std::launch::async, WrapAsync([&]() {
     auto user_client_wrapper = _user_service_client_pool->Pop();
     if (!user_client_wrapper) {
       ServiceException se;
@@ -854,10 +861,10 @@ void SocialGraphHandler::FollowWithUsername(
     }
     _user_service_client_pool->Keepalive(user_client_wrapper);
     return _return;
-  });
+  }));
 
   std::future<int64_t> followee_id_future =
-      std::async(std::launch::async, [&]() {
+      std::async(std::launch::async, WrapAsync([&]() {
         auto user_client_wrapper = _user_service_client_pool->Pop();
         if (!user_client_wrapper) {
           ServiceException se;
@@ -877,7 +884,7 @@ void SocialGraphHandler::FollowWithUsername(
         }
         _user_service_client_pool->Keepalive(user_client_wrapper);
         return _return;
-      });
+      }));
 
   int64_t user_id;
   int64_t followee_id;
@@ -907,9 +914,10 @@ void SocialGraphHandler::UnfollowWithUsername(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "unfollow_with_username_server",
       {opentracing::ChildOf(parent_span->get())});
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
-  std::future<int64_t> user_id_future = std::async(std::launch::async, [&]() {
+  std::future<int64_t> user_id_future = std::async(std::launch::async, WrapAsync([&]() {
     auto user_client_wrapper = _user_service_client_pool->Pop();
     if (!user_client_wrapper) {
       ServiceException se;
@@ -928,10 +936,10 @@ void SocialGraphHandler::UnfollowWithUsername(
     }
     _user_service_client_pool->Keepalive(user_client_wrapper);
     return _return;
-  });
+  }));
 
   std::future<int64_t> followee_id_future =
-      std::async(std::launch::async, [&]() {
+      std::async(std::launch::async, WrapAsync([&]() {
         auto user_client_wrapper = _user_service_client_pool->Pop();
         if (!user_client_wrapper) {
           ServiceException se;
@@ -951,7 +959,7 @@ void SocialGraphHandler::UnfollowWithUsername(
         }
         _user_service_client_pool->Keepalive(user_client_wrapper);
         return _return;
-      });
+      }));
 
   int64_t user_id;
   int64_t followee_id;

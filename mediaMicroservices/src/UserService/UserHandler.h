@@ -17,6 +17,7 @@
 #include <jwt/jwt.hpp>
 
 #include "../tracing.h"
+#include "../context_helper.h"
 #include "../../gen-cpp/UserService.h"
 #include "../../gen-cpp/media_service_types.h"
 #include "../ClientPool.h"
@@ -145,6 +146,7 @@ void UserHandler::RegisterUser(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "RegisterUser",
       { opentracing::ChildOf(parent_span->get()) });
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   // Compose user_id
@@ -275,6 +277,7 @@ void UserHandler::RegisterUserWithId(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "RegisterUserWithId",
       { opentracing::ChildOf(parent_span->get()) });
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   mongoc_client_t *mongodb_client = mongoc_client_pool_pop(
@@ -369,6 +372,7 @@ void UserHandler::UploadUserWithUsername(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "UploadUserWithUsername",
       { opentracing::ChildOf(parent_span->get()) });
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   size_t user_id_size;
@@ -557,6 +561,7 @@ void UserHandler::UploadUserWithUserId(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "UploadUserWithUserId",
       { opentracing::ChildOf(parent_span->get()) });
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   auto compose_client_wrapper = _compose_client_pool->Pop();
@@ -595,6 +600,7 @@ void UserHandler::Login(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "Login",
       { opentracing::ChildOf(parent_span->get()) });
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   size_t password_size;

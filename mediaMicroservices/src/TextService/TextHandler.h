@@ -10,6 +10,7 @@
 #include "../ThriftClient.h"
 #include "../logger.h"
 #include "../tracing.h"
+#include "../context_helper.h"
 
 namespace media_service {
 
@@ -42,6 +43,7 @@ void TextHandler::UploadText(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "UploadText",
       { opentracing::ChildOf(parent_span->get()) });
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   auto compose_client_wrapper = _compose_client_pool->Pop();

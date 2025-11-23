@@ -8,6 +8,7 @@
 #include "../../gen-cpp/MediaService.h"
 #include "../logger.h"
 #include "../tracing.h"
+#include "../context_helper.h"
 
 // 2018-01-01 00:00:00 UTC
 #define CUSTOM_EPOCH 1514764800000
@@ -39,6 +40,7 @@ void MediaHandler::ComposeMedia(
   auto parent_span = opentracing::Tracer::Global()->Extract(reader);
   auto span = opentracing::Tracer::Global()->StartSpan(
       "compose_media_server", {opentracing::ChildOf(parent_span->get())});
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   if (media_types.size() != media_ids.size()) {

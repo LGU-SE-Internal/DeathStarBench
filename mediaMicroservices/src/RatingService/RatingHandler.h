@@ -13,6 +13,7 @@
 #include "../RedisClient.h"
 #include "../logger.h"
 #include "../tracing.h"
+#include "../context_helper.h"
 
 
 namespace media_service {
@@ -50,12 +51,13 @@ void RatingHandler::UploadRating(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "UploadRating",
       { opentracing::ChildOf(parent_span->get()) });
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   std::future<void> upload_future;
   std::future<void> redis_future;
 
-  upload_future = std::async(std::launch::async, [&](){
+  upload_future = std::async(std::launch::async, WrapAsync([&](){
     auto compose_client_wrapper = _compose_client_pool->Pop();
     if (!compose_client_wrapper) {
       ServiceException se;
@@ -72,9 +74,9 @@ void RatingHandler::UploadRating(
       throw;
     }
     _compose_client_pool->Push(compose_client_wrapper);
-  });
+  }));
 
-  redis_future = std::async(std::launch::async, [&](){
+  redis_future = std::async(std::launch::async, WrapAsync([&](){
     auto redis_client_wrapper = _redis_client_pool->Pop();
     if (!redis_client_wrapper) {
       ServiceException se;
@@ -90,7 +92,7 @@ void RatingHandler::UploadRating(
     redis_client->sync_commit();
     redis_span->Finish();
     _redis_client_pool->Push(redis_client_wrapper);
-  });
+  }));
 
   try {
     upload_future.get();

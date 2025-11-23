@@ -14,6 +14,7 @@
 #include "../ThriftClient.h"
 #include "../logger.h"
 #include "../tracing.h"
+#include "../context_helper.h"
 
 using namespace sw::redis;
 namespace social_network {
@@ -221,6 +222,7 @@ void HomeTimelineHandler::ReadHomeTimeline(
   auto parent_span = opentracing::Tracer::Global()->Extract(reader);
   auto span = opentracing::Tracer::Global()->StartSpan(
       "read_home_timeline_server", {opentracing::ChildOf(parent_span->get())});
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   if (stop_idx <= start_idx || start_idx < 0) {

@@ -17,6 +17,7 @@
 #include "../ThriftClient.h"
 #include "../logger.h"
 #include "../tracing.h"
+#include "../context_helper.h"
 
 
 namespace media_service {
@@ -66,6 +67,7 @@ void MovieIdHandler::UploadMovieId(
   auto span = opentracing::Tracer::Global()->StartSpan(
       "UploadMovieId",
       { opentracing::ChildOf(parent_span->get()) });
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   memcached_return_t memcached_rc;
@@ -183,7 +185,7 @@ void MovieIdHandler::UploadMovieId(
   std::future<void> set_future;
   std::future<void> movie_id_future;
   std::future<void> rating_future;
-  set_future = std::async(std::launch::async, [&]() {
+  set_future = std::async(std::launch::async, WrapAsync([&]() {
     memcached_client = memcached_pool_pop(
         _memcached_client_pool, true, &memcached_rc);
     auto set_span = opentracing::Tracer::Global()->StartSpan(
@@ -204,9 +206,9 @@ void MovieIdHandler::UploadMovieId(
                    << memcached_strerror(memcached_client, memcached_rc);
     }
     memcached_pool_push(_memcached_client_pool, memcached_client);    
-  });
+  }));
 
-  movie_id_future = std::async(std::launch::async, [&]() {
+  movie_id_future = std::async(std::launch::async, WrapAsync([&]() {
     auto compose_client_wrapper = _compose_client_pool->Pop();
     if (!compose_client_wrapper) {
       ServiceException se;
@@ -223,9 +225,9 @@ void MovieIdHandler::UploadMovieId(
       throw;
     }
     _compose_client_pool->Push(compose_client_wrapper);
-  });
+  }));
 
-  rating_future = std::async(std::launch::async, [&]() {
+  rating_future = std::async(std::launch::async, WrapAsync([&]() {
     auto rating_client_wrapper = _rating_client_pool->Pop();
     if (!rating_client_wrapper) {
       ServiceException se;
@@ -242,7 +244,7 @@ void MovieIdHandler::UploadMovieId(
       throw;
     }
     _rating_client_pool->Push(rating_client_wrapper);
-  });
+  }));
 
   try {
     movie_id_future.get();
@@ -269,6 +271,7 @@ void MovieIdHandler::RegisterMovieId (
   auto span = opentracing::Tracer::Global()->StartSpan(
       "RegisterMovieId",
       { opentracing::ChildOf(parent_span->get()) });
+  auto scope = opentracing::Tracer::Global()->ScopeManager().Activate(span, false);
   opentracing::Tracer::Global()->Inject(span->context(), writer);
 
   mongoc_client_t *mongodb_client = mongoc_client_pool_pop(
