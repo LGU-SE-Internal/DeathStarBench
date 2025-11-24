@@ -33,6 +33,9 @@ local function urlEncode(s)
   return string.gsub(s, " ", "+")
 end
 
+-- Initialize URL from wrk configuration or use default
+local url = "http://localhost:8080"
+
 -- Compose a new review (write operation)
 local function compose_review()
   local username = usernames[math.random(1, #usernames)]
@@ -43,7 +46,7 @@ local function compose_review()
   
   local title = "Movie " .. tostring(math.random(0, 99))
   
-  local path = url .. "/wrk2-api/review/compose"
+  local path = "/wrk2-api/review/compose"
   local method = "POST"
   local headers = {}
   local body = "username=" .. username .. "&password=" .. password .. "&title=" ..
@@ -64,7 +67,7 @@ local function read_movie_page()
   local method = "GET"
   local headers = {}
   headers["Content-Type"] = "application/x-www-form-urlencoded"
-  local path = url .. "/wrk2-api/movie/read-page?" .. args
+  local path = "/wrk2-api/movie/read-page?" .. args
   return wrk.format(method, path, headers, nil)
 end
 
@@ -76,7 +79,7 @@ local function read_movie_info()
   local method = "GET"
   local headers = {}
   headers["Content-Type"] = "application/x-www-form-urlencoded"
-  local path = url .. "/wrk2-api/movie/read-info?" .. args
+  local path = "/wrk2-api/movie/read-info?" .. args
   return wrk.format(method, path, headers, nil)
 end
 

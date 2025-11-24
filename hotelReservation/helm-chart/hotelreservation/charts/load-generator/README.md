@@ -10,8 +10,6 @@ This Helm chart deploys a load generator for the Hotel Reservation microservices
 
 ## Building the Load Generator Image
 
-## Building the Load Generator Image
-
 The Dockerfile builds a modified wrk2 with native continuous mode support (duration=0 for infinite running).
 
 ```bash

@@ -151,6 +151,7 @@ request = function()
     local compose_post_ratio       = 0.10
     local follow_ratio             = 0.10
     local unfollow_ratio           = 0.05
+    -- Total ratios: 0.50 + 0.25 + 0.10 + 0.10 + 0.05 = 1.00
 
     local coin = math.random()
     if coin < read_home_timeline_ratio then
