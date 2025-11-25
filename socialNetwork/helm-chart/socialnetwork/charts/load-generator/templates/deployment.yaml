@@ -1,0 +1,48 @@
+{{- if .Values.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.name }}
+  labels:
+    app: {{ .Values.name }}
+spec:
+  replicas: {{ .Values.global.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name }}
+    spec:
+      containers:
+      - name: {{ .Values.container.name }}
+        image: {{ .Values.container.image }}:{{ .Values.container.imageVersion }}
+        imagePullPolicy: {{ .Values.container.imagePullPolicy | default .Values.global.imagePullPolicy }}
+        {{- if .Values.loadTest.enabled }}
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Waiting for nginx-thrift service to be ready..."
+          until nc -z {{ .Values.loadTest.targetHost }} {{ .Values.loadTest.targetPort }}; do
+            echo "Waiting for nginx-thrift..."
+            sleep 5
+          done
+          echo "Nginx-thrift is ready. Starting load test..."
+          wrk {{ .Values.loadTest.additionalArgs }} \
+            -t {{ .Values.loadTest.threads }} \
+            -c {{ .Values.loadTest.connections }} \
+            -d {{ .Values.loadTest.duration }} \
+            -s /social-network-microservices/wrk2/scripts/social-network/{{ .Values.loadTest.script }} \
+            {{ .Values.loadTest.targetUrl }}{{ .Values.loadTest.endpoint }} \
+            -R {{ .Values.loadTest.rate }}
+        {{- else }}
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Load test disabled. Sleeping..."
+          sleep infinity
+        {{- end }}
+{{- end }}

@@ -1,0 +1,37 @@
+name: load-generator
+
+global:
+  replicas: 1
+  imagePullPolicy: "IfNotPresent"
+
+container:
+  name: load-generator
+  image: 10.10.10.240/library/socialnetwork-loader
+  imageVersion: "latest"
+
+# Load test configuration
+loadTest:
+  enabled: true
+  # Target service (nginx-thrift service)
+  targetUrl: "http://nginx-thrift:8080"
+  targetHost: "nginx-thrift"
+  targetPort: 8080
+  # Workload script to use
+  # Options: compose-post.lua, read-home-timeline.lua, read-user-timeline.lua, mixed-workload.lua
+  script: "mixed-workload.lua"
+  # Endpoint path (not used for mixed-workload.lua, script handles endpoints internally)
+  endpoint: "/wrk2-api/post/compose"
+  # Number of threads
+  threads: 2
+  # Number of connections
+  connections: 2
+  # Duration of the test (e.g., 30s, 5m, 1h, or "0" for infinite mode)
+  # Set to "0" to trigger infinite mode (as implemented in modified wrk2)
+  duration: "0"
+  # Requests per second
+  rate: 10
+  # Additional wrk2 arguments
+  additionalArgs: "-D exp -L"
+
+# Whether to enable the load generator
+enabled: true

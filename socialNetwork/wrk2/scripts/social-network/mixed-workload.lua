@@ -108,18 +108,61 @@ local function read_home_timeline()
     return wrk.format(method, path, headers, nil)
   end
 
+local function follow_user()
+  local user_id = tostring(math.random(0, max_user_index - 1))
+  local followee_id
+  while (true) do
+    followee_id = tostring(math.random(0, max_user_index - 1))
+    if user_id ~= followee_id then
+      break
+    end
+  end
+
+  local method = "POST"
+  local path = "http://localhost:8080/wrk2-api/user/follow"
+  local headers = {}
+  headers["Content-Type"] = "application/x-www-form-urlencoded"
+  local body = "user_id=" .. user_id .. "&followee_id=" .. followee_id
+  return wrk.format(method, path, headers, body)
+end
+
+local function unfollow_user()
+  local user_id = tostring(math.random(0, max_user_index - 1))
+  local followee_id
+  while (true) do
+    followee_id = tostring(math.random(0, max_user_index - 1))
+    if user_id ~= followee_id then
+      break
+    end
+  end
+
+  local method = "POST"
+  local path = "http://localhost:8080/wrk2-api/user/unfollow"
+  local headers = {}
+  headers["Content-Type"] = "application/x-www-form-urlencoded"
+  local body = "user_id=" .. user_id .. "&followee_id=" .. followee_id
+  return wrk.format(method, path, headers, body)
+end
+
 request = function()
     cur_time = math.floor(socket.gettime())
-    local read_home_timeline_ratio = 0.60
-    local read_user_timeline_ratio = 0.30
+    local read_home_timeline_ratio = 0.50
+    local read_user_timeline_ratio = 0.25
     local compose_post_ratio       = 0.10
+    local follow_ratio             = 0.10
+    local unfollow_ratio           = 0.05
+    -- Total ratios: 0.50 + 0.25 + 0.10 + 0.10 + 0.05 = 1.00
 
     local coin = math.random()
     if coin < read_home_timeline_ratio then
       return read_home_timeline()
     elseif coin < read_home_timeline_ratio + read_user_timeline_ratio then
       return read_user_timeline()
-    else
+    elseif coin < read_home_timeline_ratio + read_user_timeline_ratio + compose_post_ratio then
       return compose_post()
+    elseif coin < read_home_timeline_ratio + read_user_timeline_ratio + compose_post_ratio + follow_ratio then
+      return follow_user()
+    else
+      return unfollow_user()
     end
   end

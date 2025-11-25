@@ -166,7 +166,13 @@ int main(int argc, char **argv) {
             exit(1);
         }
 
-        uint64_t stop_at = time_us() + (cfg.duration * 1000000); // check timeout
+        uint64_t stop_at;
+        if (cfg.duration == 0) {
+            // Duration is 0, run infinitely
+            stop_at = UINT64_MAX;
+        } else {
+            stop_at = time_us() + (cfg.duration * 1000000); // check timeout
+        }
 
         for (uint64_t id_thread = 0; id_thread < cfg.threads; id_thread++) {
             uint64_t i = id_url * cfg.threads + id_thread;
