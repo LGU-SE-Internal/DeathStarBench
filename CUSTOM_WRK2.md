@@ -42,10 +42,20 @@ The wrk2 source code in this repository has been modified to support infinite du
 
 ### Changes Made to wrk2
 
-In `wrk2/src/wrk.c`, the duration handling has been modified:
+In `wrk2/src/wrk.c`, the following modifications have been made:
 
+1. **Argument validation (line ~966)** - Allow duration=0 to pass validation:
 ```c
-// Original code (line ~169):
+// Original:
+if (optind == argc || !cfg->threads || !cfg->duration) return -1;
+
+// Modified to allow duration=0:
+if (optind == argc || !cfg->threads) return -1;
+```
+
+2. **Duration handling (line ~169)** - Handle duration=0 as infinite:
+```c
+// Original code:
 uint64_t stop_at = time_us() + (cfg.duration * 1000000);
 
 // Modified to:
