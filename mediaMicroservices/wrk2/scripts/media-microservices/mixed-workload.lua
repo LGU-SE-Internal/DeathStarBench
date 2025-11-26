@@ -33,8 +33,15 @@ local function urlEncode(s)
   return string.gsub(s, " ", "+")
 end
 
--- Initialize URL from wrk configuration or use default
-local url = "http://localhost:8080"
+-- Build URL from wrk's command line parameters
+local function get_url()
+  local scheme = wrk.scheme or "http"
+  local host = wrk.host or "localhost"
+  local port = wrk.port or "8080"
+  return scheme .. "://" .. host .. ":" .. port
+end
+
+local url = get_url()
 
 -- Compose a new review (write operation)
 local function compose_review()
