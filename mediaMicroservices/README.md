@@ -72,6 +72,8 @@ cd ../mediaMicroservices
 #### Compose reviews
 ```bash
 ../wrk2/wrk -D exp -t <num-threads> -c <num-conns> -d <duration> -L -s ./wrk2/scripts/media-microservices/compose-review.lua http://localhost:8080/wrk2-api/review/compose -R <reqs-per-sec>
+
+../wrk2/wrk -D exp -t 10 -c 10 -d 30s -L -s ./wrk2/scripts/media-microservices/compose-review.lua http://localhost:8080/wrk2-api/review/compose -R 10
 ```
 
 #### View Jaeger traces
