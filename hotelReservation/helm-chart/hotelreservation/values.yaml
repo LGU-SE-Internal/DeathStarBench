@@ -7,7 +7,7 @@ global:
   restartPolicy: Always
   serviceType: ClusterIP
   dockerRegistry: 10.10.10.240/library
-  defaultImageVersion: 49426e1
+  defaultImageVersion: "0bf404"
   serviceDnsDomain: "cluster.local"
   services:
     environments:
