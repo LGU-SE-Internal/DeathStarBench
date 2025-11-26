@@ -35,9 +35,9 @@ spec:
             -t {{ .Values.loadTest.threads }} \
             -c {{ .Values.loadTest.connections }} \
             -d {{ .Values.loadTest.duration }} \
+            -R {{ .Values.loadTest.rate }} \
             -s /hotel-reservation/wrk2/scripts/hotel-reservation/{{ .Values.loadTest.script }} \
-            http://{{ $frontendServiceName }}:{{ .Values.loadTest.targetPort }} \
-            -R {{ .Values.loadTest.rate }}
+            http://{{ $frontendServiceName }}:{{ .Values.loadTest.targetPort }}
         {{- else }}
         command:
         - /bin/sh

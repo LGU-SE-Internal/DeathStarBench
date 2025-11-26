@@ -34,9 +34,9 @@ spec:
             -t {{ .Values.loadTest.threads }} \
             -c {{ .Values.loadTest.connections }} \
             -d {{ .Values.loadTest.duration }} \
+            -R {{ .Values.loadTest.rate }} \
             -s /social-network-microservices/wrk2/scripts/social-network/{{ .Values.loadTest.script }} \
-            {{ .Values.loadTest.targetUrl }}{{ .Values.loadTest.endpoint }} \
-            -R {{ .Values.loadTest.rate }}
+            {{ .Values.loadTest.targetUrl }}{{ .Values.loadTest.endpoint }}
         {{- else }}
         command:
         - /bin/sh
