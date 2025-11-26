@@ -1,4 +1,4 @@
-FROM ubuntu:20.04 AS builder
+FROM ubuntu:22.04 AS builder
 
 # Install build dependencies
 RUN apt-get update && \
@@ -18,15 +18,16 @@ RUN cd /hotel-reservation/wrk2 \
     && make -j$(nproc) \
     && make install
 
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 # Install system dependencies
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
         ca-certificates \
         libsasl2-2 \
+        libssl3 \
         lua-socket \
-        netcat \
+        netcat-openbsd \
         openssl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
