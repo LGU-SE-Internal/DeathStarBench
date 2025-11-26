@@ -1,4 +1,5 @@
 {{- if .Values.enabled }}
+{{- $frontendServiceName := printf "%s-%s" .Values.loadTest.targetServicePrefix (include "hotel-reservation.fullname" .) }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -25,7 +26,7 @@ spec:
         - -c
         - |
           echo "Waiting for frontend service to be ready..."
-          until nc -z {{ .Values.loadTest.targetHost }} {{ .Values.loadTest.targetPort }}; do
+          until nc -z {{ $frontendServiceName }} {{ .Values.loadTest.targetPort }}; do
             echo "Waiting for frontend..."
             sleep 5
           done
@@ -35,7 +36,7 @@ spec:
             -c {{ .Values.loadTest.connections }} \
             -d {{ .Values.loadTest.duration }} \
             -s /hotel-reservation/wrk2/scripts/hotel-reservation/{{ .Values.loadTest.script }} \
-            {{ .Values.loadTest.targetUrl }} \
+            http://{{ $frontendServiceName }}:{{ .Values.loadTest.targetPort }} \
             -R {{ .Values.loadTest.rate }}
         {{- else }}
         command:
