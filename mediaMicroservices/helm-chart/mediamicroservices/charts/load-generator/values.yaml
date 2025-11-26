@@ -9,6 +9,15 @@ container:
   image: 10.10.10.240/library/mediamicroservices-loader
   imageVersion: "0bf404"
 
+# Init container configuration
+initContainer:
+  # Wait for data-init-job to complete before starting load generator
+  enabled: true
+  # Name of the data init job to wait for
+  dataInitJobName: "data-init-job"
+  # kubectl image for checking job status
+  kubectlImage: "bitnami/kubectl:1.28"
+
 # Load test configuration
 loadTest:
   enabled: true

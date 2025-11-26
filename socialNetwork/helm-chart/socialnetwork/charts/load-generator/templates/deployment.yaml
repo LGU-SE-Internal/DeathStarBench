@@ -15,6 +15,33 @@ spec:
       labels:
         app: {{ .Values.name }}
     spec:
+      {{- if .Values.initContainer.enabled }}
+      initContainers:
+      # Wait for data-init-job to complete before starting the load generator
+      - name: wait-for-data-init
+        image: {{ .Values.initContainer.kubectlImage }}
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Waiting for {{ .Values.initContainer.dataInitJobName }} to complete..."
+          while true; do
+            # Check if job exists and is complete
+            JOB_STATUS=$(kubectl get job {{ .Values.initContainer.dataInitJobName }} -o jsonpath='{.status.conditions[?(@.type=="Complete")].status}' 2>/dev/null || echo "")
+            if [ "$JOB_STATUS" = "True" ]; then
+              echo "Data init job completed successfully!"
+              break
+            fi
+            # Also check if the job failed
+            JOB_FAILED=$(kubectl get job {{ .Values.initContainer.dataInitJobName }} -o jsonpath='{.status.conditions[?(@.type=="Failed")].status}' 2>/dev/null || echo "")
+            if [ "$JOB_FAILED" = "True" ]; then
+              echo "Warning: Data init job failed. Starting load test anyway..."
+              break
+            fi
+            echo "Data init job not ready yet, waiting..."
+            sleep 10
+          done
+      {{- end }}
       containers:
       - name: {{ .Values.container.name }}
         image: {{ .Values.container.image }}:{{ .Values.container.imageVersion }}
