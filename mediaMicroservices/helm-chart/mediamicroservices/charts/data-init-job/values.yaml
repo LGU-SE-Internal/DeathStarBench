@@ -20,4 +20,4 @@ job:
 serverAddress: "http://nginx-web-server.{{ .Release.Namespace }}.svc.cluster.local:8080"
 
 # Enable or disable the data initialization job
-enabled: true
+enabled: false

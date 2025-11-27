@@ -1,3 +1,14 @@
+# not covered
+
+## media microservices
+cast info
+
+movie info
+
+page 
+
+plot
+
 # wrk2 with Native Continuous Mode
 
 docker build -f hotelReservation/Dockerfile-loader -t 10.10.10.240/library/hotelreservation-loader:60283c4 .
