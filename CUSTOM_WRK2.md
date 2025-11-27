@@ -1,38 +1,38 @@
 # wrk2 with Native Continuous Mode
 
-docker build -f hotelReservation/Dockerfile-loader -t 10.10.10.240/library/hotelreservation-loader:0bf404 .
-docker build -f mediaMicroservices/Dockerfile-loader -t 10.10.10.240/library/mediamicroservices-loader:0bf404 .
-docker build -f socialNetwork/Dockerfile-loader -t 10.10.10.240/library/socialnetwork-loader:0bf404 .
+docker build -f hotelReservation/Dockerfile-loader -t 10.10.10.240/library/hotelreservation-loader:60283c4 .
+docker build -f mediaMicroservices/Dockerfile-loader -t 10.10.10.240/library/mediamicroservices-loader:60283c4 .
+docker build -f socialNetwork/Dockerfile-loader -t 10.10.10.240/library/socialnetwork-loader:60283c4 .
 
-docker push 10.10.10.240/library/hotelreservation-loader:0bf404
-docker push 10.10.10.240/library/mediamicroservices-loader:0bf404
-docker push 10.10.10.240/library/socialnetwork-loader:0bf404
+docker push 10.10.10.240/library/hotelreservation-loader:60283c4
+docker push 10.10.10.240/library/mediamicroservices-loader:60283c4
+docker push 10.10.10.240/library/socialnetwork-loader:60283c4
 
-cd hotelReservation && docker build -t 10.10.10.240/library/hotelreservation:0bf404 .
+cd hotelReservation && docker build -t 10.10.10.240/library/hotelreservation:60283c4 .
 
-docker push 10.10.10.240/library/hotelreservation:0bf404
-
-
-cd ../mediaMicroservices && docker build -t  10.10.10.240/library/media-microservices:0bf404 .
-
-docker push 10.10.10.240/library/media-microservices:0bf404
-
-cd nginx-web-server && docker build -t 10.10.10.240/library/media-nginx:0bf404 .
-
-docker push 10.10.10.240/library/media-nginx:0bf404
+docker push 10.10.10.240/library/hotelreservation:60283c4
 
 
-cd ../../socialNetwork && docker build -t 10.10.10.240/library/social-network-microservices:0bf404 .
+cd ../mediaMicroservices && docker build -t  10.10.10.240/library/media-microservices:60283c4 .
 
-docker push 10.10.10.240/library/social-network-microservices:0bf404
+docker push 10.10.10.240/library/media-microservices:60283c4
 
-cd nginx-web-server && docker build -t 10.10.10.240/library/sn-openresty-thrift:0bf404 .
+cd nginx-web-server && docker build -t 10.10.10.240/library/media-nginx:60283c4 .
 
-docker push 10.10.10.240/library/sn-openresty-thrift:0bf404
+docker push 10.10.10.240/library/media-nginx:60283c4
 
-cd ../media-frontend && docker build -t 10.10.10.240/library/media-frontend:0bf404 .
 
-docker push 10.10.10.240/library/media-frontend:0bf404
+cd ../../socialNetwork && docker build -t 10.10.10.240/library/social-network-microservices:60283c4 .
+
+docker push 10.10.10.240/library/social-network-microservices:60283c4
+
+cd nginx-web-server && docker build -t 10.10.10.240/library/sn-openresty-thrift:60283c4 .
+
+docker push 10.10.10.240/library/sn-openresty-thrift:60283c4
+
+cd ../media-frontend && docker build -t 10.10.10.240/library/media-frontend:60283c4 .
+
+docker push 10.10.10.240/library/media-frontend:60283c4
 
 This repository includes a modified version of wrk2 that supports native continuous/infinite mode.
 

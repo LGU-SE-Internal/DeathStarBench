@@ -7,7 +7,7 @@ global:
 container:
   name: load-generator
   image: 10.10.10.240/library/mediamicroservices-loader
-  imageVersion: "0bf404"
+  imageVersion: "60283c4"
 
 # Init container configuration
 initContainer:
@@ -16,7 +16,7 @@ initContainer:
   # Name of the data init job to wait for
   dataInitJobName: "data-init-job"
   # kubectl image for checking job status
-  kubectlImage: "bitnami/kubectl:1.28"
+  kubectlImage: "bitnami/kubectl:latest"
 
 # Load test configuration
 loadTest:
