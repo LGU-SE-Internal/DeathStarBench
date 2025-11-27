@@ -17,30 +17,68 @@ spec:
     spec:
       {{- if .Values.initContainer.enabled }}
       initContainers:
-      # Wait for data-init-job to complete before starting the load generator
-      - name: wait-for-data-init
-        image: {{ .Values.initContainer.kubectlImage }}
+      # Wait for nginx-web-server to be ready
+      - name: wait-for-nginx
+        image: busybox:1.36
+        command: ['sh', '-c', 'until nc -z {{ .Values.loadTest.targetHost }} {{ .Values.loadTest.targetPort }}; do echo waiting for {{ .Values.loadTest.targetHost }}; sleep 5; done;']
+      # Fetch datasets from repository
+      - name: fetch-datasets
+        image: alpine/git:latest
         command:
         - /bin/sh
         - -c
         - |
-          echo "Waiting for {{ .Values.initContainer.dataInitJobName }} to complete..."
-          while true; do
-            # Check if job exists and is complete
-            JOB_STATUS=$(kubectl get job {{ .Values.initContainer.dataInitJobName }} -o jsonpath='{.status.conditions[?(@.type=="Complete")].status}' 2>/dev/null || echo "")
-            if [ "$JOB_STATUS" = "True" ]; then
-              echo "Data init job completed successfully!"
-              break
-            fi
-            # Also check if the job failed
-            JOB_FAILED=$(kubectl get job {{ .Values.initContainer.dataInitJobName }} -o jsonpath='{.status.conditions[?(@.type=="Failed")].status}' 2>/dev/null || echo "")
-            if [ "$JOB_FAILED" = "True" ]; then
-              echo "Warning: Data init job failed. Starting load test anyway..."
-              break
-            fi
-            echo "Data init job not ready yet, waiting..."
-            sleep 10
+          echo "Cloning DeathStarBench repository to get datasets..."
+          git clone --depth 1 https://github.com/LGU-SE-Internal/DeathStarBench.git /tmp/repo
+          echo "Copying datasets..."
+          cp -r /tmp/repo/mediaMicroservices/datasets /data/
+          cp /tmp/repo/mediaMicroservices/scripts/write_movie_info.py /data/
+          echo "Datasets fetched successfully!"
+          ls -lh /data/datasets/tmdb/
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
+      # Initialize data (movies, casts, users)
+      - name: data-init
+        image: {{ .Values.initContainer.image }}:{{ .Values.initContainer.imageVersion }}
+        command:
+        - /bin/sh
+        - -c
+        - |
+          echo "Installing required packages..."
+          apt-get update && apt-get install -y curl
+          pip install --no-cache-dir aiohttp
+          
+          echo "Waiting for services to be ready..."
+          sleep 15
+          
+          echo "Starting data initialization..."
+          cd /data
+          
+          echo "Writing movie information..."
+          python3 write_movie_info.py \
+            -c /data/datasets/tmdb/casts.json \
+            -m /data/datasets/tmdb/movies.json \
+            --server_address {{ .Values.initContainer.serverAddress }}
+          
+          echo "Registering users..."
+          # Register users in parallel batches for faster execution
+          for batch_start in $(seq 1 20 1000); do
+            batch_end=$((batch_start + 19))
+            for i in $(seq $batch_start $batch_end); do
+              curl -s -X POST \
+                -d "first_name=first_name_$i&last_name=last_name_$i&username=username_$i&password=password_$i" \
+                {{ .Values.initContainer.serverAddress }}/wrk2-api/user/register &
+            done
+            # Wait for current batch to complete before starting next batch
+            wait
+            echo "Registered users $batch_start to $batch_end"
           done
+          
+          echo "Data initialization completed successfully!"
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
       {{- end }}
       containers:
       - name: {{ .Values.container.name }}
@@ -51,12 +89,7 @@ spec:
         - /bin/sh
         - -c
         - |
-          echo "Waiting for nginx-web-server service to be ready..."
-          until nc -z {{ .Values.loadTest.targetHost }} {{ .Values.loadTest.targetPort }}; do
-            echo "Waiting for nginx-web-server..."
-            sleep 5
-          done
-          echo "Nginx-web-server is ready. Starting load test..."
+          echo "Starting load test..."
           wrk {{ .Values.loadTest.additionalArgs }} \
             -t {{ .Values.loadTest.threads }} \
             -c {{ .Values.loadTest.connections }} \
@@ -72,4 +105,7 @@ spec:
           echo "Load test disabled. Sleeping..."
           sleep infinity
         {{- end }}
+      volumes:
+      - name: data-volume
+        emptyDir: {}
 {{- end }}

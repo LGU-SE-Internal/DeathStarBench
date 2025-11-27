@@ -9,14 +9,21 @@ container:
   image: 10.10.10.240/library/socialnetwork-loader
   imageVersion: "0bf404"
 
-# Init container configuration
+# Init container configuration for data initialization
 initContainer:
-  # Wait for data-init-job to complete before starting load generator
+  # Enable data initialization before starting load generator
   enabled: true
-  # Name of the data init job to wait for
-  dataInitJobName: "data-init-job"
-  # kubectl image for checking job status
-  kubectlImage: "bitnami/kubectl:1.28"
+  # Python image for running data init scripts
+  image: "python"
+  imageVersion: "3.9-slim"
+  # Server address and port for API calls (nginx service)
+  serverAddress: "nginx-thrift"
+  serverPort: "8080"
+  # Social graph to use for initialization
+  # Options: socfb-Reed98 (default), ego-twitter, soc-twitter-follows-mun
+  graphName: "socfb-Reed98"
+  # Whether to compose posts after creating users and follows
+  composePosts: false
 
 # Load test configuration
 loadTest:

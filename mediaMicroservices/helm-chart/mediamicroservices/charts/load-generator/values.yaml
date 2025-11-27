@@ -9,14 +9,15 @@ container:
   image: 10.10.10.240/library/mediamicroservices-loader
   imageVersion: "60283c4"
 
-# Init container configuration
+# Init container configuration for data initialization
 initContainer:
-  # Wait for data-init-job to complete before starting load generator
+  # Enable data initialization before starting load generator
   enabled: true
-  # Name of the data init job to wait for
-  dataInitJobName: "data-init-job"
-  # kubectl image for checking job status
-  kubectlImage: "bitnami/kubectl:latest"
+  # Python image for running data init scripts
+  image: "python"
+  imageVersion: "3.9-slim"
+  # Server address for API calls (nginx service)
+  serverAddress: "http://nginx-web-server:8080"
 
 # Load test configuration
 loadTest:

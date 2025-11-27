@@ -17,30 +17,54 @@ spec:
     spec:
       {{- if .Values.initContainer.enabled }}
       initContainers:
-      # Wait for data-init-job to complete before starting the load generator
-      - name: wait-for-data-init
-        image: {{ .Values.initContainer.kubectlImage }}
+      # Wait for nginx-thrift to be ready
+      - name: wait-for-nginx
+        image: busybox:1.36
+        command: ['sh', '-c', 'until nc -z {{ .Values.loadTest.targetHost }} {{ .Values.loadTest.targetPort }}; do echo waiting for {{ .Values.loadTest.targetHost }}; sleep 5; done;']
+      # Fetch datasets from repository
+      - name: fetch-datasets
+        image: alpine/git:latest
         command:
         - /bin/sh
         - -c
         - |
-          echo "Waiting for {{ .Values.initContainer.dataInitJobName }} to complete..."
-          while true; do
-            # Check if job exists and is complete
-            JOB_STATUS=$(kubectl get job {{ .Values.initContainer.dataInitJobName }} -o jsonpath='{.status.conditions[?(@.type=="Complete")].status}' 2>/dev/null || echo "")
-            if [ "$JOB_STATUS" = "True" ]; then
-              echo "Data init job completed successfully!"
-              break
-            fi
-            # Also check if the job failed
-            JOB_FAILED=$(kubectl get job {{ .Values.initContainer.dataInitJobName }} -o jsonpath='{.status.conditions[?(@.type=="Failed")].status}' 2>/dev/null || echo "")
-            if [ "$JOB_FAILED" = "True" ]; then
-              echo "Warning: Data init job failed. Starting load test anyway..."
-              break
-            fi
-            echo "Data init job not ready yet, waiting..."
-            sleep 10
-          done
+          echo "Cloning DeathStarBench repository to get datasets..."
+          cd /data
+          git clone --depth 1 https://github.com/delimitrou/DeathStarBench.git
+          ls -lh /data/DeathStarBench/socialNetwork/datasets/social-graph/
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
+      # Initialize social graph data
+      - name: data-init
+        image: {{ .Values.initContainer.image }}:{{ .Values.initContainer.imageVersion }}
+        command:
+        - /bin/sh
+        - -c
+        - |
+          set -x
+          echo "=== Starting data initialization ==="
+          cd /data/DeathStarBench/socialNetwork
+          echo "=== Installing aiohttp ==="
+          pip install aiohttp
+          
+          echo "=== Verifying files exist ==="
+          ls -la datasets/social-graph/{{ .Values.initContainer.graphName }}/
+          
+          echo "=== Testing nginx connection ==="
+          nc -zv {{ .Values.initContainer.serverAddress }} {{ .Values.initContainer.serverPort }}
+          
+          echo "=== Starting initialization script ==="
+          python3 -u scripts/init_social_graph.py \
+            --ip {{ .Values.initContainer.serverAddress }} \
+            --port {{ .Values.initContainer.serverPort }} \
+            --graph {{ .Values.initContainer.graphName }} \
+            {{ if .Values.initContainer.composePosts }}--compose{{ end }}
+          
+          echo "=== Initialization completed ==="
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
       {{- end }}
       containers:
       - name: {{ .Values.container.name }}
@@ -51,12 +75,7 @@ spec:
         - /bin/sh
         - -c
         - |
-          echo "Waiting for nginx-thrift service to be ready..."
-          until nc -z {{ .Values.loadTest.targetHost }} {{ .Values.loadTest.targetPort }}; do
-            echo "Waiting for nginx-thrift..."
-            sleep 5
-          done
-          echo "Nginx-thrift is ready. Starting load test..."
+          echo "Starting load test..."
           wrk {{ .Values.loadTest.additionalArgs }} \
             -t {{ .Values.loadTest.threads }} \
             -c {{ .Values.loadTest.connections }} \
@@ -72,4 +91,7 @@ spec:
           echo "Load test disabled. Sleeping..."
           sleep infinity
         {{- end }}
+      volumes:
+      - name: data-volume
+        emptyDir: {}
 {{- end }}
