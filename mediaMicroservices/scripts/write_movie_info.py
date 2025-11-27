@@ -304,9 +304,12 @@ if __name__ == '__main__':
   print(f"  Register:    {stats['register_success']} success, {stats['register_failed']} failed")
   print("="*50)
   
-  # Wait for writes to propagate
-  print("\nWaiting 10 seconds for writes to propagate...")
-  time.sleep(10)
+  # Wait for writes to propagate using async sleep
+  async def wait_for_propagation():
+    print("\nWaiting 10 seconds for writes to propagate...")
+    await asyncio.sleep(10)
+  
+  loop.run_until_complete(wait_for_propagation())
   
   # Verify data was written with retry logic
   print("\nVerifying data was written correctly...")
