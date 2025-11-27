@@ -1,38 +1,49 @@
+# not covered
+
+## media microservices
+cast info
+
+movie info
+
+page 
+
+plot
+
 # wrk2 with Native Continuous Mode
 
-docker build -f hotelReservation/Dockerfile-loader -t 10.10.10.240/library/hotelreservation-loader:0bf404 .
-docker build -f mediaMicroservices/Dockerfile-loader -t 10.10.10.240/library/mediamicroservices-loader:0bf404 .
-docker build -f socialNetwork/Dockerfile-loader -t 10.10.10.240/library/socialnetwork-loader:0bf404 .
+docker build -f hotelReservation/Dockerfile-loader -t 10.10.10.240/library/hotelreservation-loader:60283c4 .
+docker build -f mediaMicroservices/Dockerfile-loader -t 10.10.10.240/library/mediamicroservices-loader:60283c4 .
+docker build -f socialNetwork/Dockerfile-loader -t 10.10.10.240/library/socialnetwork-loader:60283c4 .
 
-docker push 10.10.10.240/library/hotelreservation-loader:0bf404
-docker push 10.10.10.240/library/mediamicroservices-loader:0bf404
-docker push 10.10.10.240/library/socialnetwork-loader:0bf404
+docker push 10.10.10.240/library/hotelreservation-loader:60283c4
+docker push 10.10.10.240/library/mediamicroservices-loader:60283c4
+docker push 10.10.10.240/library/socialnetwork-loader:60283c4
 
-cd hotelReservation && docker build -t 10.10.10.240/library/hotelreservation:0bf404 .
+cd hotelReservation && docker build -t 10.10.10.240/library/hotelreservation:60283c4 .
 
-docker push 10.10.10.240/library/hotelreservation:0bf404
-
-
-cd ../mediaMicroservices && docker build -t  10.10.10.240/library/media-microservices:0bf404 .
-
-docker push 10.10.10.240/library/media-microservices:0bf404
-
-cd nginx-web-server && docker build -t 10.10.10.240/library/media-nginx:0bf404 .
-
-docker push 10.10.10.240/library/media-nginx:0bf404
+docker push 10.10.10.240/library/hotelreservation:60283c4
 
 
-cd ../../socialNetwork && docker build -t 10.10.10.240/library/social-network-microservices:0bf404 .
+cd ../mediaMicroservices && docker build -t  10.10.10.240/library/media-microservices:60283c4 .
 
-docker push 10.10.10.240/library/social-network-microservices:0bf404
+docker push 10.10.10.240/library/media-microservices:60283c4
 
-cd nginx-web-server && docker build -t 10.10.10.240/library/sn-openresty-thrift:0bf404 .
+cd nginx-web-server && docker build -t 10.10.10.240/library/media-nginx:60283c4 .
 
-docker push 10.10.10.240/library/sn-openresty-thrift:0bf404
+docker push 10.10.10.240/library/media-nginx:60283c4
 
-cd ../media-frontend && docker build -t 10.10.10.240/library/media-frontend:0bf404 .
 
-docker push 10.10.10.240/library/media-frontend:0bf404
+cd ../../socialNetwork && docker build -t 10.10.10.240/library/social-network-microservices:60283c4 .
+
+docker push 10.10.10.240/library/social-network-microservices:60283c4
+
+cd nginx-web-server && docker build -t 10.10.10.240/library/sn-openresty-thrift:60283c4 .
+
+docker push 10.10.10.240/library/sn-openresty-thrift:60283c4
+
+cd ../media-frontend && docker build -t 10.10.10.240/library/media-frontend:60283c4 .
+
+docker push 10.10.10.240/library/media-frontend:60283c4
 
 This repository includes a modified version of wrk2 that supports native continuous/infinite mode.
 
@@ -42,10 +53,20 @@ The wrk2 source code in this repository has been modified to support infinite du
 
 ### Changes Made to wrk2
 
-In `wrk2/src/wrk.c`, the duration handling has been modified:
+In `wrk2/src/wrk.c`, the following modifications have been made:
 
+1. **Argument validation (line ~966)** - Allow duration=0 to pass validation:
 ```c
-// Original code (line ~169):
+// Original:
+if (optind == argc || !cfg->threads || !cfg->duration) return -1;
+
+// Modified to allow duration=0:
+if (optind == argc || !cfg->threads) return -1;
+```
+
+2. **Duration handling (line ~169)** - Handle duration=0 as infinite:
+```c
+// Original code:
 uint64_t stop_at = time_us() + (cfg.duration * 1000000);
 
 // Modified to:

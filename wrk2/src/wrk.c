@@ -963,7 +963,9 @@ static int parse_args(struct config *cfg, char ***urls, struct http_parser_url *
         }
     }
 
-    if (optind == argc || !cfg->threads || !cfg->duration) return -1;
+    // Allow duration=0 for infinite mode (custom modification)
+    // Original check: if (optind == argc || !cfg->threads || !cfg->duration) return -1;
+    if (optind == argc || !cfg->threads) return -1;
 
     if (!cfg->connections || cfg->connections < cfg->threads) {
         fprintf(stderr, "number of connections must be >= threads\n");

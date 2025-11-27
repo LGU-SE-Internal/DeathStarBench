@@ -13,6 +13,16 @@ local decset = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0'}
 -- load env vars
 local max_user_index = tonumber(os.getenv("max_user_index")) or 962
 
+-- Build URL from wrk's command line parameters
+local function get_url()
+  local scheme = wrk.scheme or "http"
+  local host = wrk.host or "localhost"
+  local port = wrk.port or "8080"
+  return scheme .. "://" .. host .. ":" .. port
+end
+
+local url = get_url()
+
 local function stringRandom(length)
   if length > 0 then
     return stringRandom(length - 1) .. charset[math.random(1, #charset)]
@@ -65,7 +75,7 @@ request = function()
   media_types = media_types:sub(1, #media_types - 1) .. "]"
 
   local method = "POST"
-  local path = "http://localhost:8080/wrk2-api/post/compose"
+  local path = url .. "/wrk2-api/post/compose"
   local headers = {}
   local body
   headers["Content-Type"] = "application/x-www-form-urlencoded"

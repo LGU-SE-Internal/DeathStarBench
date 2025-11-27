@@ -7,14 +7,14 @@ global:
 container:
   name: load-generator
   image: 10.10.10.240/library/hotelreservation-loader
-  imageVersion: "0bf404"
+  imageVersion: "60283c4"
 
 # Load test configuration
 loadTest:
   enabled: true
-  # Target service (frontend service)
-  targetUrl: "http://frontend:5000"
-  targetHost: "frontend"
+  # Target service prefix (will be combined with helm release fullname)
+  # The actual service name will be: frontend-<release-name>-hotelres
+  targetServicePrefix: "frontend"
   targetPort: 5000
   # Workload script to use
   # Options: mixed-workload_type_1.lua, mixed-workload_type_1_with_attractions.lua

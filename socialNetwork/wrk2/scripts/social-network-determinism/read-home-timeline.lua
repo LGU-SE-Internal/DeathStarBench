@@ -8,6 +8,16 @@ local max_user_index = tonumber(os.getenv("max_user_index")) or 962
 local start = tostring(tonumber(os.getenv("start")) or 0)
 local stop = tostring(tonumber(os.getenv("stop")) or 10)
 
+-- Build URL from wrk's command line parameters
+local function get_url()
+  local scheme = wrk.scheme or "http"
+  local host = wrk.host or "localhost"
+  local port = wrk.port or "8080"
+  return scheme .. "://" .. host .. ":" .. port
+end
+
+local url = get_url()
+
 request = function()
   local user_id = tostring(math.random(0, max_user_index - 1))
 
@@ -15,7 +25,7 @@ request = function()
   local method = "GET"
   local headers = {}
   headers["Content-Type"] = "application/x-www-form-urlencoded"
-  local path = "http://localhost:8080/wrk2-api/home-timeline/read?" .. args
+  local path = url .. "/wrk2-api/home-timeline/read?" .. args
   return wrk.format(method, path, headers, nil)
 
 end

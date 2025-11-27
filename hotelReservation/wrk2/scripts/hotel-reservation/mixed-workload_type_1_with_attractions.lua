@@ -2,7 +2,15 @@ local socket = require("socket")
 math.randomseed(socket.gettime()*1000)
 math.random(); math.random(); math.random()
 
-local url = "http://localhost:5000"
+-- Build URL from wrk's command line parameters
+local function get_url()
+  local scheme = wrk.scheme or "http"
+  local host = wrk.host or "localhost"
+  local port = wrk.port or "5000"
+  return scheme .. "://" .. host .. ":" .. port
+end
+
+local url = get_url()
 
 local function get_user()
   local id = math.random(0, 500)

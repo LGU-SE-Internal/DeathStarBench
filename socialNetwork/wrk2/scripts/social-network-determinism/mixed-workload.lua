@@ -24,6 +24,16 @@ local home_stop = tostring(tonumber(os.getenv("home_stop")) or 10)
 local user_start = tostring(tonumber(os.getenv("user_start")) or 0)
 local user_stop = tostring(tonumber(os.getenv("user_stop")) or 10)
 
+-- Build URL from wrk's command line parameters
+local function get_url()
+  local scheme = wrk.scheme or "http"
+  local host = wrk.host or "localhost"
+  local port = wrk.port or "8080"
+  return scheme .. "://" .. host .. ":" .. port
+end
+
+local url = get_url()
+
 local function stringRandom(length)
   if length > 0 then
     return stringRandom(length - 1) .. charset[math.random(1, #charset)]
@@ -73,7 +83,7 @@ local function compose_post()
   media_types = media_types:sub(1, #media_types - 1) .. "]"
 
   local method = "POST"
-  local path = "http://localhost:8080/wrk2-api/post/compose"
+  local path = url .. "/wrk2-api/post/compose"
   local headers = {}
   local body
   headers["Content-Type"] = "application/x-www-form-urlencoded"
@@ -98,7 +108,7 @@ local function read_user_timeline()
   local method = "GET"
   local headers = {}
   headers["Content-Type"] = "application/x-www-form-urlencoded"
-  local path = "http://localhost:8080/wrk2-api/user-timeline/read?" .. args
+  local path = url .. "/wrk2-api/user-timeline/read?" .. args
   return wrk.format(method, path, headers, nil)
 end
 
@@ -111,7 +121,7 @@ local function read_home_timeline()
     local method = "GET"
     local headers = {}
     headers["Content-Type"] = "application/x-www-form-urlencoded"
-    local path = "http://localhost:8080/wrk2-api/home-timeline/read?" .. args
+    local path = url .. "/wrk2-api/home-timeline/read?" .. args
     return wrk.format(method, path, headers, nil)
   end
 

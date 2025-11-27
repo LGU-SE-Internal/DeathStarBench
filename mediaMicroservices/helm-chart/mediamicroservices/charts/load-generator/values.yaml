@@ -7,7 +7,17 @@ global:
 container:
   name: load-generator
   image: 10.10.10.240/library/mediamicroservices-loader
-  imageVersion: "0bf404"
+  imageVersion: "60283c4"
+
+# Init container configuration for data initialization
+initContainer:
+  # Enable data initialization before starting load generator
+  enabled: true
+  # Python image for running data init scripts
+  image: "python"
+  imageVersion: "3.9-slim"
+  # Server address for API calls (nginx service)
+  serverAddress: "http://nginx-web-server:8080"
 
 # Load test configuration
 loadTest:

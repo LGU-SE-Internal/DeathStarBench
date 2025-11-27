@@ -28,4 +28,4 @@ graphName: "socfb-Reed98"
 composePosts: false
 
 # Enable or disable the data initialization job
-enabled: true
+enabled: false
