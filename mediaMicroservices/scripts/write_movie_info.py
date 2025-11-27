@@ -5,24 +5,52 @@ import json
 import argparse
 
 async def upload_cast_info(session, addr, cast):
-  async with session.post(addr + "/wrk2-api/cast-info/write", json=cast) as resp:
-    return await resp.text()
+  try:
+    async with session.post(addr + "/wrk2-api/cast-info/write", json=cast, timeout=aiohttp.ClientTimeout(total=30)) as resp:
+      text = await resp.text()
+      if resp.status != 200:
+        print(f"Warning: cast-info write failed with status {resp.status}: {text[:100]}")
+      return text
+  except Exception as e:
+    print(f"Error uploading cast info: {e}")
+    return None
 
 async def upload_plot(session, addr, plot):
-  async with session.post(addr + "/wrk2-api/plot/write", json=plot) as resp:
-    return await resp.text()
+  try:
+    async with session.post(addr + "/wrk2-api/plot/write", json=plot, timeout=aiohttp.ClientTimeout(total=30)) as resp:
+      text = await resp.text()
+      if resp.status != 200:
+        print(f"Warning: plot write failed with status {resp.status}: {text[:100]}")
+      return text
+  except Exception as e:
+    print(f"Error uploading plot: {e}")
+    return None
 
 async def upload_movie_info(session, addr, movie):
-  async with session.post(addr + "/wrk2-api/movie-info/write", json=movie) as resp:
-    return await resp.text()
+  try:
+    async with session.post(addr + "/wrk2-api/movie-info/write", json=movie, timeout=aiohttp.ClientTimeout(total=30)) as resp:
+      text = await resp.text()
+      if resp.status != 200:
+        print(f"Warning: movie-info write failed with status {resp.status} for movie {movie.get('movie_id')}: {text[:100]}")
+      return text
+  except Exception as e:
+    print(f"Error uploading movie info for {movie.get('movie_id')}: {e}")
+    return None
 
 async def register_movie(session, addr, movie):
   params = {
     "title": movie["title"],
     "movie_id": movie["movie_id"]
   }
-  async with session.post(addr + "/wrk2-api/movie/register", data=params) as resp:
-    return await resp.text()
+  try:
+    async with session.post(addr + "/wrk2-api/movie/register", data=params, timeout=aiohttp.ClientTimeout(total=30)) as resp:
+      text = await resp.text()
+      if resp.status != 200:
+        print(f"Warning: movie register failed with status {resp.status} for movie {movie.get('movie_id')}: {text[:100]}")
+      return text
+  except Exception as e:
+    print(f"Error registering movie {movie.get('movie_id')}: {e}")
+    return None
 
 async def write_cast_info(addr, raw_casts):
   idx = 0
@@ -94,6 +122,25 @@ async def write_movie_info(addr, raw_movies):
       resps = await asyncio.gather(*tasks)
     print(idx, "movies finished")
 
+async def verify_data(addr, movie_ids):
+  """Verify that movies were actually written by reading them back."""
+  import random
+  sample_ids = random.sample(movie_ids, min(5, len(movie_ids)))
+  print(f"Verifying data for sample movie IDs: {sample_ids}")
+  
+  async with aiohttp.ClientSession() as session:
+    for movie_id in sample_ids:
+      try:
+        url = f"{addr}/wrk2-api/movie/read-info?movie_id={movie_id}"
+        async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as resp:
+          text = await resp.text()
+          if resp.status == 200 and "title" in text:
+            print(f"  ✓ Movie {movie_id} verified successfully")
+          else:
+            print(f"  ✗ Movie {movie_id} NOT FOUND (status {resp.status}): {text[:100]}")
+      except Exception as e:
+        print(f"  ✗ Error verifying movie {movie_id}: {e}")
+
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument("-c", "--cast", action="store", dest="cast_filename",
@@ -104,14 +151,31 @@ if __name__ == '__main__':
     type=str, default="http://127.0.0.1:8080")
   args = parser.parse_args()
 
+  print(f"Server address: {args.server_addr}")
+  print(f"Cast file: {args.cast_filename}")
+  print(f"Movie file: {args.movie_filename}")
+
   with open(args.cast_filename, 'r') as cast_file:
     raw_casts = json.load(cast_file)
+  print(f"Loaded {len(raw_casts)} casts")
   loop = asyncio.get_event_loop()
   future = asyncio.ensure_future(write_cast_info(args.server_addr, raw_casts))
   loop.run_until_complete(future)
 
   with open(args.movie_filename, 'r') as movie_file:
     raw_movies = json.load(movie_file)
-    loop = asyncio.get_event_loop()
-    future = asyncio.ensure_future(write_movie_info(args.server_addr, raw_movies))
-    loop.run_until_complete(future)
+  print(f"Loaded {len(raw_movies)} movies")
+  movie_ids = [str(m["id"]) for m in raw_movies]
+  loop = asyncio.get_event_loop()
+  future = asyncio.ensure_future(write_movie_info(args.server_addr, raw_movies))
+  loop.run_until_complete(future)
+  
+  # Wait a moment for writes to propagate
+  import time
+  print("Waiting 5 seconds for writes to propagate...")
+  time.sleep(5)
+  
+  # Verify data was written
+  loop = asyncio.get_event_loop()
+  future = asyncio.ensure_future(verify_data(args.server_addr, movie_ids))
+  loop.run_until_complete(future)
