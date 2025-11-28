@@ -49,9 +49,6 @@ spec:
           apt-get update && apt-get install -y curl
           pip install --no-cache-dir aiohttp
           
-          echo "Waiting for services to be ready..."
-          sleep 15
-          
           echo "Starting data initialization..."
           cd /data
           
@@ -59,7 +56,8 @@ spec:
           python3 write_movie_info.py \
             -c /data/datasets/tmdb/casts.json \
             -m /data/datasets/tmdb/movies.json \
-            --server_address {{ .Values.initContainer.serverAddress }}
+            --server_address {{ .Values.initContainer.serverAddress }} \
+            --wait-timeout {{ .Values.initContainer.waitTimeout | default 60 }}
           
           echo "Registering users..."
           # Register users in parallel batches for faster execution
