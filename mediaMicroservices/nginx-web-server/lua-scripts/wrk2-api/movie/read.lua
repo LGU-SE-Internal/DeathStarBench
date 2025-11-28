@@ -7,11 +7,7 @@ end
 function _M.ReadMoviePage()
   local ngx = ngx
   local req_id = tonumber(string.sub(ngx.var.request_id, 0, 15), 16)
-  local tracer = ngx.var.opentracing_binary_context
   local carrier = {}
-  carrier["ot-tracer-traceid"] = ngx.var.opentracing_context_traceid
-  carrier["ot-tracer-spanid"] = ngx.var.opentracing_context_spanid
-  carrier["ot-tracer-sampled"] = ngx.var.opentracing_context_sampled
   
   local movie_id = ngx.var.arg_movie_id or ""
   local review_start = tonumber(ngx.var.arg_review_start) or 0
@@ -39,11 +35,7 @@ end
 function _M.ReadMovieInfo()
   local ngx = ngx
   local req_id = tonumber(string.sub(ngx.var.request_id, 0, 15), 16)
-  local tracer = ngx.var.opentracing_binary_context
   local carrier = {}
-  carrier["ot-tracer-traceid"] = ngx.var.opentracing_context_traceid
-  carrier["ot-tracer-spanid"] = ngx.var.opentracing_context_spanid
-  carrier["ot-tracer-sampled"] = ngx.var.opentracing_context_sampled
   
   local movie_id = ngx.var.arg_movie_id or ""
   
