@@ -34,6 +34,19 @@ local function _ThriftToTable(obj)
   return result
 end
 
+-- Helper function to get error message from various error types
+local function _GetErrorMessage(err)
+  if err == nil then
+    return "Unknown error"
+  elseif type(err) == "string" then
+    return err
+  elseif type(err) == "table" and err.message then
+    return err.message
+  else
+    return tostring(err)
+  end
+end
+
 function _M.ReadMoviePage()
   local ngx = ngx
   local req_id = tonumber(string.sub(ngx.var.request_id, 0, 15), 16)
@@ -53,9 +66,10 @@ function _M.ReadMoviePage()
   GenericObjectPool:returnConnection(page_client)
   
   if not status then
+    local err_msg = _GetErrorMessage(ret)
     ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
-    ngx.say("Failed to read movie page: " .. ret.message)
-    ngx.log(ngx.ERR, "Failed to read movie page: " .. ret.message)
+    ngx.say("Failed to read movie page: " .. err_msg)
+    ngx.log(ngx.ERR, "ReadMoviePage(): Failed to read movie page: " .. err_msg)
     ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
   else
     ngx.say(require("cjson").encode(_ThriftToTable(ret)))
@@ -79,9 +93,10 @@ function _M.ReadMovieInfo()
   GenericObjectPool:returnConnection(movie_info_client)
   
   if not status then
+    local err_msg = _GetErrorMessage(ret)
     ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
-    ngx.say("Failed to read movie info: " .. ret.message)
-    ngx.log(ngx.ERR, "Failed to read movie info: " .. ret.message)
+    ngx.say("Failed to read movie info: " .. err_msg)
+    ngx.log(ngx.ERR, "ReadMovieInfo(): Failed to read movie info: " .. err_msg)
     ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
   else
     ngx.say(require("cjson").encode(_ThriftToTable(ret)))
