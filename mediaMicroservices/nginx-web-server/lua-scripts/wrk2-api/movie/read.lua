@@ -4,6 +4,35 @@ if (k8s_suffix == nil) then
   k8s_suffix = ""
 end
 
+-- Helper function to convert Thrift objects to plain Lua tables for JSON encoding
+-- Thrift objects have method functions (read, write) that cjson cannot serialize
+local function _ThriftToTable(obj)
+  if type(obj) ~= "table" then
+    return obj
+  end
+  
+  local result = {}
+  for k, v in pairs(obj) do
+    -- Skip functions (like read, write methods from Thrift)
+    if type(v) ~= "function" then
+      if type(v) == "table" then
+        -- Check if it's an array-like table
+        if #v > 0 then
+          result[k] = {}
+          for i, item in ipairs(v) do
+            result[k][i] = _ThriftToTable(item)
+          end
+        else
+          result[k] = _ThriftToTable(v)
+        end
+      else
+        result[k] = v
+      end
+    end
+  end
+  return result
+end
+
 function _M.ReadMoviePage()
   local ngx = ngx
   local req_id = tonumber(string.sub(ngx.var.request_id, 0, 15), 16)
@@ -28,7 +57,7 @@ function _M.ReadMoviePage()
     ngx.log(ngx.ERR, "Failed to read movie page: " .. ret.message)
     ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
   else
-    ngx.say(require("cjson").encode(ret))
+    ngx.say(require("cjson").encode(_ThriftToTable(ret)))
   end
 end
 
@@ -54,7 +83,7 @@ function _M.ReadMovieInfo()
     ngx.log(ngx.ERR, "Failed to read movie info: " .. ret.message)
     ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
   else
-    ngx.say(require("cjson").encode(ret))
+    ngx.say(require("cjson").encode(_ThriftToTable(ret)))
   end
 end
 
