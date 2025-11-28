@@ -119,6 +119,7 @@ async def write_movie_info(addr, raw_movies):
     for raw_movie in raw_movies:
       movie = dict()
       casts = list()
+      seen_cast_info_ids = set()  # Track seen cast_info_ids to avoid duplicates
       movie["movie_id"] = str(raw_movie["id"])
       original_title = raw_movie["title"]
       
@@ -135,10 +136,16 @@ async def write_movie_info(addr, raw_movies):
       movie["plot_id"] = raw_movie["id"]
       for raw_cast in raw_movie["cast"]:
         try:
+          cast_info_id = raw_cast["id"]
+          # Skip duplicate cast_info_ids to avoid "cast_info_ids are duplicated" error in PageService
+          if cast_info_id in seen_cast_info_ids:
+            continue
+          seen_cast_info_ids.add(cast_info_id)
+          
           cast = dict()
           cast["cast_id"] = raw_cast["cast_id"]
           cast["character"] = raw_cast["character"]
-          cast["cast_info_id"] = raw_cast["id"]
+          cast["cast_info_id"] = cast_info_id
           casts.append(cast)
         except:
           print("Warning: cast info missing!")
