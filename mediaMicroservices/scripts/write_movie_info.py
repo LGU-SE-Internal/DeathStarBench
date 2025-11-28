@@ -110,7 +110,7 @@ async def write_cast_info(addr, raw_casts):
       resps = await asyncio.gather(*tasks)
     print(idx, "casts finished")
 
-async def write_movie_info(addr, raw_movies):
+async def write_movie_info(addr, raw_movies, valid_cast_ids):
   idx = 0
   tasks = []
   seen_titles = set()  # Track seen titles to handle duplicates
@@ -119,6 +119,7 @@ async def write_movie_info(addr, raw_movies):
     for raw_movie in raw_movies:
       movie = dict()
       casts = list()
+      seen_cast_info_ids = set()  # Track seen cast_info_ids to avoid duplicates
       movie["movie_id"] = str(raw_movie["id"])
       original_title = raw_movie["title"]
       
@@ -135,10 +136,19 @@ async def write_movie_info(addr, raw_movies):
       movie["plot_id"] = raw_movie["id"]
       for raw_cast in raw_movie["cast"]:
         try:
+          cast_info_id = raw_cast["id"]
+          # Skip duplicate cast_info_ids to avoid "cast_info_ids are duplicated" error in PageService
+          if cast_info_id in seen_cast_info_ids:
+            continue
+          # Skip cast members that don't exist in casts.json to avoid "return set incomplete" error
+          if cast_info_id not in valid_cast_ids:
+            continue
+          seen_cast_info_ids.add(cast_info_id)
+          
           cast = dict()
           cast["cast_id"] = raw_cast["cast_id"]
           cast["character"] = raw_cast["character"]
-          cast["cast_info_id"] = raw_cast["id"]
+          cast["cast_info_id"] = cast_info_id
           casts.append(cast)
         except:
           print("Warning: cast info missing!")
@@ -284,6 +294,8 @@ if __name__ == '__main__':
   with open(args.cast_filename, 'r') as cast_file:
     raw_casts = json.load(cast_file)
   print(f"Loaded {len(raw_casts)} casts")
+  # Build set of valid cast IDs to filter movie casts
+  valid_cast_ids = set(c['id'] for c in raw_casts)
   future = asyncio.ensure_future(write_cast_info(args.server_addr, raw_casts))
   loop.run_until_complete(future)
 
@@ -291,7 +303,7 @@ if __name__ == '__main__':
     raw_movies = json.load(movie_file)
   print(f"Loaded {len(raw_movies)} movies")
   movie_ids = [str(m["id"]) for m in raw_movies]
-  future = asyncio.ensure_future(write_movie_info(args.server_addr, raw_movies))
+  future = asyncio.ensure_future(write_movie_info(args.server_addr, raw_movies, valid_cast_ids))
   loop.run_until_complete(future)
   
   # Print statistics

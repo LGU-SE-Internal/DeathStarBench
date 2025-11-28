@@ -4,14 +4,53 @@ if (k8s_suffix == nil) then
   k8s_suffix = ""
 end
 
+-- Helper function to convert Thrift objects to plain Lua tables for JSON encoding
+-- Thrift objects have method functions (read, write) and userdata that cjson cannot serialize
+local function _ThriftToTable(obj)
+  if type(obj) ~= "table" then
+    return obj
+  end
+  
+  local result = {}
+  for k, v in pairs(obj) do
+    local vtype = type(v)
+    -- Skip functions (like read, write methods from Thrift) and userdata
+    if vtype ~= "function" and vtype ~= "userdata" and vtype ~= "thread" then
+      if vtype == "table" then
+        -- Check if it's an array-like table
+        if #v > 0 then
+          result[k] = {}
+          for i, item in ipairs(v) do
+            result[k][i] = _ThriftToTable(item)
+          end
+        else
+          result[k] = _ThriftToTable(v)
+        end
+      else
+        result[k] = v
+      end
+    end
+  end
+  return result
+end
+
+-- Helper function to get error message from various error types
+local function _GetErrorMessage(err)
+  if err == nil then
+    return "Unknown error"
+  elseif type(err) == "string" then
+    return err
+  elseif type(err) == "table" and err.message then
+    return err.message
+  else
+    return tostring(err)
+  end
+end
+
 function _M.ReadMoviePage()
   local ngx = ngx
   local req_id = tonumber(string.sub(ngx.var.request_id, 0, 15), 16)
-  local tracer = ngx.var.opentracing_binary_context
   local carrier = {}
-  carrier["ot-tracer-traceid"] = ngx.var.opentracing_context_traceid
-  carrier["ot-tracer-spanid"] = ngx.var.opentracing_context_spanid
-  carrier["ot-tracer-sampled"] = ngx.var.opentracing_context_sampled
   
   local movie_id = ngx.var.arg_movie_id or ""
   local review_start = tonumber(ngx.var.arg_review_start) or 0
@@ -27,23 +66,20 @@ function _M.ReadMoviePage()
   GenericObjectPool:returnConnection(page_client)
   
   if not status then
+    local err_msg = _GetErrorMessage(ret)
     ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
-    ngx.say("Failed to read movie page: " .. ret.message)
-    ngx.log(ngx.ERR, "Failed to read movie page: " .. ret.message)
+    ngx.say("Failed to read movie page: " .. err_msg)
+    ngx.log(ngx.ERR, "ReadMoviePage(): Failed to read movie page: " .. err_msg)
     ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
   else
-    ngx.say(require("cjson").encode(ret))
+    ngx.say(require("cjson").encode(_ThriftToTable(ret)))
   end
 end
 
 function _M.ReadMovieInfo()
   local ngx = ngx
   local req_id = tonumber(string.sub(ngx.var.request_id, 0, 15), 16)
-  local tracer = ngx.var.opentracing_binary_context
   local carrier = {}
-  carrier["ot-tracer-traceid"] = ngx.var.opentracing_context_traceid
-  carrier["ot-tracer-spanid"] = ngx.var.opentracing_context_spanid
-  carrier["ot-tracer-sampled"] = ngx.var.opentracing_context_sampled
   
   local movie_id = ngx.var.arg_movie_id or ""
   
@@ -57,12 +93,13 @@ function _M.ReadMovieInfo()
   GenericObjectPool:returnConnection(movie_info_client)
   
   if not status then
+    local err_msg = _GetErrorMessage(ret)
     ngx.status = ngx.HTTP_INTERNAL_SERVER_ERROR
-    ngx.say("Failed to read movie info: " .. ret.message)
-    ngx.log(ngx.ERR, "Failed to read movie info: " .. ret.message)
+    ngx.say("Failed to read movie info: " .. err_msg)
+    ngx.log(ngx.ERR, "ReadMovieInfo(): Failed to read movie info: " .. err_msg)
     ngx.exit(ngx.HTTP_INTERNAL_SERVER_ERROR)
   else
-    ngx.say(require("cjson").encode(ret))
+    ngx.say(require("cjson").encode(_ThriftToTable(ret)))
   end
 end
 

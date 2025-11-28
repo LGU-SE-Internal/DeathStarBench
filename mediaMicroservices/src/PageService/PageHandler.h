@@ -153,8 +153,13 @@ void PageHandler::ReadPage(
   }
   
   std::vector<int64_t> cast_info_ids;
+  std::set<int64_t> cast_info_ids_set;
   for (auto &cast : _return.movie_info.casts) {
-    cast_info_ids.emplace_back(cast.cast_info_id);
+    // Deduplicate cast_info_ids to avoid "cast_info_ids are duplicated" error
+    if (cast_info_ids_set.find(cast.cast_info_id) == cast_info_ids_set.end()) {
+      cast_info_ids_set.insert(cast.cast_info_id);
+      cast_info_ids.emplace_back(cast.cast_info_id);
+    }
   }
 
   cast_info_future = std::async(std::launch::async, [&](){
