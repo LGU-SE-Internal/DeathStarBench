@@ -5,7 +5,7 @@ if (k8s_suffix == nil) then
 end
 
 -- Helper function to convert Thrift objects to plain Lua tables for JSON encoding
--- Thrift objects have method functions (read, write) that cjson cannot serialize
+-- Thrift objects have method functions (read, write) and userdata that cjson cannot serialize
 local function _ThriftToTable(obj)
   if type(obj) ~= "table" then
     return obj
@@ -13,9 +13,10 @@ local function _ThriftToTable(obj)
   
   local result = {}
   for k, v in pairs(obj) do
-    -- Skip functions (like read, write methods from Thrift)
-    if type(v) ~= "function" then
-      if type(v) == "table" then
+    local vtype = type(v)
+    -- Skip functions (like read, write methods from Thrift) and userdata
+    if vtype ~= "function" and vtype ~= "userdata" and vtype ~= "thread" then
+      if vtype == "table" then
         -- Check if it's an array-like table
         if #v > 0 then
           result[k] = {}
