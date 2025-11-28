@@ -110,7 +110,7 @@ async def write_cast_info(addr, raw_casts):
       resps = await asyncio.gather(*tasks)
     print(idx, "casts finished")
 
-async def write_movie_info(addr, raw_movies):
+async def write_movie_info(addr, raw_movies, valid_cast_ids):
   idx = 0
   tasks = []
   seen_titles = set()  # Track seen titles to handle duplicates
@@ -139,6 +139,9 @@ async def write_movie_info(addr, raw_movies):
           cast_info_id = raw_cast["id"]
           # Skip duplicate cast_info_ids to avoid "cast_info_ids are duplicated" error in PageService
           if cast_info_id in seen_cast_info_ids:
+            continue
+          # Skip cast members that don't exist in casts.json to avoid "return set incomplete" error
+          if cast_info_id not in valid_cast_ids:
             continue
           seen_cast_info_ids.add(cast_info_id)
           
@@ -291,6 +294,8 @@ if __name__ == '__main__':
   with open(args.cast_filename, 'r') as cast_file:
     raw_casts = json.load(cast_file)
   print(f"Loaded {len(raw_casts)} casts")
+  # Build set of valid cast IDs to filter movie casts
+  valid_cast_ids = set(c['id'] for c in raw_casts)
   future = asyncio.ensure_future(write_cast_info(args.server_addr, raw_casts))
   loop.run_until_complete(future)
 
@@ -298,7 +303,7 @@ if __name__ == '__main__':
     raw_movies = json.load(movie_file)
   print(f"Loaded {len(raw_movies)} movies")
   movie_ids = [str(m["id"]) for m in raw_movies]
-  future = asyncio.ensure_future(write_movie_info(args.server_addr, raw_movies))
+  future = asyncio.ensure_future(write_movie_info(args.server_addr, raw_movies, valid_cast_ids))
   loop.run_until_complete(future)
   
   # Print statistics
