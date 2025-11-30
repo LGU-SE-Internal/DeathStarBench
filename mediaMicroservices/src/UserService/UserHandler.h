@@ -454,7 +454,8 @@ void UserHandler::UploadUserWithUsername(
       &memcached_flags,
       &memcached_rc);
   id_get_span->End();
-  if (!user_id_mmc && memcached_rc != MEMCACHED_NOTFOUND) {
+  // Handle memcached error - treat SUCCESS with NULL data as cache miss (not an error)
+  if (!user_id_mmc && memcached_rc != MEMCACHED_NOTFOUND && memcached_rc != MEMCACHED_SUCCESS) {
     ServiceException se;
     se.errorCode = ErrorCode::SE_MEMCACHED_ERROR;
     se.message = memcached_strerror(memcached_client, memcached_rc);
@@ -677,7 +678,8 @@ void UserHandler::Login(
       &memcached_flags,
       &memcached_rc);
   pswd_get_span->End();
-  if (!password_mmc && memcached_rc != MEMCACHED_NOTFOUND) {
+  // Handle memcached error - treat SUCCESS with NULL data as cache miss (not an error)
+  if (!password_mmc && memcached_rc != MEMCACHED_NOTFOUND && memcached_rc != MEMCACHED_SUCCESS) {
     ServiceException se;
     se.errorCode = ErrorCode::SE_MEMCACHED_ERROR;
     se.message = memcached_strerror(memcached_client, memcached_rc);
@@ -694,7 +696,8 @@ void UserHandler::Login(
       &memcached_flags,
       &memcached_rc);
   salt_get_span->End();
-  if (!salt_mmc && memcached_rc != MEMCACHED_NOTFOUND) {
+  // Handle memcached error - treat SUCCESS with NULL data as cache miss (not an error)
+  if (!salt_mmc && memcached_rc != MEMCACHED_NOTFOUND && memcached_rc != MEMCACHED_SUCCESS) {
     ServiceException se;
     se.errorCode = ErrorCode::SE_MEMCACHED_ERROR;
     se.message = memcached_strerror(memcached_client, memcached_rc);
@@ -712,7 +715,8 @@ void UserHandler::Login(
       &memcached_flags,
       &memcached_rc);
   id_get_span->End();
-  if (!user_id_mmc && memcached_rc != MEMCACHED_NOTFOUND) {
+  // Handle memcached error - treat SUCCESS with NULL data as cache miss (not an error)
+  if (!user_id_mmc && memcached_rc != MEMCACHED_NOTFOUND && memcached_rc != MEMCACHED_SUCCESS) {
     ServiceException se;
     se.errorCode = ErrorCode::SE_MEMCACHED_ERROR;
     se.message = memcached_strerror(memcached_client, memcached_rc);

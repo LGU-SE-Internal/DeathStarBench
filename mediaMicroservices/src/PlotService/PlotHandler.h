@@ -111,7 +111,8 @@ void PlotHandler::ReadPlot(
       &plot_size,
       &memcached_flags,
       &memcached_rc);
-  if (!plot_mmc && memcached_rc != MEMCACHED_NOTFOUND) {
+  // Handle memcached error - treat SUCCESS with NULL data as cache miss (not an error)
+  if (!plot_mmc && memcached_rc != MEMCACHED_NOTFOUND && memcached_rc != MEMCACHED_SUCCESS) {
     ServiceException se;
     se.errorCode = ErrorCode::SE_MEMCACHED_ERROR;
     se.message = memcached_strerror(memcached_client, memcached_rc);
