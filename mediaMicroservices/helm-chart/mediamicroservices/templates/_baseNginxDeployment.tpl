@@ -11,6 +11,7 @@ spec:
   selector:
     matchLabels:
       service: {{ .Values.name }}
+      app: {{ .Values.name }}
   template:
     metadata:
       labels:
