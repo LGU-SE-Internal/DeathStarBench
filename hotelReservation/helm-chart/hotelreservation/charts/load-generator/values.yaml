@@ -7,7 +7,7 @@ global:
 container:
   name: load-generator
   image: 10.10.10.240/library/hotelreservation-loader
-  imageVersion: "60283c4"
+  imageVersion: "48efa00"
 
 # Load test configuration
 loadTest:
