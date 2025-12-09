@@ -6,7 +6,7 @@ metadata:
     {{- include "hotel-reservation.labels" . | nindent 4 }}
     {{- include "hotel-reservation.backendLabels" . | nindent 4 }}
     service: {{ .Values.name }}-{{ include "hotel-reservation.fullname" . }}
-    app: {{ .Values.name }}-{{ include "hotel-reservation.fullname" . }}
+    app: {{ .Values.name }}
   name: {{ .Values.name }}-{{ include "hotel-reservation.fullname" . }}
 spec:
   replicas: {{ .Values.replicas | default .Values.global.replicas }}
