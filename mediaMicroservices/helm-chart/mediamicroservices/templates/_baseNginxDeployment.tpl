@@ -4,6 +4,7 @@ kind: Deployment
 metadata:
   labels:
     service: {{ .Values.name }}
+    app: {{ .Values.name }}
   name: {{ .Values.name }}
 spec:
   replicas: {{ .Values.replicas | default .Values.global.replicas }}
