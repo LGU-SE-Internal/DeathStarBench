@@ -93,7 +93,10 @@ void MovieInfoHandler::WriteMovieInfo(
 
   auto scope = tracer->WithActiveSpan(span);
 
-  
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "MovieInfoService");
+  span->SetAttribute("rpc.method", "WriteMovieInfo");
 
   // Inject context for downstream services
 
@@ -236,7 +239,10 @@ void MovieInfoHandler::ReadMovieInfo(
 
   auto scope = tracer->WithActiveSpan(span);
 
-  
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "MovieInfoService");
+  span->SetAttribute("rpc.method", "ReadMovieInfo");
 
   // Inject context for downstream services
 
@@ -451,7 +457,10 @@ void MovieInfoHandler::UpdateRating(
 
   auto scope = tracer->WithActiveSpan(span);
 
-  
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "MovieInfoService");
+  span->SetAttribute("rpc.method", "UpdateRating");
 
   // Inject context for downstream services
 

@@ -90,7 +90,10 @@ void MovieIdHandler::UploadMovieId(
 
   auto scope = tracer->WithActiveSpan(span);
 
-  
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "MovieIdService");
+  span->SetAttribute("rpc.method", "UploadMovieId");
 
   // Inject context for downstream services
 
@@ -323,7 +326,10 @@ void MovieIdHandler::RegisterMovieId (
 
   auto scope = tracer->WithActiveSpan(span);
 
-  
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "MovieIdService");
+  span->SetAttribute("rpc.method", "RegisterMovieId");
 
   // Inject context for downstream services
 

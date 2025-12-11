@@ -75,7 +75,10 @@ void ReviewStorageHandler::StoreReview(
 
   auto scope = tracer->WithActiveSpan(span);
 
-  
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "ReviewStorageService");
+  span->SetAttribute("rpc.method", "StoreReview");
 
   // Inject context for downstream services
 
@@ -175,7 +178,10 @@ void ReviewStorageHandler::ReadReviews(
 
   auto scope = tracer->WithActiveSpan(span);
 
-  
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "ReviewStorageService");
+  span->SetAttribute("rpc.method", "ReadReviews");
 
   // Inject context for downstream services
 
