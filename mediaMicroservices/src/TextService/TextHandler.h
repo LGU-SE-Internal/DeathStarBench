@@ -66,7 +66,10 @@ void TextHandler::UploadText(
 
   auto scope = tracer->WithActiveSpan(span);
 
-  
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "TextService");
+  span->SetAttribute("rpc.method", "UploadText");
 
   // Inject context for downstream services
 

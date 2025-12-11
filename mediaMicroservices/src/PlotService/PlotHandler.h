@@ -77,7 +77,10 @@ void PlotHandler::ReadPlot(
 
   auto scope = tracer->WithActiveSpan(span);
 
-  
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "PlotService");
+  span->SetAttribute("rpc.method", "ReadPlot");
 
   // Inject context for downstream services
 
@@ -257,7 +260,10 @@ void PlotHandler::WritePlot(
 
   auto scope = tracer->WithActiveSpan(span);
 
-  
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "PlotService");
+  span->SetAttribute("rpc.method", "WritePlot");
 
   // Inject context for downstream services
 

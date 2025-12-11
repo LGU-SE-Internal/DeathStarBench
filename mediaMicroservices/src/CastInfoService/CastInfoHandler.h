@@ -84,7 +84,10 @@ void CastInfoHandler::WriteCastInfo(
 
   auto scope = tracer->WithActiveSpan(span);
 
-  
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "CastInfoService");
+  span->SetAttribute("rpc.method", "WriteCastInfo");
 
   // Inject context for downstream services
 
@@ -120,6 +123,9 @@ void CastInfoHandler::WriteCastInfo(
 
   bson_error_t error;
   auto insert_span = tracer->StartSpan("MongoInsertCastInfo");
+  // Set span attributes for database operation
+  insert_span->SetAttribute("db.system", "mongodb");
+  insert_span->SetAttribute("db.operation", "insert");
   bool plotinsert = mongoc_collection_insert_one (
       collection, new_doc, nullptr, nullptr, &error);
   insert_span->End();
@@ -180,7 +186,10 @@ void CastInfoHandler::ReadCastInfo(
 
   auto scope = tracer->WithActiveSpan(span);
 
-  
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "CastInfoService");
+  span->SetAttribute("rpc.method", "ReadCastInfo");
 
   // Inject context for downstream services
 
@@ -241,6 +250,9 @@ void CastInfoHandler::ReadCastInfo(
   size_t return_value_length;
   uint32_t flags;
   auto get_span = tracer->StartSpan("MmcMgetCastInfo");
+  // Set span attributes for cache operation
+  get_span->SetAttribute("db.system", "memcached");
+  get_span->SetAttribute("db.operation", "mget");
   while (true) {
     return_value = memcached_fetch(memcached_client, return_key,
         &return_key_length, &return_value_length, &flags, &memcached_rc);
@@ -322,6 +334,9 @@ void CastInfoHandler::ReadCastInfo(
     const bson_t *doc;
 
     auto find_span = tracer->StartSpan("MongoFindCastInfo");
+    // Set span attributes for database operation
+    find_span->SetAttribute("db.system", "mongodb");
+    find_span->SetAttribute("db.operation", "find");
 
     while (true) {
       bool found = mongoc_cursor_next(cursor, &doc);
@@ -372,6 +387,9 @@ void CastInfoHandler::ReadCastInfo(
         throw se;
       }
       auto set_span = tracer->StartSpan("MmcSetCastInfo");
+      // Set span attributes for cache operation
+      set_span->SetAttribute("db.system", "memcached");
+      set_span->SetAttribute("db.operation", "set");
       for (auto & it : cast_info_json_map) {
         std::string id_str = std::to_string(it.first);
         _rc = memcached_set(

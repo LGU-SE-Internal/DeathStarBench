@@ -107,7 +107,10 @@ void UniqueIdHandler::UploadUniqueId(
 
   auto scope = tracer->WithActiveSpan(span);
 
-  
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "UniqueIdService");
+  span->SetAttribute("rpc.method", "UploadUniqueId");
 
   // Inject context for downstream services
 
