@@ -51,6 +51,11 @@ void TextHandler::ComposeText(
   auto span = tracer->StartSpan("compose_text_server");
   auto scope = tracer->WithActiveSpan(span);
 
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "TextService");
+  span->SetAttribute("rpc.method", "ComposeText");
+
   std::vector<std::string> mention_usernames;
   std::smatch m;
   std::regex e("@[a-zA-Z0-9-_]+");

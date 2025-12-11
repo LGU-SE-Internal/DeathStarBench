@@ -100,6 +100,11 @@ void UserTimelineHandler::WriteUserTimeline(
   auto span = tracer->StartSpan("write_user_timeline_server");
   auto scope = tracer->WithActiveSpan(span);
 
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "UserTimelineService");
+  span->SetAttribute("rpc.method", "WriteUserTimeline");
+
   mongoc_client_t *mongodb_client =
       mongoc_client_pool_pop(_mongodb_client_pool);
   if (!mongodb_client) {
@@ -188,6 +193,11 @@ void UserTimelineHandler::ReadUserTimeline(
   std::map<std::string, std::string> writer_text_map;
   
   auto span = tracer->StartSpan("read_user_timeline_server");
+
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "UserTimelineService");
+  span->SetAttribute("rpc.method", "ReadUserTimeline");
 
   if (stop <= start || start < 0) {
     return;
