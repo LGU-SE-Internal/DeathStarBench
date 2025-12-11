@@ -193,6 +193,7 @@ void UserTimelineHandler::ReadUserTimeline(
   std::map<std::string, std::string> writer_text_map;
   
   auto span = tracer->StartSpan("read_user_timeline_server");
+  auto scope = tracer->WithActiveSpan(span);
 
   // Set span attributes following OpenTelemetry semantic conventions
   span->SetAttribute("rpc.system", "thrift");
