@@ -43,20 +43,20 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: status.hostIP
-          {{- range $variable, $value := .environments }}
-          - name: {{ $variable }}
-            value: {{ $value | quote }}
-          {{- end }}
+        {{- range $variable, $value := .environments }}
+        - name: {{ $variable }}
+          value: {{ $value | quote }}
+        {{- end }}
         {{- else if hasKey $.Values.global.services "environments" }}
         env:
         - name: NODE_IP
           valueFrom:
             fieldRef:
               fieldPath: status.hostIP
-          {{- range $variable, $value := $.Values.global.services.environments }}
-          - name: {{ $variable }}
-            value: {{ $value | quote }}
-          {{- end }}
+        {{- range $variable, $value := $.Values.global.services.environments }}
+        - name: {{ $variable }}
+          value: {{ $value | quote }}
+        {{- end }}
         {{- end }}
         {{- if .command}}
         command:
