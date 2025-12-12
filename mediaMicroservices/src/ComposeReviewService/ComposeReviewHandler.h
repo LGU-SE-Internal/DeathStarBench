@@ -288,7 +288,10 @@ void ComposeReviewHandler::UploadMovieId(
 
   auto scope = tracer->WithActiveSpan(span);
 
-  
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "ComposeReviewService");
+  span->SetAttribute("rpc.method", "UploadMovieId");
 
   // Inject context for downstream services
 
@@ -428,7 +431,10 @@ void ComposeReviewHandler::UploadUserId(
 
   auto scope = tracer->WithActiveSpan(span);
 
-  
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "ComposeReviewService");
+  span->SetAttribute("rpc.method", "UploadUserId");
 
   // Inject context for downstream services
 
@@ -570,7 +576,10 @@ void ComposeReviewHandler::UploadUniqueId(
 
   auto scope = tracer->WithActiveSpan(span);
 
-  
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "ComposeReviewService");
+  span->SetAttribute("rpc.method", "UploadUniqueId");
 
   // Inject context for downstream services
 
@@ -714,7 +723,10 @@ void ComposeReviewHandler::UploadText(
 
   auto scope = tracer->WithActiveSpan(span);
 
-  
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "ComposeReviewService");
+  span->SetAttribute("rpc.method", "UploadText");
 
   // Inject context for downstream services
 
@@ -852,7 +864,10 @@ void ComposeReviewHandler::UploadRating(
 
   auto scope = tracer->WithActiveSpan(span);
 
-  
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "ComposeReviewService");
+  span->SetAttribute("rpc.method", "UploadRating");
 
   // Inject context for downstream services
 

@@ -104,7 +104,10 @@ void UrlShortenHandler::ComposeUrls(
 
   auto scope = tracer->WithActiveSpan(span);
 
-  
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "UrlShortenService");
+  span->SetAttribute("rpc.method", "ComposeUrls");
 
   // Inject context for downstream services
 

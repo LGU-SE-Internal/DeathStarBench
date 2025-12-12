@@ -370,6 +370,11 @@ void ComposePostHandler::ComposePost(
   auto tracer = opentelemetry::trace::Provider::GetTracerProvider()->GetTracer("social_network");
   
   auto span = tracer->StartSpan("compose_post_server");
+  auto scope = tracer->WithActiveSpan(span);
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "ComposePostService");
+  span->SetAttribute("rpc.method", "ComposePost");
   std::map<std::string, std::string> writer_text_map;
   
   

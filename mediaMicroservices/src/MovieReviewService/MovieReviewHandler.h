@@ -84,7 +84,10 @@ void MovieReviewHandler::UploadMovieReview(
 
   auto scope = tracer->WithActiveSpan(span);
 
-  
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "MovieReviewService");
+  span->SetAttribute("rpc.method", "UploadMovieReview");
 
   // Inject context for downstream services
 
@@ -262,10 +265,12 @@ void MovieReviewHandler::ReadMovieReviews(
   
   auto scope = tracer->WithActiveSpan(span);
 
-  
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "MovieReviewService");
+  span->SetAttribute("rpc.method", "ReadMovieReviews");
   
 
-  
   // Inject context for downstream services
 
   

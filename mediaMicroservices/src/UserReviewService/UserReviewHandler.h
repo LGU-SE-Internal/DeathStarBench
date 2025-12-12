@@ -84,7 +84,10 @@ void UserReviewHandler::UploadUserReview(
 
   auto scope = tracer->WithActiveSpan(span);
 
-  
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "UserReviewService");
+  span->SetAttribute("rpc.method", "UploadUserReview");
 
   // Inject context for downstream services
 
@@ -248,7 +251,10 @@ void UserReviewHandler::ReadUserReviews(
 
   auto scope = tracer->WithActiveSpan(span);
 
-  
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "UserReviewService");
+  span->SetAttribute("rpc.method", "ReadUserReviews");
 
   // Inject context for downstream services
 

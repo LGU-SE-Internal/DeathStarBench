@@ -151,7 +151,10 @@ void UserHandler::RegisterUserWithId(
 
   auto scope = tracer->WithActiveSpan(span);
 
-  
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "UserService");
+  span->SetAttribute("rpc.method", "RegisterUserWithId");
 
   // Inject context for downstream services
 

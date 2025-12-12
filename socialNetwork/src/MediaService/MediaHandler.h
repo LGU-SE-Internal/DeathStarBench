@@ -41,6 +41,11 @@ void MediaHandler::ComposeMedia(
   auto span = tracer->StartSpan("compose_media_server");
   auto scope = tracer->WithActiveSpan(span);
 
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "MediaService");
+  span->SetAttribute("rpc.method", "ComposeMedia");
+
   if (media_types.size() != media_ids.size()) {
     ServiceException se;
     se.errorCode = ErrorCode::SE_THRIFT_HANDLER_ERROR;

@@ -105,6 +105,11 @@ void HomeTimelineHandler::WriteHomeTimeline(
   auto span = tracer->StartSpan("write_home_timeline_server");
   auto scope = tracer->WithActiveSpan(span);
 
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "HomeTimelineService");
+  span->SetAttribute("rpc.method", "WriteHomeTimeline");
+
   // Find followers of the user
   auto followers_span = tracer->StartSpan("get_followers_client");
   std::map<std::string, std::string> writer_text_map;
@@ -214,6 +219,12 @@ void HomeTimelineHandler::ReadHomeTimeline(
   std::map<std::string, std::string> writer_text_map;
   
   auto span = tracer->StartSpan("read_home_timeline_server");
+  auto scope = tracer->WithActiveSpan(span);
+
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "HomeTimelineService");
+  span->SetAttribute("rpc.method", "ReadHomeTimeline");
 
   if (stop_idx <= start_idx || start_idx < 0) {
     return;

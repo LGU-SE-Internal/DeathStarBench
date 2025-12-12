@@ -72,7 +72,10 @@ void UserMentionHandler::ComposeUserMentions(
 
   auto scope = tracer->WithActiveSpan(span);
 
-  
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "UserMentionService");
+  span->SetAttribute("rpc.method", "ComposeUserMentions");
 
   // Inject context for downstream services
 

@@ -24,7 +24,7 @@ cd hotelReservation && docker build -t 10.10.10.240/library/hotelreservation:602
 docker push 10.10.10.240/library/hotelreservation:60283c4
 
 
-cd ../mediaMicroservices && docker build -t  10.10.10.240/library/media-microservices:fbb2e89 .
+cd ../mediaMicroservices && docker build -t  10.10.10.240/library/media-microservices:778a8df .
 
 docker push 10.10.10.240/library/media-microservices:60283c4
 
@@ -33,7 +33,7 @@ cd nginx-web-server && docker build -t 10.10.10.240/library/media-nginx:60283c4 
 docker push 10.10.10.240/library/media-nginx:60283c4
 
 
-cd ../../socialNetwork && docker build -t 10.10.10.240/library/social-network-microservices:60283c4 .
+cd ../../socialNetwork && docker build -t 10.10.10.240/library/social-network-microservices:778a8df .
 
 docker push 10.10.10.240/library/social-network-microservices:60283c4
 

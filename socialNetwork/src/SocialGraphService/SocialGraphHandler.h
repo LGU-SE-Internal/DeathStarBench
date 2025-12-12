@@ -833,7 +833,10 @@ void SocialGraphHandler::FollowWithUsername(
 
   auto scope = tracer->WithActiveSpan(span);
 
-  
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "SocialGraphService");
+  span->SetAttribute("rpc.method", "FollowWithUsername");
 
   // Inject context for downstream services
 
@@ -939,7 +942,10 @@ void SocialGraphHandler::UnfollowWithUsername(
 
   auto scope = tracer->WithActiveSpan(span);
 
-  
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "SocialGraphService");
+  span->SetAttribute("rpc.method", "UnfollowWithUsername");
 
   // Inject context for downstream services
 

@@ -70,6 +70,11 @@ int64_t UniqueIdHandler::ComposeUniqueId(
   auto span = tracer->StartSpan("compose_unique_id_server");
   auto scope = tracer->WithActiveSpan(span);
 
+  // Set span attributes following OpenTelemetry semantic conventions
+  span->SetAttribute("rpc.system", "thrift");
+  span->SetAttribute("rpc.service", "UniqueIdService");
+  span->SetAttribute("rpc.method", "ComposeUniqueId");
+
   _thread_lock->lock();
   int64_t timestamp =
       duration_cast<milliseconds>(system_clock::now().time_since_epoch())
