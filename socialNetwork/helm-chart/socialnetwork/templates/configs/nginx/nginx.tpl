@@ -24,7 +24,7 @@ http {
   otel_exporter {
     endpoint {{ .Values.global.otel.endpoint | replace ":4318" ":4317" }};
   }
-  otel_service_name nginx-web-server;
+  otel_service_name nginx-thrift;
   otel_trace on;
   otel_trace_context propagate;
 

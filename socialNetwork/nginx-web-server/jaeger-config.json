@@ -1,5 +1,5 @@
 {
-  "service_name": "nginx-web-server",
+  "service_name": "nginx-thrift",
   "diabled": false,
   "reporter": {
     "logSpans": false,
