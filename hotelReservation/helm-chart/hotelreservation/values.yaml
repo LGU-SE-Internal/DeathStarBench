@@ -18,7 +18,7 @@ global:
       TLS: 0
       LOG_LEVEL: "INFO"
       OTEL_SAMPLE_RATIO: "1"
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://$(NODE_IP):4317"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://$(NODE_IP):4318"
       MEMC_TIMEOUT: "2"
       GC: "100"
   affinity: {}
