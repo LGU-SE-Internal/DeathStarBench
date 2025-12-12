@@ -40,7 +40,7 @@ The load generator can be configured through the `values.yaml` file:
 ```yaml
 loadTest:
   enabled: true
-  targetServicePrefix: "frontend"  # Will be combined with helm release fullname
+  targetServicePrefix: "frontend"  # Service name to connect to
   targetPort: 5000
   script: "mixed-workload_type_1_with_attractions.lua"  # Default: comprehensive mixed workload
   threads: 2
@@ -65,7 +65,7 @@ loadTest:
 ### Configuration Parameters
 
 - `enabled`: Enable/disable the load generator
-- `targetServicePrefix`: Service name prefix (will be combined with helm release fullname to form the full service name, e.g., `frontend-<release-name>-hotelres`)
+- `targetServicePrefix`: Service name to connect to (e.g., `frontend`)
 - `targetPort`: Target service port for health checks
 - `script`: Lua script to use for load generation
 - `threads`: Number of threads for wrk2
