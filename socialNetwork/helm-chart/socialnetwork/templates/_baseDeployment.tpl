@@ -31,8 +31,12 @@ spec:
         - containerPort: {{ $cport.containerPort -}}
         {{ end }} 
         env:
+        - name: NODE_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
         - name: OTEL_EXPORTER_OTLP_ENDPOINT
-          value: "{{ $.Values.global.otel.endpoint }}"
+          value: "http://$(NODE_IP):4317"
         {{- if .env }}
         {{- range $e := .env}}
         - name: {{ $e.name }}

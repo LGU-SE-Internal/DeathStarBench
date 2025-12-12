@@ -18,7 +18,7 @@ global:
       TLS: 0
       LOG_LEVEL: "INFO"
       OTEL_SAMPLE_RATIO: "1"
-      OTEL_EXPORTER_OTLP_ENDPOINT: "opentelemetry-kube-stack-deployment-collector.monitoring:4318"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://$(NODE_IP):4317"
       MEMC_TIMEOUT: "2"
       GC: "100"
   affinity: {}
