@@ -12,6 +12,8 @@ function _M.WritePlot()
 
   local req_id = tonumber(string.sub(ngx.var.request_id, 0, 15), 16)
   local carrier = {}
+  carrier["traceparent"] = ngx.var.http_traceparent or ""
+  carrier["tracestate"] = ngx.var.http_tracestate or ""
 
   ngx.req.read_body()
   local data = ngx.req.get_body_data()

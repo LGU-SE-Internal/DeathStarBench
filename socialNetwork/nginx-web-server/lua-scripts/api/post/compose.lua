@@ -78,6 +78,8 @@ function _M.ComposePost()
       ComposePostServiceClient, "compose-post-service" .. k8s_suffix, 9090)
 
     local carrier = {}
+    carrier["traceparent"] = ngx.var.http_traceparent or ""
+    carrier["tracestate"] = ngx.var.http_tracestate or ""
 
     if (not _StrIsEmpty(post.media_ids) and not _StrIsEmpty(post.media_types)) then
       -- Filter out cjson.null values from arrays to prevent Thrift writeString errors

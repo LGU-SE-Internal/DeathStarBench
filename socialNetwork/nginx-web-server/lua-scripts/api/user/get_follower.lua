@@ -32,6 +32,8 @@ function _M.GetFollower()
 
   local req_id = tonumber(string.sub(ngx.var.request_id, 0, 15), 16)
   local carrier = {}
+  carrier["traceparent"] = ngx.var.http_traceparent or ""
+  carrier["tracestate"] = ngx.var.http_tracestate or ""
 
   if (_StrIsEmpty(ngx.var.cookie_login_token)) then
     ngx.status = ngx.HTTP_UNAUTHORIZED

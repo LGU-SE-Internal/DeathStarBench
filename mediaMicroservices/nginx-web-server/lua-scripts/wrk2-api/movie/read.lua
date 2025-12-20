@@ -51,6 +51,8 @@ function _M.ReadMoviePage()
   local ngx = ngx
   local req_id = tonumber(string.sub(ngx.var.request_id, 0, 15), 16)
   local carrier = {}
+  carrier["traceparent"] = ngx.var.http_traceparent or ""
+  carrier["tracestate"] = ngx.var.http_tracestate or ""
   
   local movie_id = ngx.var.arg_movie_id or ""
   local review_start = tonumber(ngx.var.arg_review_start) or 0
@@ -80,6 +82,8 @@ function _M.ReadMovieInfo()
   local ngx = ngx
   local req_id = tonumber(string.sub(ngx.var.request_id, 0, 15), 16)
   local carrier = {}
+  carrier["traceparent"] = ngx.var.http_traceparent or ""
+  carrier["tracestate"] = ngx.var.http_tracestate or ""
   
   local movie_id = ngx.var.arg_movie_id or ""
   
