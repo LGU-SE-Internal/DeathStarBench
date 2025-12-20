@@ -282,8 +282,8 @@ http {
     }
 
     location /api/home-timeline/read {
-            otel_trace off;
-            if ($request_method = 'OPTIONS') {
+          otel_trace off;
+          if ($request_method = 'OPTIONS') {
               add_header 'Access-Control-Allow-Origin' '*';
               add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
               add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range';
