@@ -77,6 +77,7 @@ http {
     # Checklist: Make sure that the location here is consistent
     # with the location you specified in wrk2.
     location /wrk2-api/user/register {
+      otel_trace off;
       content_by_lua '
           local client = require "wrk2-api/user/register"
           client.RegisterUser();
@@ -84,6 +85,7 @@ http {
     }
 
     location /wrk2-api/movie/register {
+      otel_trace off;
       content_by_lua '
           local client = require "wrk2-api/movie/register"
           client.RegisterMovie();
@@ -91,6 +93,7 @@ http {
     }
 
     location /wrk2-api/review/compose {
+      otel_trace off;
       content_by_lua '
           local client = require "wrk2-api/review/compose"
           client.ComposeReview();
@@ -98,6 +101,7 @@ http {
     }
 
     location /wrk2-api/movie-info/write {
+      otel_trace off;
       content_by_lua '
           local client = require "wrk2-api/movie-info/write"
           client.WriteMovieInfo();
@@ -105,6 +109,7 @@ http {
     }
 
     location /wrk2-api/cast-info/write {
+      otel_trace off;
       content_by_lua '
           local client = require "wrk2-api/cast-info/write"
           client.WriteCastInfo();
@@ -112,6 +117,7 @@ http {
     }
 
     location /wrk2-api/plot/write {
+      otel_trace off;
       content_by_lua '
           local client = require "wrk2-api/plot/write"
           client.WritePlot();
@@ -119,6 +125,7 @@ http {
     }
 
     location /wrk2-api/movie/read-page {
+      otel_trace off;
       content_by_lua '
           local client = require "wrk2-api/movie/read"
           client.ReadMoviePage();
@@ -126,6 +133,7 @@ http {
     }
 
     location /wrk2-api/movie/read-info {
+      otel_trace off;
       content_by_lua '
           local client = require "wrk2-api/movie/read"
           client.ReadMovieInfo();

@@ -108,6 +108,7 @@ http {
     # Checklist: Make sure that the location here is consistent
     # with the location you specified in wrk2.
     location /api/user/register {
+          otel_trace off;
           if ($request_method = 'OPTIONS') {
             add_header 'Access-Control-Allow-Origin' '*';
             add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
@@ -136,6 +137,7 @@ http {
     }
 
     location /api/user/follow {
+          otel_trace off;
           if ($request_method = 'OPTIONS') {
             add_header 'Access-Control-Allow-Origin' '*';
             add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
@@ -164,6 +166,7 @@ http {
     }
 
     location /api/user/unfollow {
+          otel_trace off;
           if ($request_method = 'OPTIONS') {
             add_header 'Access-Control-Allow-Origin' '*';
             add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
@@ -192,6 +195,7 @@ http {
     }
 
     location /api/user/login {
+          otel_trace off;
           if ($request_method = 'OPTIONS') {
             add_header 'Access-Control-Allow-Origin' '*';
             add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
@@ -220,6 +224,7 @@ http {
     }
 
     location /api/post/compose {
+          otel_trace off;
           if ($request_method = 'OPTIONS') {
             add_header 'Access-Control-Allow-Origin' '*';
             add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
@@ -248,6 +253,7 @@ http {
     }
 
     location /api/user-timeline/read {
+          otel_trace off;
           if ($request_method = 'OPTIONS') {
             add_header 'Access-Control-Allow-Origin' '*';
             add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
@@ -276,6 +282,7 @@ http {
     }
 
     location /api/home-timeline/read {
+            otel_trace off;
             if ($request_method = 'OPTIONS') {
               add_header 'Access-Control-Allow-Origin' '*';
               add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
@@ -333,6 +340,7 @@ http {
     # }
     # get follower lua
     location /api/user/get_follower {
+          otel_trace off;
           if ($request_method = 'OPTIONS') {
             add_header 'Access-Control-Allow-Origin' '*';
             add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
@@ -362,6 +370,7 @@ http {
 
     # get followee lua
     location /api/user/get_followee {
+          otel_trace off;
           if ($request_method = 'OPTIONS') {
             add_header 'Access-Control-Allow-Origin' '*';
             add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
@@ -414,6 +423,7 @@ http {
     }
 
     location /wrk2-api/home-timeline/read {
+      otel_trace off;
       content_by_lua '
           local client = require "wrk2-api/home-timeline/read"
           client.ReadHomeTimeline();
@@ -421,6 +431,7 @@ http {
     }
 
     location /wrk2-api/user-timeline/read {
+      otel_trace off;
       content_by_lua '
           local client = require "wrk2-api/user-timeline/read"
           client.ReadUserTimeline();
@@ -428,6 +439,7 @@ http {
     }
 
     location /wrk2-api/post/compose {
+      otel_trace off;
       content_by_lua '
           local client = require "wrk2-api/post/compose"
           client.ComposePost();
@@ -435,6 +447,7 @@ http {
     }
 
     location /wrk2-api/user/register {
+      otel_trace off;
       content_by_lua '
           local client = require "wrk2-api/user/register"
           client.RegisterUser();
@@ -442,6 +455,7 @@ http {
     }
 
     location /wrk2-api/user/follow {
+      otel_trace off;
       content_by_lua '
           local client = require "wrk2-api/user/follow"
           client.Follow();
@@ -449,6 +463,7 @@ http {
     }
 
     location /wrk2-api/user/unfollow {
+      otel_trace off;
       content_by_lua '
           local client = require "wrk2-api/user/unfollow"
           client.Unfollow();
