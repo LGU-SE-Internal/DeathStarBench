@@ -26,7 +26,7 @@ http {
   }
   otel_service_name nginx-thrift;
   otel_trace on;
-  otel_trace_context inject;
+  otel_trace_context propagate;
 
   include       mime.types;
   default_type  application/octet-stream;
