@@ -32,6 +32,14 @@ function _M.GetFollowee()
 
   local req_id = tonumber(string.sub(ngx.var.request_id, 0, 15), 16)
   local carrier = {}
+  -- Use nginx's current span context (not incoming client headers)
+  if ngx.var.otel_trace_id and ngx.var.otel_span_id then
+    carrier["traceparent"] = string.format("00-%s-%s-01", ngx.var.otel_trace_id, ngx.var.otel_span_id)
+    carrier["tracestate"] = ngx.var.http_tracestate or ""
+  else
+    carrier["traceparent"] = ngx.var.http_traceparent or ""
+    carrier["tracestate"] = ngx.var.http_tracestate or ""
+  end
 
   if (_StrIsEmpty(ngx.var.cookie_login_token)) then
     ngx.status = ngx.HTTP_UNAUTHORIZED

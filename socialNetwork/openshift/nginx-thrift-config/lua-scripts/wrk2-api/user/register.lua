@@ -16,19 +16,20 @@ local function _NgxInternalError(ngx, label, msg)
 end
 
 function _M.RegisterUser()
-  local bridge_tracer = require "opentracing_bridge_tracer"
   local ngx = ngx
   local GenericObjectPool = require "GenericObjectPool"
   local UserServiceClient = require "social_network_UserService"
 
   local req_id = tonumber(string.sub(ngx.var.request_id, 0, 15), 16)
-  local tracer = bridge_tracer.new_from_global()
-  local parent_span_context = tracer:binary_extract(
-      ngx.var.opentracing_binary_context)
-  local span = tracer:start_span("RegisterUser",
-      {["references"] = {{"child_of", parent_span_context}}})
   local carrier = {}
-  tracer:text_map_inject(span:context(), carrier)
+  -- Use nginx's current span context (not incoming client headers)
+  if ngx.var.otel_trace_id and ngx.var.otel_span_id then
+    carrier["traceparent"] = string.format("00-%s-%s-01", ngx.var.otel_trace_id, ngx.var.otel_span_id)
+    carrier["tracestate"] = ngx.var.http_tracestate or ""
+  else
+    carrier["traceparent"] = ngx.var.http_traceparent or ""
+    carrier["tracestate"] = ngx.var.http_tracestate or ""
+  end
 
   ngx.req.read_body()
   local post = ngx.req.get_post_args()
@@ -53,7 +54,6 @@ function _M.RegisterUser()
   else
     ngx.say("Successfully registered.")
   end
-  span:finish()
 end
 
 return _M

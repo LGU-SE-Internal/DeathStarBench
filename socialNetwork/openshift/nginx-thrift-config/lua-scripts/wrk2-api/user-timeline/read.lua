@@ -54,7 +54,6 @@ local function _LoadTimeline(data)
 end
 
 function _M.ReadUserTimeline()
-  local bridge_tracer = require "opentracing_bridge_tracer"
   local ngx = ngx
   local GenericObjectPool = require "GenericObjectPool"
   local UserTimelineServiceClient = require "social_network_UserTimelineService"
@@ -62,13 +61,15 @@ function _M.ReadUserTimeline()
   local liblualongnumber = require "liblualongnumber"
 
   local req_id = tonumber(string.sub(ngx.var.request_id, 0, 15), 16)
-  local tracer = bridge_tracer.new_from_global()
-  local parent_span_context = tracer:binary_extract(
-      ngx.var.opentracing_binary_context)
-  local span = tracer:start_span("ReadUserTimeline",
-      {["references"] = {{"child_of", parent_span_context}}})
   local carrier = {}
-  tracer:text_map_inject(span:context(), carrier)
+  -- Use nginx's current span context (not incoming client headers)
+  if ngx.var.otel_trace_id and ngx.var.otel_span_id then
+    carrier["traceparent"] = string.format("00-%s-%s-01", ngx.var.otel_trace_id, ngx.var.otel_span_id)
+    carrier["tracestate"] = ngx.var.http_tracestate or ""
+  else
+    carrier["traceparent"] = ngx.var.http_traceparent or ""
+    carrier["tracestate"] = ngx.var.http_tracestate or ""
+  end
 
   ngx.req.read_body()
   local args = ngx.req.get_uri_args()
