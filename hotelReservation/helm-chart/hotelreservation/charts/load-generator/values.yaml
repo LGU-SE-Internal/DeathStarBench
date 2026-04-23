@@ -6,7 +6,11 @@ global:
 
 container:
   name: load-generator
-  image: 10.10.10.240/library/hotelreservation-loader
+  # Blank dockerRegistry falls back to global.dockerRegistry (same pattern as app services).
+  dockerRegistry: ""
+  # Image name only (no registry prefix). The registry is prepended from
+  # container.dockerRegistry or global.dockerRegistry.
+  image: hotelreservation-loader
   # Leave blank to fall back to global.defaultImageVersion; override to pin a specific tag.
   imageVersion: ""
 

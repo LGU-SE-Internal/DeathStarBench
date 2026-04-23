@@ -6,10 +6,22 @@ global:
   imagePullPolicy: "IfNotPresent"
   restartPolicy: Always
   serviceType: ClusterIP
-  dockerRegistry: 10.10.10.240/library
+  # Registry that hosts the hotelreservation-built images (frontend, search,
+  # profile, reservation, recommendation, user, loader, etc.). This chart has
+  # no sensible public default — images are built from this repository and
+  # must be hosted somewhere the cluster can reach. Consumers MUST set this
+  # value explicitly; leaving it blank causes helm template/install to fail
+  # with an explanatory message.
+  #
+  # Example values:
+  #   dockerRegistry: docker.io/opspai       # Docker Hub namespace
+  #   dockerRegistry: ghcr.io/lgu-se-internal # GitHub Container Registry
+  #   dockerRegistry: 10.10.10.240/library    # private harbor
+  dockerRegistry: ""
   # Registry for infrastructure images (consul, memcached, mongodb, redis, etc.).
   # Defaults to dockerRegistry for back-compat. Override this when your app
-  # images live in a private registry but infra is pulled from a public one.
+  # images live in a private registry but infra is pulled from a public one
+  # (e.g., infraDockerRegistry: docker.io for upstream bitnami / library images).
   infraDockerRegistry: ""  # blank = fallback to dockerRegistry
   defaultImageVersion: "0bf404"
   serviceDnsDomain: "cluster.local"
