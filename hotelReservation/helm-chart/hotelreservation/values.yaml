@@ -7,6 +7,10 @@ global:
   restartPolicy: Always
   serviceType: ClusterIP
   dockerRegistry: 10.10.10.240/library
+  # Registry for infrastructure images (consul, memcached, mongodb, redis, etc.).
+  # Defaults to dockerRegistry for back-compat. Override this when your app
+  # images live in a private registry but infra is pulled from a public one.
+  infraDockerRegistry: ""  # blank = fallback to dockerRegistry
   defaultImageVersion: "0bf404"
   serviceDnsDomain: "cluster.local"
   services:

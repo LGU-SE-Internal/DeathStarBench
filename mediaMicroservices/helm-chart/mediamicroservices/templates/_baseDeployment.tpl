@@ -21,7 +21,7 @@ spec:
       containers:
       {{- with .Values.container }}
       - name: "{{ .name }}"
-        image: {{ .dockerRegistry | default $.Values.global.dockerRegistry }}/{{ .image }}:{{ .imageVersion | default $.Values.global.defaultImageVersion }}
+        image: {{ .dockerRegistry | default (ternary ($.Values.global.infraDockerRegistry | default $.Values.global.dockerRegistry) $.Values.global.dockerRegistry (eq (.infra | default false) true)) }}/{{ .image }}:{{ .imageVersion | default $.Values.global.defaultImageVersion }}
         imagePullPolicy: {{ .imagePullPolicy | default $.Values.global.imagePullPolicy }}
         ports:
         {{- range $cport := .ports }}

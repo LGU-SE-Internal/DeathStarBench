@@ -4,6 +4,10 @@ global:
   restartPolicy: Always
   serviceType: ClusterIP
   dockerRegistry: 10.10.10.240/library
+  # Registry for infrastructure images (memcached, mongodb, redis, etc.).
+  # Defaults to dockerRegistry for back-compat. Override this when your app
+  # images live in a private registry but infra is pulled from a public one.
+  infraDockerRegistry: ""  # blank = fallback to dockerRegistry
   defaultImageVersion: "778a8df"
   nginx:
     resolverName: kube-dns.kube-system.svc.cluster.local

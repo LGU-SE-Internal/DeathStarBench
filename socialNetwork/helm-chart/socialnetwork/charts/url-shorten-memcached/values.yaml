@@ -5,6 +5,7 @@ ports:
     targetPort: 11211
 
 container:
+  infra: true
   image: library/memcached
   imageVersion: 1.6.7
   name: url-shorten-memcached
