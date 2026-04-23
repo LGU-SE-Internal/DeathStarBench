@@ -5,6 +5,7 @@ ports:
     targetPort: 27017
  
 container:
+  infra: true
   args: 
   - --config
   - /social-network-microservices/config/mongod.conf

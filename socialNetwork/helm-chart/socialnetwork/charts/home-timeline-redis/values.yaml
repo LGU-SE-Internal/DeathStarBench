@@ -5,6 +5,7 @@ ports:
     targetPort: 6379
 
 container:
+  infra: true
   args: 
   - /social-network-microservices/config/redis.conf
   image: redis
