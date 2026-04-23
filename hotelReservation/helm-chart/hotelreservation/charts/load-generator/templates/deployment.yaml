@@ -18,7 +18,9 @@ spec:
     spec:
       containers:
       - name: {{ .Values.container.name }}
-        image: {{ .Values.container.dockerRegistry | default .Values.global.dockerRegistry }}/{{ .Values.container.image }}:{{ .Values.container.imageVersion | default .Values.global.defaultImageVersion }}
+        {{- $registry := .Values.container.dockerRegistry | default .Values.global.dockerRegistry }}
+        {{- if eq $registry "" }}{{- fail "global.dockerRegistry (or load-generator.container.dockerRegistry) must be set; see values.yaml for details" }}{{- end }}
+        image: {{ $registry }}/{{ .Values.container.image }}:{{ .Values.container.imageVersion | default .Values.global.defaultImageVersion }}
         imagePullPolicy: {{ .Values.container.imagePullPolicy | default .Values.global.imagePullPolicy }}
         {{- if .Values.loadTest.enabled }}
         command:
