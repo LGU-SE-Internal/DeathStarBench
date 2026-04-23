@@ -103,11 +103,36 @@ loadTest:
 
 ## Building
 
-The modified wrk2 is built automatically as part of the Dockerfile-loader build process:
+The modified wrk2 is built automatically as part of the `Dockerfile-loader`
+build process. All three loader Dockerfiles depend on the repo-root
+`wrk2/` tree (including the `wrk2/deps/luajit` git submodule), so the
+build context MUST be the repository root — NOT the per-benchmark
+subdirectory.
+
+Initialize the luajit submodule once, then build each loader from the
+repo root with `-f <subdir>/Dockerfile-loader`:
 
 ```bash
-cd hotelReservation  # or socialNetwork or mediaMicroservices
-docker build -f Dockerfile-loader -t registry/service-loader:latest .
+# from the repo root
+git submodule update --init --recursive
+
+docker build -f hotelReservation/Dockerfile-loader \
+    -t registry/hotelreservation-loader:latest .
+docker build -f socialNetwork/Dockerfile-loader \
+    -t registry/socialnetwork-loader:latest .
+docker build -f mediaMicroservices/Dockerfile-loader \
+    -t registry/mediamicroservices-loader:latest .
+```
+
+> Running `cd hotelReservation && docker build -f Dockerfile-loader .`
+> will fail: the `COPY ../wrk2 ...` in the Dockerfile resolves outside
+> the build context and docker does not permit that. Always build from
+> the repo root.
+
+A convenience wrapper is provided at `scripts/build-loaders.sh`:
+
+```bash
+REGISTRY=10.10.10.240/library TAG=dev bash scripts/build-loaders.sh
 ```
 
 ## Technical Details
