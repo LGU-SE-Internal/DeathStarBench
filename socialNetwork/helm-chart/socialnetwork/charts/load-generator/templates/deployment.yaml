@@ -25,7 +25,7 @@ spec:
         command: ['sh', '-c', 'until nc -z {{ .Values.loadTest.targetHost }} {{ .Values.loadTest.targetPort }}; do echo waiting for {{ .Values.loadTest.targetHost }}; sleep 5; done;']
       # Fetch datasets from repository
       - name: fetch-datasets
-        image: {{ $infraRegistry }}/alpine/git:latest
+        image: {{ $infraRegistry }}/git:latest
         command:
         - /bin/sh
         - -c

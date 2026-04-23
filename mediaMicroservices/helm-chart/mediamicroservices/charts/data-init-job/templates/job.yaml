@@ -22,10 +22,12 @@ spec:
       restartPolicy: {{ .Values.job.restartPolicy }}
       initContainers:
       - name: wait-for-nginx
-        image: busybox:1.28
+        {{- $infraRegistry := .Values.global.infraDockerRegistry | default .Values.global.dockerRegistry }}
+        {{- if eq $infraRegistry "" }}{{- fail "global.dockerRegistry (or global.infraDockerRegistry) must be set; see values.yaml for details" }}{{- end }}
+        image: {{ $infraRegistry }}/busybox:1.28
         command: ['sh', '-c', 'until nc -z nginx-web-server 8080; do echo waiting for nginx-web-server; sleep 5; done;']
       - name: fetch-datasets
-        image: alpine/git:latest
+        image: {{ $infraRegistry }}/git:latest
         command:
         - /bin/sh
         - -c

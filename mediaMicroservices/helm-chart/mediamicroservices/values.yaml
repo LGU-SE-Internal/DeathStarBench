@@ -15,10 +15,19 @@ global:
   #   dockerRegistry: ghcr.io/lgu-se-internal # GitHub Container Registry
   #   dockerRegistry: 10.10.10.240/library    # private harbor
   dockerRegistry: ""
-  # Registry for infrastructure images (memcached, mongodb, redis, etc.).
-  # Defaults to dockerRegistry for back-compat. Override this when your app
-  # images live in a private registry but infra is pulled from a public one
-  # (e.g., infraDockerRegistry: docker.io for upstream bitnami / library images).
+  # Registry for infrastructure images (memcached, mongodb, redis, busybox,
+  # git, etc.). Defaults to dockerRegistry for back-compat. Override this
+  # when your app images live in a private registry but infra is pulled from
+  # a public one.
+  #
+  # Infra image names are flat (memcached, mongo, redis, busybox, git) so
+  # that setting global.dockerRegistry=docker.io/<org> works with flat
+  # Docker Hub registries (which do NOT allow nested repos like
+  # <org>/library/memcached).
+  #
+  # To use PUBLIC docker.io images as infra (no mirror needed), set:
+  #   global.infraDockerRegistry=docker.io/library
+  # (all infra in this chart lives under docker.io/library).
   infraDockerRegistry: ""  # blank = fallback to dockerRegistry
   defaultImageVersion: "778a8df"
   nginx:

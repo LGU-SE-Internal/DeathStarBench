@@ -7,7 +7,7 @@ ports:
 
 container:
   infra: true
-  image: library/memcached
+  image: memcached
   imageVersion: 1.6.7
   name: post-storage-memcached
   ports: 
