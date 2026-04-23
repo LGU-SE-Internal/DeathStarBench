@@ -18,10 +18,18 @@ global:
   #   dockerRegistry: ghcr.io/lgu-se-internal # GitHub Container Registry
   #   dockerRegistry: 10.10.10.240/library    # private harbor
   dockerRegistry: ""
-  # Registry for infrastructure images (consul, memcached, mongodb, redis, etc.).
+  # Registry for infrastructure images (consul, memcached, mongodb, etc.).
   # Defaults to dockerRegistry for back-compat. Override this when your app
-  # images live in a private registry but infra is pulled from a public one
-  # (e.g., infraDockerRegistry: docker.io for upstream bitnami / library images).
+  # images live in a private registry but infra is pulled from a public one.
+  #
+  # Infra image names are flat (consul, memcached, mongo) so that setting
+  # global.dockerRegistry=docker.io/<org> works with flat Docker Hub
+  # registries (which do NOT allow nested repos like <org>/hashicorp/consul).
+  #
+  # To use PUBLIC docker.io images as infra (no mirror needed), set:
+  #   global.infraDockerRegistry=docker.io/library
+  # except for consul which lives under docker.io/hashicorp — override per-subchart:
+  #   consul.container.dockerRegistry=docker.io/hashicorp
   infraDockerRegistry: ""  # blank = fallback to dockerRegistry
   defaultImageVersion: "0bf404"
   serviceDnsDomain: "cluster.local"

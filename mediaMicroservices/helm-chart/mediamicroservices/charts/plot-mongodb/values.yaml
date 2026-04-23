@@ -9,7 +9,7 @@ container:
   args:
     - --config
     - /media-microservices/config/mongod.conf
-  image: library/mongo
+  image: mongo
   imageVersion: 4.4.6
   name: plot-mongodb
   ports:
