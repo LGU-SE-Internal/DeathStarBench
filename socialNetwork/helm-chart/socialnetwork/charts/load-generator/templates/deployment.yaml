@@ -68,7 +68,7 @@ spec:
       {{- end }}
       containers:
       - name: {{ .Values.container.name }}
-        image: {{ .Values.container.image }}:{{ .Values.container.imageVersion | default .Values.global.defaultImageVersion }}
+        image: {{ .Values.container.dockerRegistry | default .Values.global.dockerRegistry }}/{{ .Values.container.image }}:{{ .Values.container.imageVersion | default .Values.global.defaultImageVersion }}
         imagePullPolicy: {{ .Values.container.imagePullPolicy | default .Values.global.imagePullPolicy }}
         {{- if .Values.loadTest.enabled }}
         command:
