@@ -1,0 +1,38 @@
+name: Chart Version Guard
+
+# Fail the PR if a helm chart's files changed but its Chart.yaml `version`
+# was not bumped versus the base branch. Keeps helm-repo consumers from
+# silently pulling a stale cached tgz after a substantive chart edit.
+#
+# Affected charts are auto-discovered: every `*/helm-chart/*/Chart.yaml`
+# under the repo is a guarded chart root, and any path-diff inside that
+# chart root requires a version bump in its Chart.yaml.
+
+on:
+  pull_request:
+    paths:
+      - '**/helm-chart/**'
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  verify-version-bump:
+    name: Verify Chart.yaml version bump
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR (with full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Fetch base ref
+        run: git fetch --no-tags --depth=1 origin "${{ github.event.pull_request.base.ref }}"
+
+      - name: Check version bumps
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: bash scripts/check-chart-version-bump.sh "$BASE_SHA" "$HEAD_SHA"
