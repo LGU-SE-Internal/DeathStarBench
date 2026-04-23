@@ -7,7 +7,8 @@ global:
 container:
   name: load-generator
   image: 10.10.10.240/library/hotelreservation-loader
-  imageVersion: "48efa00"
+  # Leave blank to fall back to global.defaultImageVersion; override to pin a specific tag.
+  imageVersion: ""
 
 # Load test configuration
 loadTest:

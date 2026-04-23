@@ -7,7 +7,8 @@ global:
 container:
   name: load-generator
   image: 10.10.10.240/library/mediamicroservices-loader
-  imageVersion: "60283c4"
+  # Leave blank to fall back to global.defaultImageVersion; override to pin a specific tag.
+  imageVersion: ""
 
 # Init container configuration for data initialization
 initContainer:
