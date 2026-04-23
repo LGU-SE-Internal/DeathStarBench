@@ -11,6 +11,23 @@ Open-source benchmark suite for cloud microservices. DeathStarBench includes fiv
 * Banking System (in progress)
 * Drone coordination system (in progress)
 
+## Building the wrk2 loader images
+
+Each benchmark ships a `Dockerfile-loader` that builds a wrk2-based load
+generator. These Dockerfiles `COPY ../wrk2 ...` from the repo-root
+`wrk2/` tree (which contains the `wrk2/deps/luajit` git submodule), so
+they MUST be built with the repo root as the docker build context:
+
+```bash
+git submodule update --init --recursive
+docker build -f hotelReservation/Dockerfile-loader -t hotelreservation-loader:latest .
+docker build -f socialNetwork/Dockerfile-loader    -t socialnetwork-loader:latest    .
+docker build -f mediaMicroservices/Dockerfile-loader -t mediamicroservices-loader:latest .
+```
+
+A helper that does submodule init + all three builds is provided at
+`scripts/build-loaders.sh`.
+
 ## License & Copyright 
 
 DeathStarBench is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, version 2.
