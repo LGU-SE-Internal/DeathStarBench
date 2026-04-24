@@ -33,6 +33,16 @@ global:
   infraDockerRegistry: ""  # blank = fallback to dockerRegistry
   defaultImageVersion: "0bf404"
   serviceDnsDomain: "cluster.local"
+  otel:
+    # OTEL collector endpoint in "host:port" form (scheme auto-prefixed as
+    # http:// if omitted). When empty, services default to the node-local
+    # DaemonSet ($(NODE_IP):4318) which assumes an OTel-collector DaemonSet
+    # on every node (e.g. opentelemetry-kube-stack on kind).
+    #
+    # For clusters with only a Deployment collector (e.g. VKE Byte), set:
+    #   otel.endpoint: opentelemetry-kube-stack-deployment-collector.monitoring.svc.cluster.local:4318
+    #
+    endpoint: ""
   services:
     environments:
       # TLS enablement
@@ -42,7 +52,6 @@ global:
       TLS: 0
       LOG_LEVEL: "INFO"
       OTEL_SAMPLE_RATIO: "1"
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://$(NODE_IP):4318"
       MEMC_TIMEOUT: "2"
       GC: "100"
   affinity: {}

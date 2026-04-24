@@ -70,7 +70,16 @@ global:
   nginx:
     resolverName: kube-dns.kube-system.svc.cluster.local
   otel:
-    endpoint: "opentelemetry-kube-stack-deployment-collector.monitoring:4318"
+    # OTEL collector endpoint in "host:port" form (scheme auto-prefixed as
+    # http:// if omitted). When empty, the template falls back to the
+    # node-local DaemonSet default ($(NODE_IP):4318) which assumes an
+    # OTel-collector DaemonSet is scheduled on every node (e.g. the
+    # opentelemetry-kube-stack preset used on kind clusters).
+    #
+    # For clusters that only expose a Deployment collector (e.g. VKE Byte),
+    # set:
+    #   otel.endpoint: opentelemetry-kube-stack-deployment-collector.monitoring.svc.cluster.local:4318
+    endpoint: ""
     samplerParam: 1
     disabled: false
 
