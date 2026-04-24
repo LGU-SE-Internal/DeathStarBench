@@ -39,25 +39,33 @@ spec:
         {{- range $cport := .ports }}
         - containerPort: {{ $cport.containerPort -}}
         {{ end }}
-        {{- if hasKey . "environments" }}
+        {{- if or (hasKey . "environments") (hasKey $.Values.global.services "environments") }}
         env:
         - name: NODE_IP
           valueFrom:
             fieldRef:
               fieldPath: status.hostIP
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          {{- $otelEndpoint := (($.Values.global.otel).endpoint) | default "" }}
+          {{- if $otelEndpoint }}
+          value: {{ if hasPrefix "http" $otelEndpoint }}{{ $otelEndpoint | quote }}{{ else }}{{ printf "http://%s" $otelEndpoint | quote }}{{ end }}
+          {{- else }}
+          value: "http://$(NODE_IP):4318"
+          {{- end }}
+        {{- if hasKey . "environments" }}
         {{- range $variable, $value := .environments }}
+        {{- if ne $variable "OTEL_EXPORTER_OTLP_ENDPOINT" }}
         - name: {{ $variable }}
           value: {{ $value | quote }}
         {{- end }}
-        {{- else if hasKey $.Values.global.services "environments" }}
-        env:
-        - name: NODE_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.hostIP
+        {{- end }}
+        {{- else }}
         {{- range $variable, $value := $.Values.global.services.environments }}
+        {{- if ne $variable "OTEL_EXPORTER_OTLP_ENDPOINT" }}
         - name: {{ $variable }}
           value: {{ $value | quote }}
+        {{- end }}
+        {{- end }}
         {{- end }}
         {{- end }}
         {{- if .command}}
