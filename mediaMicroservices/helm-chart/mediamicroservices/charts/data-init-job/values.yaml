@@ -19,5 +19,22 @@ job:
 # Server address for API calls (nginx service)
 serverAddress: "http://nginx-web-server.{{ .Release.Namespace }}.svc.cluster.local:8080"
 
+# Dataset image configuration. When enabled (default), an init container pulls
+# a pre-baked datasets+scripts image and `cp -r`'s its contents into the shared
+# volume — replacing the legacy `git clone https://github.com/.../DeathStarBench`
+# init container, which is unreliable on clusters with constrained GitHub egress.
+# Set datasetImage.enabled=false to fall back to the old git-clone behavior.
+datasetImage:
+  enabled: true
+  # Blank dockerRegistry falls back to global.dockerRegistry.
+  dockerRegistry: ""
+  # Image name only (no registry prefix). The registry is prepended from
+  # datasetImage.dockerRegistry or global.dockerRegistry.
+  image: loader-datasets
+  # Leave blank to fall back to global.defaultImageVersion (or "latest"); override
+  # to pin a specific tag for reproducibility.
+  imageVersion: ""
+  imagePullPolicy: ""
+
 # Enable or disable the data initialization job
 enabled: false

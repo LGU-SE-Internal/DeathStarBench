@@ -23,7 +23,30 @@ spec:
         {{- if eq $infraRegistry "" }}{{- fail "global.dockerRegistry (or global.infraDockerRegistry) must be set; see values.yaml for details" }}{{- end }}
         image: {{ $infraRegistry }}/busybox:1.36
         command: ['sh', '-c', 'until nc -z {{ .Values.loadTest.targetHost }} {{ .Values.loadTest.targetPort }}; do echo waiting for {{ .Values.loadTest.targetHost }}; sleep 5; done;']
-      # Fetch datasets from repository
+      {{- if .Values.datasetImage.enabled }}
+      # Copy datasets from a pre-baked image (no GitHub egress at pod-start time).
+      - name: copy-datasets
+        {{- $datasetRegistry := .Values.datasetImage.dockerRegistry | default .Values.global.dockerRegistry }}
+        {{- if eq $datasetRegistry "" }}{{- fail "global.dockerRegistry (or load-generator.datasetImage.dockerRegistry) must be set when datasetImage.enabled=true" }}{{- end }}
+        image: {{ $datasetRegistry }}/{{ .Values.datasetImage.image }}:{{ .Values.datasetImage.imageVersion | default .Values.global.defaultImageVersion | default "latest" }}
+        imagePullPolicy: {{ .Values.datasetImage.imagePullPolicy | default .Values.global.imagePullPolicy }}
+        command:
+        - /bin/sh
+        - -c
+        - |
+          set -eu
+          echo "Copying pre-baked datasets into shared volume..."
+          mkdir -p /data/DeathStarBench
+          cp -r /datasets/socialNetwork /data/DeathStarBench/socialNetwork
+          ls -lh /data/DeathStarBench/socialNetwork/datasets/social-graph/
+          echo "Datasets ready."
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
+      {{- else }}
+      # Legacy fallback: clone the upstream DSB repo at pod-start time.
+      # Kept for back-compat; prefer datasetImage.enabled=true on clusters with
+      # constrained GitHub egress.
       - name: fetch-datasets
         image: {{ $infraRegistry }}/git:latest
         command:
@@ -37,6 +60,7 @@ spec:
         volumeMounts:
         - name: data-volume
           mountPath: /data
+      {{- end }}
       # Initialize social graph data
       - name: data-init
         image: {{ .Values.initContainer.image }}:{{ .Values.initContainer.imageVersion }}

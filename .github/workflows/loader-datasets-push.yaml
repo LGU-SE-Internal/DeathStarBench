@@ -1,0 +1,74 @@
+name: Push loader-datasets
+concurrency: ci-loader-datasets
+
+# Builds the deathstarbench/loader-datasets image, which is the read-only
+# dataset bundle consumed by the socialNetwork and mediaMicroservices chart
+# init containers (replacing the previous `git clone` of the upstream repo).
+#
+# Triggered on changes to the Dockerfile or to any of the bundled data /
+# script trees, so the image stays in sync with the source files it ships.
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'loader-datasets/**'
+      - 'socialNetwork/datasets/**'
+      - 'socialNetwork/scripts/**'
+      - 'mediaMicroservices/datasets/**'
+      - 'mediaMicroservices/scripts/**'
+      - '.github/workflows/loader-datasets-push.yaml'
+
+env:
+  IMAGE_BASE_NAME: 'deathstarbench/loader-datasets'
+  TAG_PREFIX: 'loader-datasets'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: master
+        fetch-depth: 0
+    - name: Login to ACR
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_REGISTRY_LOGIN }}
+        password: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
+    - name: Build docker image
+      run: docker build -f loader-datasets/Dockerfile -t ${{ env.IMAGE_BASE_NAME }} .
+    - name: Calculate new version
+      id: new-version
+      uses: codacy/git-version@2.6.2
+      with:
+        prefix: "${{ env.TAG_PREFIX }}-"
+        log-paths: |
+          loader-datasets/
+          socialNetwork/datasets/
+          socialNetwork/scripts/
+          mediaMicroservices/datasets/
+          mediaMicroservices/scripts/
+      if: github.ref == 'refs/heads/master'
+    - name: Create tag
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.git.createRef({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            ref: 'refs/tags/${{ steps.new-version.outputs.VERSION }}',
+            sha: context.sha
+          })
+    - name: Retrieve version number
+      run: TEMP=${{ steps.new-version.outputs.VERSION }} && echo VERSION_NUMBER=${TEMP#*-} >> $GITHUB_ENV
+    - name: Create image full name
+      run: echo "IMAGE_ID=${{ env.IMAGE_BASE_NAME }}:${{ env.VERSION_NUMBER }}" >> $GITHUB_ENV
+    - name: Tag image
+      run: docker tag ${{ env.IMAGE_BASE_NAME }} ${{ env.IMAGE_ID }}
+    - name: Push docker image
+      run: docker push ${{ env.IMAGE_ID }}
+    - name: Tag image as latest
+      run: docker tag ${{ env.IMAGE_BASE_NAME }} ${{ env.IMAGE_BASE_NAME }}:latest
+    - name: Push latest
+      run: docker push ${{ env.IMAGE_BASE_NAME }}:latest
