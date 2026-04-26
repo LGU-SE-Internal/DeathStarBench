@@ -8,7 +8,7 @@ on:
       - 'wrk2/**'
 
 env:
-  IMAGE_BASE_NAME: 'deathstarbench/wrk2-client'
+  IMAGE_BASE_NAME: 'opspai/wrk2-client'
   REPO_PATH: 'wrk2'
   TAG_PREFIX: 'wrk2'
 
