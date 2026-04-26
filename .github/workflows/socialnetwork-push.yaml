@@ -8,7 +8,7 @@ on:
       - 'socialNetwork/**'
 
 env:
-  IMAGE_BASE_NAME: 'deathstarbench/social-network-microservices'
+  IMAGE_BASE_NAME: 'opspai/social-network-microservices'
   REPO_PATH: 'socialNetwork'
   TAG_PREFIX: 'socialNetwork'
 

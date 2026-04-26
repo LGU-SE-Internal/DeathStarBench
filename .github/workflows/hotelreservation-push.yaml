@@ -8,7 +8,7 @@ on:
       - 'hotelReservation/**'
 
 env:
-  IMAGE_BASE_NAME: 'deathstarbench/hotel-reservation'
+  IMAGE_BASE_NAME: 'opspai/hotel-reservation'
   REPO_PATH: 'hotelReservation'
   TAG_PREFIX: 'hotelReservation'
 

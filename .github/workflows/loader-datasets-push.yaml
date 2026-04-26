@@ -1,7 +1,7 @@
 name: Push loader-datasets
 concurrency: ci-loader-datasets
 
-# Builds the deathstarbench/loader-datasets image, which is the read-only
+# Builds the opspai/loader-datasets image, which is the read-only
 # dataset bundle consumed by the socialNetwork and mediaMicroservices chart
 # init containers (replacing the previous `git clone` of the upstream repo).
 #
@@ -20,7 +20,7 @@ on:
       - '.github/workflows/loader-datasets-push.yaml'
 
 env:
-  IMAGE_BASE_NAME: 'deathstarbench/loader-datasets'
+  IMAGE_BASE_NAME: 'opspai/loader-datasets'
   TAG_PREFIX: 'loader-datasets'
 
 jobs:
