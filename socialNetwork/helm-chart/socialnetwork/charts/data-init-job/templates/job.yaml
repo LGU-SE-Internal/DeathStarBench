@@ -26,6 +26,28 @@ spec:
         {{- if eq $infraRegistry "" }}{{- fail "global.dockerRegistry (or global.infraDockerRegistry) must be set; see values.yaml for details" }}{{- end }}
         image: {{ $infraRegistry }}/busybox:1.28
         command: ['sh', '-c', 'until nc -z nginx-thrift 8080; do echo waiting for nginx-thrift; sleep 5; done;']
+      {{- if .Values.datasetImage.enabled }}
+      # Copy datasets from a pre-baked image (no GitHub egress at pod-start time).
+      - name: copy-datasets
+        {{- $datasetRegistry := .Values.datasetImage.dockerRegistry | default .Values.global.dockerRegistry }}
+        {{- if eq $datasetRegistry "" }}{{- fail "global.dockerRegistry (or data-init-job.datasetImage.dockerRegistry) must be set when datasetImage.enabled=true" }}{{- end }}
+        image: {{ $datasetRegistry }}/{{ .Values.datasetImage.image }}:{{ .Values.datasetImage.imageVersion | default .Values.global.defaultImageVersion | default "latest" }}
+        imagePullPolicy: {{ .Values.datasetImage.imagePullPolicy | default .Values.global.imagePullPolicy }}
+        command:
+        - /bin/sh
+        - -c
+        - |
+          set -eu
+          echo "Copying pre-baked datasets into shared volume..."
+          mkdir -p /data/DeathStarBench
+          cp -r /datasets/socialNetwork /data/DeathStarBench/socialNetwork
+          ls -lh /data/DeathStarBench/socialNetwork/datasets/social-graph/
+          echo "Datasets ready."
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
+      {{- else }}
+      # Legacy fallback: clone the upstream DSB repo at pod-start time.
       - name: fetch-datasets
         image: {{ $infraRegistry }}/git:latest
         command:
@@ -39,6 +61,7 @@ spec:
         volumeMounts:
         - name: data-volume
           mountPath: /data
+      {{- end }}
       containers:
       - name: {{ .Values.container.name }}
         image: {{ .Values.container.image }}:{{ .Values.container.imageVersion }}
