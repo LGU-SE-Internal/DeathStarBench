@@ -5,13 +5,17 @@
 
 #include <string>
 #include <cstdlib>
+#include <csignal>
+#include <chrono>
 #include <map>
 #include <vector>
 #include <iostream>
 
 // OTel SDK Includes
+#include <opentelemetry/sdk/trace/tracer_provider.h>
 #include <opentelemetry/sdk/trace/tracer_provider_factory.h>
-#include <opentelemetry/sdk/trace/simple_processor_factory.h>
+#include <opentelemetry/sdk/trace/batch_span_processor_factory.h>
+#include <opentelemetry/sdk/trace/batch_span_processor_options.h>
 #include <opentelemetry/sdk/resource/resource.h>
 #include <opentelemetry/exporters/otlp/otlp_http_exporter_factory.h>
 #include <opentelemetry/trace/provider.h>
@@ -83,6 +87,31 @@ void SetUpLogProvider(const std::string &service) {
     opentelemetry::nostd::shared_ptr<opentelemetry::logs::LoggerProvider>(std_provider));
 }
 
+// Flush and shut down the global tracer provider. Safe to call multiple
+// times; subsequent calls are no-ops because Shutdown() drops the provider.
+inline void FlushAndShutdownTracer() {
+  auto provider = opentelemetry::trace::Provider::GetTracerProvider();
+  auto sdk_provider =
+    dynamic_cast<opentelemetry::sdk::trace::TracerProvider*>(provider.get());
+  if (sdk_provider != nullptr) {
+    sdk_provider->ForceFlush(std::chrono::seconds(5));
+    sdk_provider->Shutdown();
+  }
+}
+
+// Async-signal handlers cannot safely call most C++ runtime; we accept the
+// best-effort behavior used by upstream OTel C++ samples — flush, then exit.
+inline void OtelSignalHandler(int signum) {
+  FlushAndShutdownTracer();
+  std::signal(signum, SIG_DFL);
+  std::raise(signum);
+}
+
+inline void InstallTracerShutdownHandler() {
+  std::signal(SIGTERM, OtelSignalHandler);
+  std::signal(SIGINT, OtelSignalHandler);
+}
+
 void SetUpTracer(const std::string &service) {
   bool r = false;
   while (!r) {
@@ -98,7 +127,9 @@ void SetUpTracer(const std::string &service) {
       otlp_options.url = otlp_endpoint + "/v1/traces";
       
       auto exporter = opentelemetry::exporter::otlp::OtlpHttpExporterFactory::Create(otlp_options);
-      auto processor = opentelemetry::sdk::trace::SimpleSpanProcessorFactory::Create(std::move(exporter));
+      opentelemetry::sdk::trace::BatchSpanProcessorOptions bsp_options{};
+      auto processor = opentelemetry::sdk::trace::BatchSpanProcessorFactory::Create(
+        std::move(exporter), bsp_options);
       processors.push_back(std::move(processor));
       
       LOG(info) << "Using OpenTelemetry OTLP HTTP exporter: " << otlp_options.url;
@@ -123,7 +154,11 @@ void SetUpTracer(const std::string &service) {
       
       // Initialize Log Provider
       SetUpLogProvider(service);
-      
+
+      // Drain buffered spans on container TERM/INT so wrk2-load runs don't
+      // lose tail batches when the orchestrator stops the pod.
+      InstallTracerShutdownHandler();
+
       r = true;
     }
     catch(const std::exception& e) {
