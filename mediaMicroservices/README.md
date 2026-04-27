@@ -78,3 +78,6 @@ cd ../mediaMicroservices
 
 #### View Jaeger traces
 View Jaeger traces by accessing `http://localhost:16686`
+
+<!-- ci: trigger initial build for opspai/media-microservices image (aegis#236) -->
+
