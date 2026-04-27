@@ -37,7 +37,7 @@ spec:
         - name: OTEL_EXPORTER_OTLP_ENDPOINT
           {{- $otelEndpoint := $.Values.global.otel.endpoint | default "" }}
           {{- if $otelEndpoint }}
-          value: {{ if hasPrefix "http" $otelEndpoint }}{{ $otelEndpoint | quote }}{{ else }}{{ printf "http://%s" $otelEndpoint | quote }}{{ end }}
+          value: {{ $otelEndpoint | quote }}
           {{- else }}
           value: "http://$(NODE_IP):4318"
           {{- end }}
