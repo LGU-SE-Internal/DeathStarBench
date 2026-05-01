@@ -30,7 +30,9 @@ spec:
     spec:
       initContainers:
       - name: wait-for-consul
-        image: busybox:1.35
+        {{- $infraReg := $.Values.global.infraDockerRegistry | default $.Values.global.dockerRegistry }}
+        {{- if eq $infraReg "" }}{{- fail "global.infraDockerRegistry (or global.dockerRegistry as fallback) must be set; needed for the wait-for-consul busybox init container" }}{{- end }}
+        image: {{ $infraReg }}/busybox:1.35
         command: ['sh', '-c', 'until nslookup consul.{{ .Release.Namespace }}.svc.cluster.local; do echo "waiting for consul DNS"; sleep 2; done']
       containers:
       {{- with .Values.container }}
