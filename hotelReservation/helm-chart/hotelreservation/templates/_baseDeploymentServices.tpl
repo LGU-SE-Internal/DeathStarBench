@@ -28,6 +28,10 @@ spec:
         {{ tpl $.Values.global.annotations . | nindent 8 | trim }}
       {{- end }}
     spec:
+      initContainers:
+      - name: wait-for-consul
+        image: busybox:1.35
+        command: ['sh', '-c', 'until nslookup consul.{{ .Release.Namespace }}.svc.cluster.local; do echo "waiting for consul DNS"; sleep 2; done']
       containers:
       {{- with .Values.container }}
       - name: "{{ .name }}"
