@@ -34,14 +34,60 @@ global:
     resolverName: kube-dns.kube-system.svc.cluster.local
   otel:
     # OTEL collector endpoint in "host:port" form (scheme auto-prefixed as
-    # http:// if omitted). When empty, the template falls back to the
-    # node-local DaemonSet default ($(NODE_IP):4318) which assumes an
-    # OTel-collector DaemonSet is scheduled on every node (e.g. the
-    # opentelemetry-kube-stack preset used on kind clusters).
+    # http:// if omitted). Defaults to the per-namespace collector deployed
+    # by this chart (templates/otel-collector-*.yaml). When empty, the
+    # template falls back to the node-local DaemonSet default
+    # ($(NODE_IP):4318) which assumes an OTel-collector DaemonSet is
+    # scheduled on every node (e.g. the opentelemetry-kube-stack preset
+    # used on kind clusters).
     #
-    # For clusters that only expose a Deployment collector (e.g. VKE Byte),
-    # set:
+    # To send to a shared cluster-wide collector instead, also set
+    # otelCollector.enabled=false and override here, e.g.:
     #   otel.endpoint: opentelemetry-kube-stack-deployment-collector.monitoring.svc.cluster.local:4318
-    endpoint: ""
+    endpoint: "otel-collector:4318"
     samplerParam: 1
     disabled: false
+
+# Per-namespace OpenTelemetry collector. One Deployment + Service +
+# ConfigMap + ServiceAccount/ClusterRole/Binding rendered into the release
+# namespace, exporting directly to ClickHouse. Each release gets its own
+# sending_queue so a noisy namespace cannot starve sibling namespaces of
+# their queue capacity.
+otelCollector:
+  enabled: true
+  name: otel-collector
+  replicas: 1
+  image:
+    # Public upstream image; aegis byte-cluster pulls via its registry
+    # mirror automatically. Override --set otelCollector.image.repository=...
+    # to use a private mirror.
+    repository: docker.io/opspai/opentelemetry-collector-contrib
+    tag: "0.142.0"
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 250m
+      memory: 1Gi
+    limits:
+      cpu: 2
+      memory: 4Gi
+  clickhouse:
+    endpoint: "tcp://clickstack-clickhouse-clickhouse-headless.monitoring.svc.cluster.local:9000?dial_timeout=10s&compress=lz4&username=default"
+    database: otel
+    tracesTableName: otel_traces
+    metricsTableName: otel_metrics
+    logsTableName: otel_logs
+    ttl: 72h
+    timeout: 30s
+  sendingQueue:
+    enabled: true
+    numConsumers: 10
+    queueSize: 5000
+    blocking: true
+  batch:
+    sendBatchSize: 2000
+    sendBatchMaxSize: 4000
+    timeout: 5s
+  memoryLimiter:
+    limitPercentage: 75
+    spikeLimitPercentage: 15
