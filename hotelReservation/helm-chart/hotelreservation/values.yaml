@@ -34,15 +34,16 @@ global:
   defaultImageVersion: "0bf404"
   serviceDnsDomain: "cluster.local"
   otel:
-    # OTEL collector endpoint in "host:port" form (scheme auto-prefixed as
-    # http:// if omitted). When empty, services default to the node-local
-    # DaemonSet ($(NODE_IP):4318) which assumes an OTel-collector DaemonSet
-    # on every node (e.g. opentelemetry-kube-stack on kind).
+    # OTEL collector endpoint in "host:port" form. Default targets the
+    # per-namespace sidecar collector deployed by this chart (see
+    # .Values.otelCollector). HS services use the OTLP/HTTP exporter, so the
+    # default points at the collector's HTTP receiver port (4318).
     #
-    # For clusters with only a Deployment collector (e.g. VKE Byte), set:
-    #   otel.endpoint: opentelemetry-kube-stack-deployment-collector.monitoring.svc.cluster.local:4318
+    # Override with --set global.otel.endpoint=<host:port> to route at a
+    # shared cluster-wide collector (typical when otelCollector.enabled=false),
+    # e.g. opentelemetry-kube-stack-deployment-hs-collector.monitoring.svc.cluster.local:4318
     #
-    endpoint: ""
+    endpoint: "otel-collector:4318"
   services:
     environments:
       # TLS enablement
@@ -72,3 +73,52 @@ global:
       pvprovisioner:
         enabled: false
         storageClassName: ceph-fs   # optional
+
+# Per-namespace OTLP collector sidecar.
+#
+# Deploys a single-replica otel-collector-contrib in the release namespace so
+# each hotel-reservation install gets its own queue and exporter to ClickHouse,
+# instead of all namespaces fanning into one shared cluster-wide collector
+# (which saturates its ClickHouse exporter sending_queue and silently drops
+# spans). See aegis #366 / #367.
+#
+# Disable to fall back to a shared collector — also override
+# .global.otel.endpoint to point at that collector's URL.
+otelCollector:
+  enabled: true
+  name: otel-collector
+  replicas: 1
+  image:
+    # Public upstream is otel/opentelemetry-collector-contrib:0.142.0; the
+    # docker.io/opspai mirror lets byte-cluster (volces auto-mirror) pull
+    # without rate-limiting from upstream.
+    repository: docker.io/opspai/opentelemetry-collector-contrib
+    tag: "0.142.0"
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      cpu: 250m
+      memory: 1Gi
+    limits:
+      cpu: 2
+      memory: 4Gi
+  clickhouse:
+    endpoint: "tcp://clickstack-clickhouse-clickhouse-headless.monitoring.svc.cluster.local:9000?dial_timeout=10s&compress=lz4&username=default"
+    database: otel
+    tracesTableName: otel_traces
+    metricsTableName: otel_metrics
+    logsTableName: otel_logs
+    ttl: 72h
+    timeout: 30s
+  sendingQueue:
+    enabled: true
+    numConsumers: 10
+    queueSize: 5000
+    blocking: true
+  batch:
+    sendBatchSize: 2000
+    sendBatchMaxSize: 4000
+    timeout: 5s
+  memoryLimiter:
+    limitPercentage: 75
+    spikeLimitPercentage: 15
