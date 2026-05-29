@@ -1,4 +1,7 @@
 dependencies:
+- name: aegis-points
+  repository: ""
+  version: 0.1.0
 - name: data-init-job
   repository: ""
   version: 0.1.0
@@ -98,5 +101,5 @@ dependencies:
 - name: movie-info-memcached
   repository: ""
   version: 0.1.0
-digest: sha256:62ea2a9268af67e9f57c7adc26deafc4c7a13d55bb55ddff112181deceecc792
-generated: "2025-11-08T11:52:03.941917355Z"
+digest: sha256:147e92567fcebd11372d4adfd8697bc70ca0714a1b453133bcfdf358cc130832
+generated: "2026-05-29T07:53:45.890983173+01:00"
