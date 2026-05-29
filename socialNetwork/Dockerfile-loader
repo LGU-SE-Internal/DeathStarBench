@@ -27,6 +27,7 @@ RUN apt-get update && \
         libsasl2-2 \
         libssl3 \
         lua-socket \
+        netcat-openbsd \
         openssl \
         python3-aiohttp \
         python3-minimal \

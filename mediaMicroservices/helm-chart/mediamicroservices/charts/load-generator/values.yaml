@@ -14,13 +14,12 @@ container:
   # Leave blank to fall back to global.defaultImageVersion; override to pin a specific tag.
   imageVersion: ""
 
-# Init container configuration for data initialization
+# Init container configuration for data initialization.
+# The data-init container reuses the load-generator image (container.image),
+# which bakes python3 + aiohttp + curl — no public-network install at pod start.
 initContainer:
   # Enable data initialization before starting load generator
   enabled: true
-  # Python image for running data init scripts
-  image: "python"
-  imageVersion: "3.9-slim"
   # Server address for API calls (nginx service)
   serverAddress: "http://nginx-web-server:8080"
   # Timeout in seconds to wait for backend services to be ready

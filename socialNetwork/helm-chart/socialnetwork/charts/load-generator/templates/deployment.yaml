@@ -61,9 +61,13 @@ spec:
         - name: data-volume
           mountPath: /data
       {{- end }}
-      # Initialize social graph data
+      # Initialize social graph data. Reuses the load-generator image, which bakes
+      # python3 + aiohttp + netcat — no public-network install at pod start.
       - name: data-init
-        image: {{ .Values.initContainer.image }}:{{ .Values.initContainer.imageVersion }}
+        {{- $initRegistry := .Values.container.dockerRegistry | default .Values.global.dockerRegistry }}
+        {{- if eq $initRegistry "" }}{{- fail "global.dockerRegistry (or load-generator.container.dockerRegistry) must be set; see values.yaml for details" }}{{- end }}
+        image: {{ $initRegistry }}/{{ .Values.container.image }}:{{ .Values.container.imageVersion | default .Values.global.defaultImageVersion }}
+        imagePullPolicy: {{ .Values.container.imagePullPolicy | default .Values.global.imagePullPolicy }}
         command:
         - /bin/sh
         - -c
@@ -71,9 +75,7 @@ spec:
           set -x
           echo "=== Starting data initialization ==="
           cd /data/DeathStarBench/socialNetwork
-          echo "=== Installing aiohttp ==="
-          pip install aiohttp
-          
+
           echo "=== Verifying files exist ==="
           ls -la datasets/social-graph/{{ .Values.initContainer.graphName }}/
           
