@@ -165,3 +165,20 @@ redis:
     persistence:
       enabled: false
     replicaCount: 6
+
+# Chart-bound PointManifest auto-import (aegis-points library subchart).
+# When enabled, a post-install/post-upgrade Job imports every
+# aegis-points/*.yaml into aegis-chaos so the chaos point catalog for this
+# system is populated automatically on RestartPedestal install — no manual
+# 'aegisctl manifest import-dir' step.
+aegis:
+  chaosServer: http://aegis-chaos.aegis.svc:8082
+  points:
+    enabled: true
+    keepGoing: false
+  aegisctlImage: opspai/aegisctl:latest
+  # The import Job only calls the aegis-chaos HTTP API (no k8s API access),
+  # so the namespace default ServiceAccount is sufficient. Leaving this empty
+  # would default to "<Release.Name>-aegis", which these charts do not create.
+  serviceAccount: default
+  imagePullPolicy: IfNotPresent

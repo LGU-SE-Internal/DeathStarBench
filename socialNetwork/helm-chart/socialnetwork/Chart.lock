@@ -1,4 +1,10 @@
 dependencies:
+- name: aegis-points
+  repository: ""
+  version: 0.1.0
+- name: data-init-job
+  repository: ""
+  version: 0.1.0
 - name: compose-post-service
   repository: ""
   version: 0.1.0
@@ -6,9 +12,6 @@ dependencies:
   repository: ""
   version: 0.1.0
 - name: home-timeline-service
-  repository: ""
-  version: 0.1.0
-- name: jaeger
   repository: ""
   version: 0.1.0
 - name: media-service
@@ -92,5 +95,5 @@ dependencies:
 - name: redis
   repository: https://charts.bitnami.com/bitnami
   version: 17.3.7
-digest: sha256:ae28f9578ffe74dc4b53bb0acd57c6e2e69c55f1118ed446e16ceb8a98ace498
-generated: "2023-01-17T14:10:40.338928+01:00"
+digest: sha256:bdc9da998a1a57eb8d23ecaad205cafc7fbe2a107f81dd3f4f3a9ae405e65bea
+generated: "2026-05-29T07:52:48.153855381+01:00"
