@@ -92,6 +92,9 @@ void PageHandler::ReadPage(
   span->SetAttribute("rpc.service", "PageService");
   span->SetAttribute("rpc.method", "ReadPage");
 
+  LOG(info) << "ReadPage: req_id=" << req_id << " movie_id=" << movie_id
+            << " review_start=" << review_start << " review_stop=" << review_stop;
+
   // Inject context for downstream services
 
   std::map<std::string, std::string> writer_text_map;

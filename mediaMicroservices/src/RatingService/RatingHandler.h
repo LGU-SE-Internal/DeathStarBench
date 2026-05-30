@@ -78,6 +78,9 @@ void RatingHandler::UploadRating(
   span->SetAttribute("rpc.service", "RatingService");
   span->SetAttribute("rpc.method", "UploadRating");
 
+  LOG(info) << "UploadRating: req_id=" << req_id << " movie_id=" << movie_id
+            << " rating=" << rating;
+
   // Inject context for downstream services
 
   std::map<std::string, std::string> writer_text_map;

@@ -58,6 +58,9 @@ void PostStorageHandler::StorePost(
   auto span = tracer->StartSpan("store_post_server");
   auto scope = tracer->WithActiveSpan(span);
 
+  LOG(info) << "StorePost: req_id=" << req_id << " post_id=" << post.post_id
+            << " creator_id=" << post.creator.user_id;
+
   mongoc_client_t *mongodb_client =
       mongoc_client_pool_pop(_mongodb_client_pool);
   if (!mongodb_client) {
@@ -171,6 +174,8 @@ void PostStorageHandler::ReadPost(
   
   auto span = tracer->StartSpan("read_post_server");
   auto scope = tracer->WithActiveSpan(span);
+
+  LOG(info) << "ReadPost: req_id=" << req_id << " post_id=" << post_id;
 
   std::string post_id_str = std::to_string(post_id);
 
@@ -384,6 +389,9 @@ void PostStorageHandler::ReadPosts(
   span->SetAttribute("rpc.system", "thrift");
   span->SetAttribute("rpc.service", "PostStorageService");
   span->SetAttribute("rpc.method", "ReadPosts");
+
+  LOG(info) << "ReadPosts: req_id=" << req_id
+            << " num_post_ids=" << post_ids.size();
 
   // Inject context for downstream services
 

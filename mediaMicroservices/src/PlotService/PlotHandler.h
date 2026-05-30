@@ -82,6 +82,8 @@ void PlotHandler::ReadPlot(
   span->SetAttribute("rpc.service", "PlotService");
   span->SetAttribute("rpc.method", "ReadPlot");
 
+  LOG(info) << "ReadPlot: req_id=" << req_id << " plot_id=" << plot_id;
+
   // Inject context for downstream services
 
   std::map<std::string, std::string> writer_text_map;
@@ -264,6 +266,9 @@ void PlotHandler::WritePlot(
   span->SetAttribute("rpc.system", "thrift");
   span->SetAttribute("rpc.service", "PlotService");
   span->SetAttribute("rpc.method", "WritePlot");
+
+  LOG(info) << "WritePlot: req_id=" << req_id << " plot_id=" << plot_id
+            << " plot_len=" << plot.size();
 
   // Inject context for downstream services
 

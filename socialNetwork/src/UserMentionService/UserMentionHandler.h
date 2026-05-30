@@ -77,6 +77,9 @@ void UserMentionHandler::ComposeUserMentions(
   span->SetAttribute("rpc.service", "UserMentionService");
   span->SetAttribute("rpc.method", "ComposeUserMentions");
 
+  LOG(info) << "ComposeUserMentions: req_id=" << req_id
+            << " num_usernames=" << usernames.size();
+
   // Inject context for downstream services
 
   std::map<std::string, std::string> writer_text_map;

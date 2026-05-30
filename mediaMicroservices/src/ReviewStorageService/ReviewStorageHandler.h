@@ -80,6 +80,9 @@ void ReviewStorageHandler::StoreReview(
   span->SetAttribute("rpc.service", "ReviewStorageService");
   span->SetAttribute("rpc.method", "StoreReview");
 
+  LOG(info) << "StoreReview: req_id=" << req_id << " review_id=" << review.review_id
+            << " user_id=" << review.user_id << " movie_id=" << review.movie_id;
+
   // Inject context for downstream services
 
   std::map<std::string, std::string> writer_text_map;
@@ -183,6 +186,9 @@ void ReviewStorageHandler::ReadReviews(
   span->SetAttribute("rpc.service", "ReviewStorageService");
   span->SetAttribute("rpc.method", "ReadReviews");
 
+  LOG(info) << "ReadReviews: req_id=" << req_id
+            << " num_review_ids=" << review_ids.size();
+
   // Inject context for downstream services
 
   std::map<std::string, std::string> writer_text_map;
@@ -273,9 +279,10 @@ void ReviewStorageHandler::ReadReviews(
     new_review.timestamp = review_json["timestamp"];
     new_review.review_id = review_json["review_id"];
     return_map.insert(std::make_pair(new_review.review_id, new_review));
+    LOG(debug) << "Review " << new_review.review_id
+               << " of movie " << new_review.movie_id << " found in memcached";
     review_ids_not_cached.erase(new_review.review_id);
     free(return_value);
-    LOG(debug) << "Review: " << new_review.review_id << " found in memcached";
   }
   get_span->End();
   memcached_quit(memcached_client);

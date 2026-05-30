@@ -110,6 +110,10 @@ void HomeTimelineHandler::WriteHomeTimeline(
   span->SetAttribute("rpc.service", "HomeTimelineService");
   span->SetAttribute("rpc.method", "WriteHomeTimeline");
 
+  LOG(info) << "WriteHomeTimeline: req_id=" << req_id << " post_id=" << post_id
+            << " user_id=" << user_id
+            << " num_user_mentions=" << user_mentions_id.size();
+
   // Find followers of the user
   auto followers_span = tracer->StartSpan("get_followers_client");
   std::map<std::string, std::string> writer_text_map;
@@ -225,6 +229,9 @@ void HomeTimelineHandler::ReadHomeTimeline(
   span->SetAttribute("rpc.system", "thrift");
   span->SetAttribute("rpc.service", "HomeTimelineService");
   span->SetAttribute("rpc.method", "ReadHomeTimeline");
+
+  LOG(info) << "ReadHomeTimeline: req_id=" << req_id << " user_id=" << user_id
+            << " start=" << start_idx << " stop=" << stop_idx;
 
   if (stop_idx <= start_idx || start_idx < 0) {
     return;

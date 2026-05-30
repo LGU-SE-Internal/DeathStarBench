@@ -89,6 +89,9 @@ void CastInfoHandler::WriteCastInfo(
   span->SetAttribute("rpc.service", "CastInfoService");
   span->SetAttribute("rpc.method", "WriteCastInfo");
 
+  LOG(info) << "WriteCastInfo: req_id=" << req_id << " cast_info_id=" << cast_info_id
+            << " name=" << name;
+
   // Inject context for downstream services
 
   std::map<std::string, std::string> writer_text_map;
@@ -190,6 +193,9 @@ void CastInfoHandler::ReadCastInfo(
   span->SetAttribute("rpc.system", "thrift");
   span->SetAttribute("rpc.service", "CastInfoService");
   span->SetAttribute("rpc.method", "ReadCastInfo");
+
+  LOG(info) << "ReadCastInfo: req_id=" << req_id
+            << " num_cast_info_ids=" << cast_info_ids.size();
 
   // Inject context for downstream services
 

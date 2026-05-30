@@ -71,6 +71,8 @@ void TextHandler::UploadText(
   span->SetAttribute("rpc.service", "TextService");
   span->SetAttribute("rpc.method", "UploadText");
 
+  LOG(info) << "UploadText: req_id=" << req_id << " text_len=" << text.size();
+
   // Inject context for downstream services
 
   std::map<std::string, std::string> writer_text_map;

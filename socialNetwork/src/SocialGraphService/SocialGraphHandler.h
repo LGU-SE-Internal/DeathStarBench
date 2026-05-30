@@ -113,6 +113,9 @@ void SocialGraphHandler::Follow(
   auto span = tracer->StartSpan("follow_server");
   auto scope = tracer->WithActiveSpan(span);
 
+  LOG(info) << "Follow: req_id=" << req_id << " user_id=" << user_id
+            << " followee_id=" << followee_id;
+
   int64_t timestamp =
       duration_cast<milliseconds>(system_clock::now().time_since_epoch())
           .count();
@@ -310,6 +313,9 @@ void SocialGraphHandler::Unfollow(
   
   auto span = tracer->StartSpan("unfollow_server");
 
+  LOG(info) << "Unfollow: req_id=" << req_id << " user_id=" << user_id
+            << " followee_id=" << followee_id;
+
   std::future<void> mongo_update_follower_future =
       std::async(std::launch::async, [&]() {
         mongoc_client_t *mongodb_client =
@@ -488,6 +494,8 @@ void SocialGraphHandler::GetFollowers(
   
   auto span = tracer->StartSpan("get_followers_server");
 
+  LOG(info) << "GetFollowers: req_id=" << req_id << " user_id=" << user_id;
+
   auto redis_span = tracer->StartSpan("social_graph_redis_get_client");
 
   std::vector<std::string> followers_str;
@@ -617,6 +625,8 @@ void SocialGraphHandler::GetFollowees(
   std::map<std::string, std::string> writer_text_map;
   
   auto span = tracer->StartSpan("get_followees_server");
+
+  LOG(info) << "GetFollowees: req_id=" << req_id << " user_id=" << user_id;
 
   auto redis_span = tracer->StartSpan("social_graph_redis_get_client");
 
@@ -755,6 +765,8 @@ void SocialGraphHandler::InsertUser(
   
   auto span = tracer->StartSpan("insert_user_server");
 
+  LOG(info) << "InsertUser: req_id=" << req_id << " user_id=" << user_id;
+
   mongoc_client_t *mongodb_client =
       mongoc_client_pool_pop(_mongodb_client_pool);
   if (!mongodb_client) {
@@ -837,6 +849,9 @@ void SocialGraphHandler::FollowWithUsername(
   span->SetAttribute("rpc.system", "thrift");
   span->SetAttribute("rpc.service", "SocialGraphService");
   span->SetAttribute("rpc.method", "FollowWithUsername");
+
+  LOG(info) << "FollowWithUsername: req_id=" << req_id << " user_name=" << user_name
+            << " followee_name=" << followee_name;
 
   // Inject context for downstream services
 
@@ -946,6 +961,9 @@ void SocialGraphHandler::UnfollowWithUsername(
   span->SetAttribute("rpc.system", "thrift");
   span->SetAttribute("rpc.service", "SocialGraphService");
   span->SetAttribute("rpc.method", "UnfollowWithUsername");
+
+  LOG(info) << "UnfollowWithUsername: req_id=" << req_id << " user_name=" << user_name
+            << " followee_name=" << followee_name;
 
   // Inject context for downstream services
 

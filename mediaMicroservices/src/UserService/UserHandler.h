@@ -173,6 +173,8 @@ void UserHandler::RegisterUser(
   span->SetAttribute("rpc.service", "UserService");
   span->SetAttribute("rpc.method", "RegisterUser");
 
+  LOG(info) << "RegisterUser: req_id=" << req_id << " username=" << username;
+
   // Inject context for downstream services
 
   std::map<std::string, std::string> writer_text_map;
@@ -337,6 +339,9 @@ void UserHandler::RegisterUserWithId(
   span->SetAttribute("rpc.service", "UserService");
   span->SetAttribute("rpc.method", "RegisterUserWithId");
 
+  LOG(info) << "RegisterUserWithId: req_id=" << req_id << " username=" << username
+            << " user_id=" << user_id;
+
   // Inject context for downstream services
 
   std::map<std::string, std::string> writer_text_map;
@@ -437,6 +442,9 @@ void UserHandler::UploadUserWithUsername(
   
   auto span = tracer->StartSpan("UploadUserWithUsername");
   auto scope = tracer->WithActiveSpan(span);
+
+  LOG(info) << "UploadUserWithUsername: req_id=" << req_id
+            << " username=" << username;
 
   size_t user_id_size;
   uint32_t memcached_flags;
@@ -624,6 +632,8 @@ void UserHandler::UploadUserWithUserId(
   auto span = tracer->StartSpan("UploadUserWithUserId");
   auto scope = tracer->WithActiveSpan(span);
 
+  LOG(info) << "UploadUserWithUserId: req_id=" << req_id << " user_id=" << user_id;
+
   auto compose_client_wrapper = _compose_client_pool->Pop();
   if (!compose_client_wrapper) {
     ServiceException se;
@@ -659,6 +669,8 @@ void UserHandler::Login(
   
   auto span = tracer->StartSpan("Login");
   auto scope = tracer->WithActiveSpan(span);
+
+  LOG(info) << "Login: req_id=" << req_id << " username=" << username;
 
   size_t password_size;
   size_t salt_size;

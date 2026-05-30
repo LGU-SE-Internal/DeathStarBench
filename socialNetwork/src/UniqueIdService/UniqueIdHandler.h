@@ -75,6 +75,9 @@ int64_t UniqueIdHandler::ComposeUniqueId(
   span->SetAttribute("rpc.service", "UniqueIdService");
   span->SetAttribute("rpc.method", "ComposeUniqueId");
 
+  LOG(info) << "ComposeUniqueId: req_id=" << req_id
+            << " post_type=" << post_type;
+
   _thread_lock->lock();
   int64_t timestamp =
       duration_cast<milliseconds>(system_clock::now().time_since_epoch())

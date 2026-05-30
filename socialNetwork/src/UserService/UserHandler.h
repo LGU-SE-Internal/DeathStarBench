@@ -156,6 +156,9 @@ void UserHandler::RegisterUserWithId(
   span->SetAttribute("rpc.service", "UserService");
   span->SetAttribute("rpc.method", "RegisterUserWithId");
 
+  LOG(info) << "RegisterUserWithId: req_id=" << req_id << " username=" << username
+            << " user_id=" << user_id;
+
   // Inject context for downstream services
 
   std::map<std::string, std::string> writer_text_map;
@@ -274,6 +277,8 @@ void UserHandler::RegisterUser(
   std::map<std::string, std::string> writer_text_map;
   
   auto span = tracer->StartSpan("register_user_server");
+
+  LOG(info) << "RegisterUser: req_id=" << req_id << " username=" << username;
 
   // Compose user_id
   _thread_lock->lock();
@@ -417,6 +422,9 @@ void UserHandler::ComposeCreatorWithUsername(
   std::map<std::string, std::string> writer_text_map;
   
   auto span = tracer->StartSpan("compose_creator_server");
+
+  LOG(info) << "ComposeCreatorWithUsername: req_id=" << req_id
+            << " username=" << username;
 
   size_t user_id_size;
   uint32_t memcached_flags;
@@ -573,6 +581,9 @@ void UserHandler::ComposeCreatorWithUserId(
   
   auto span = tracer->StartSpan("compose_creator_server");
 
+  LOG(info) << "ComposeCreatorWithUserId: req_id=" << req_id
+            << " user_id=" << user_id << " username=" << username;
+
   Creator creator;
   creator.username = username;
   creator.user_id = user_id;
@@ -592,6 +603,8 @@ void UserHandler::Login(std::string &_return, int64_t req_id,
   std::map<std::string, std::string> writer_text_map;
   
   auto span = tracer->StartSpan("login_server");
+
+  LOG(info) << "Login: req_id=" << req_id << " username=" << username;
 
   size_t login_size;
   uint32_t memcached_flags;
@@ -777,6 +790,8 @@ int64_t UserHandler::GetUserId(
   std::map<std::string, std::string> writer_text_map;
   
   auto span = tracer->StartSpan("get_user_id_server");
+
+  LOG(info) << "GetUserId: req_id=" << req_id << " username=" << username;
 
   size_t user_id_size;
   uint32_t memcached_flags;

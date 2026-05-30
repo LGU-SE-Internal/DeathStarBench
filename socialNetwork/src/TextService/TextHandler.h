@@ -56,6 +56,8 @@ void TextHandler::ComposeText(
   span->SetAttribute("rpc.service", "TextService");
   span->SetAttribute("rpc.method", "ComposeText");
 
+  LOG(info) << "ComposeText: req_id=" << req_id << " text_len=" << text.size();
+
   std::vector<std::string> mention_usernames;
   std::smatch m;
   std::regex e("@[a-zA-Z0-9-_]+");

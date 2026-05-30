@@ -46,6 +46,9 @@ void MediaHandler::ComposeMedia(
   span->SetAttribute("rpc.service", "MediaService");
   span->SetAttribute("rpc.method", "ComposeMedia");
 
+  LOG(info) << "ComposeMedia: req_id=" << req_id
+            << " num_media=" << media_ids.size();
+
   if (media_types.size() != media_ids.size()) {
     ServiceException se;
     se.errorCode = ErrorCode::SE_THRIFT_HANDLER_ERROR;
