@@ -98,6 +98,9 @@ void MovieInfoHandler::WriteMovieInfo(
   span->SetAttribute("rpc.service", "MovieInfoService");
   span->SetAttribute("rpc.method", "WriteMovieInfo");
 
+  LOG(info) << "WriteMovieInfo: req_id=" << req_id << " movie_id=" << movie_id
+            << " title=" << title << " num_casts=" << casts.size();
+
   // Inject context for downstream services
 
   std::map<std::string, std::string> writer_text_map;
@@ -243,6 +246,8 @@ void MovieInfoHandler::ReadMovieInfo(
   span->SetAttribute("rpc.system", "thrift");
   span->SetAttribute("rpc.service", "MovieInfoService");
   span->SetAttribute("rpc.method", "ReadMovieInfo");
+
+  LOG(info) << "ReadMovieInfo: req_id=" << req_id << " movie_id=" << movie_id;
 
   // Inject context for downstream services
 
@@ -461,6 +466,10 @@ void MovieInfoHandler::UpdateRating(
   span->SetAttribute("rpc.system", "thrift");
   span->SetAttribute("rpc.service", "MovieInfoService");
   span->SetAttribute("rpc.method", "UpdateRating");
+
+  LOG(info) << "UpdateRating: req_id=" << req_id << " movie_id=" << movie_id
+            << " sum_uncommitted_rating=" << sum_uncommitted_rating
+            << " num_uncommitted_rating=" << num_uncommitted_rating;
 
   // Inject context for downstream services
 

@@ -293,6 +293,8 @@ void ComposeReviewHandler::UploadMovieId(
   span->SetAttribute("rpc.service", "ComposeReviewService");
   span->SetAttribute("rpc.method", "UploadMovieId");
 
+  LOG(info) << "UploadMovieId: req_id=" << req_id << " movie_id=" << movie_id;
+
   // Inject context for downstream services
 
   std::map<std::string, std::string> writer_text_map;
@@ -390,6 +392,8 @@ void ComposeReviewHandler::UploadMovieId(
   // it is in charge of compose the request and upload to the microservices in
   // the next tier.
   if (counter_value == NUM_COMPONENTS) {
+    LOG(info) << "ComposeAndUpload: req_id=" << req_id
+              << " all " << NUM_COMPONENTS << " components received";
     _ComposeAndUpload(req_id, writer_text_map);
   }
   span->End();
@@ -435,6 +439,8 @@ void ComposeReviewHandler::UploadUserId(
   span->SetAttribute("rpc.system", "thrift");
   span->SetAttribute("rpc.service", "ComposeReviewService");
   span->SetAttribute("rpc.method", "UploadUserId");
+
+  LOG(info) << "UploadUserId: req_id=" << req_id << " user_id=" << user_id;
 
   // Inject context for downstream services
 
@@ -580,6 +586,8 @@ void ComposeReviewHandler::UploadUniqueId(
   span->SetAttribute("rpc.system", "thrift");
   span->SetAttribute("rpc.service", "ComposeReviewService");
   span->SetAttribute("rpc.method", "UploadUniqueId");
+
+  LOG(info) << "UploadUniqueId: req_id=" << req_id << " review_id=" << review_id;
 
   // Inject context for downstream services
 
@@ -728,6 +736,8 @@ void ComposeReviewHandler::UploadText(
   span->SetAttribute("rpc.service", "ComposeReviewService");
   span->SetAttribute("rpc.method", "UploadText");
 
+  LOG(info) << "UploadText: req_id=" << req_id << " text_len=" << text.size();
+
   // Inject context for downstream services
 
   std::map<std::string, std::string> writer_text_map;
@@ -868,6 +878,8 @@ void ComposeReviewHandler::UploadRating(
   span->SetAttribute("rpc.system", "thrift");
   span->SetAttribute("rpc.service", "ComposeReviewService");
   span->SetAttribute("rpc.method", "UploadRating");
+
+  LOG(info) << "UploadRating: req_id=" << req_id << " rating=" << rating;
 
   // Inject context for downstream services
 

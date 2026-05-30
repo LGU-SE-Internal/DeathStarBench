@@ -109,6 +109,8 @@ void UrlShortenHandler::ComposeUrls(
   span->SetAttribute("rpc.service", "UrlShortenService");
   span->SetAttribute("rpc.method", "ComposeUrls");
 
+  LOG(info) << "ComposeUrls: req_id=" << req_id << " num_urls=" << urls.size();
+
   // Inject context for downstream services
 
   std::map<std::string, std::string> writer_text_map;

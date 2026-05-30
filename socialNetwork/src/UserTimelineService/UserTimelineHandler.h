@@ -105,6 +105,9 @@ void UserTimelineHandler::WriteUserTimeline(
   span->SetAttribute("rpc.service", "UserTimelineService");
   span->SetAttribute("rpc.method", "WriteUserTimeline");
 
+  LOG(info) << "WriteUserTimeline: req_id=" << req_id << " post_id=" << post_id
+            << " user_id=" << user_id;
+
   mongoc_client_t *mongodb_client =
       mongoc_client_pool_pop(_mongodb_client_pool);
   if (!mongodb_client) {
@@ -199,6 +202,9 @@ void UserTimelineHandler::ReadUserTimeline(
   span->SetAttribute("rpc.system", "thrift");
   span->SetAttribute("rpc.service", "UserTimelineService");
   span->SetAttribute("rpc.method", "ReadUserTimeline");
+
+  LOG(info) << "ReadUserTimeline: req_id=" << req_id << " user_id=" << user_id
+            << " start=" << start << " stop=" << stop;
 
   if (stop <= start || start < 0) {
     return;

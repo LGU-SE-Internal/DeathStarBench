@@ -95,6 +95,9 @@ void MovieIdHandler::UploadMovieId(
   span->SetAttribute("rpc.service", "MovieIdService");
   span->SetAttribute("rpc.method", "UploadMovieId");
 
+  LOG(info) << "UploadMovieId: req_id=" << req_id << " title=" << title
+            << " rating=" << rating;
+
   // Inject context for downstream services
 
   std::map<std::string, std::string> writer_text_map;
@@ -330,6 +333,9 @@ void MovieIdHandler::RegisterMovieId (
   span->SetAttribute("rpc.system", "thrift");
   span->SetAttribute("rpc.service", "MovieIdService");
   span->SetAttribute("rpc.method", "RegisterMovieId");
+
+  LOG(info) << "RegisterMovieId: req_id=" << req_id << " title=" << title
+            << " movie_id=" << movie_id;
 
   // Inject context for downstream services
 

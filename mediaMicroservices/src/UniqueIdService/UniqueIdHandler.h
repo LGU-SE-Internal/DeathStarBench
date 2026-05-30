@@ -112,6 +112,8 @@ void UniqueIdHandler::UploadUniqueId(
   span->SetAttribute("rpc.service", "UniqueIdService");
   span->SetAttribute("rpc.method", "UploadUniqueId");
 
+  LOG(info) << "UploadUniqueId: req_id=" << req_id;
+
   // Inject context for downstream services
 
   std::map<std::string, std::string> writer_text_map;

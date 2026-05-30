@@ -375,6 +375,11 @@ void ComposePostHandler::ComposePost(
   span->SetAttribute("rpc.system", "thrift");
   span->SetAttribute("rpc.service", "ComposePostService");
   span->SetAttribute("rpc.method", "ComposePost");
+
+  LOG(info) << "ComposePost: req_id=" << req_id << " user_id=" << user_id
+            << " username=" << username << " text_len=" << text.size()
+            << " num_media=" << media_ids.size();
+
   std::map<std::string, std::string> writer_text_map;
   
   

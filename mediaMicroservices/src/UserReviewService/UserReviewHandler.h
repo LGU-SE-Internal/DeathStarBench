@@ -89,6 +89,9 @@ void UserReviewHandler::UploadUserReview(
   span->SetAttribute("rpc.service", "UserReviewService");
   span->SetAttribute("rpc.method", "UploadUserReview");
 
+  LOG(info) << "UploadUserReview: req_id=" << req_id << " user_id=" << user_id
+            << " review_id=" << review_id;
+
   // Inject context for downstream services
 
   std::map<std::string, std::string> writer_text_map;
@@ -255,6 +258,9 @@ void UserReviewHandler::ReadUserReviews(
   span->SetAttribute("rpc.system", "thrift");
   span->SetAttribute("rpc.service", "UserReviewService");
   span->SetAttribute("rpc.method", "ReadUserReviews");
+
+  LOG(info) << "ReadUserReviews: req_id=" << req_id << " user_id=" << user_id
+            << " start=" << start << " stop=" << stop;
 
   // Inject context for downstream services
 
