@@ -132,7 +132,12 @@ void SetUpTracer(const std::string &service) {
         std::move(exporter), bsp_options);
       processors.push_back(std::move(processor));
       
-      LOG(info) << "Using OpenTelemetry OTLP HTTP exporter: " << otlp_options.url;
+      // Must not use LOG() here: it runs before SetUpLogProvider() installs the
+      // OTLP LoggerProvider, so the boost OTLP sink would lazily latch onto the
+      // default no-op LoggerProvider and cache it forever, dropping every later
+      // application log from OTLP export (console still works). media uses
+      // std::cout here for the same reason.
+      std::cout << "Using OpenTelemetry OTLP HTTP exporter: " << otlp_options.url << std::endl;
       
       // Create resource with service name
       auto resource_attributes = opentelemetry::sdk::resource::ResourceAttributes{
@@ -162,11 +167,11 @@ void SetUpTracer(const std::string &service) {
       r = true;
     }
     catch(const std::exception& e) {
-      LOG(error) << "Failed to setup tracer: " << e.what() << ", retrying ...";
+      std::cerr << "Failed to setup tracer: " << e.what() << ", retrying ..." << std::endl;
       sleep(1);
     }
     catch(...) {
-      LOG(error) << "Failed to setup tracer, retrying ...";
+      std::cerr << "Failed to setup tracer, retrying ..." << std::endl;
       sleep(1);
     }
   }
