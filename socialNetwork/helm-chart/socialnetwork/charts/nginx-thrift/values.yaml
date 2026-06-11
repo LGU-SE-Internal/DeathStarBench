@@ -8,7 +8,16 @@ container:
   image: sn-openresty-thrift
   imageVersion: be28ed6
   name: nginx-thrift
-  ports: 
+  # nginx-thrift edge idles ~505Mi resident — give it a 1.5Gi ceiling so normal
+  # traffic never OOMs while memory_stress still has room to breach (aegis#563).
+  resources:
+    requests:
+      cpu: 50m
+      memory: 640Mi
+    limits:
+      cpu: 500m
+      memory: 1536Mi
+  ports:
   - containerPort: 8080
   env:
   - name: fqdn_suffix

@@ -5,11 +5,20 @@ global:
     maxReplicas: 10
     targetMemoryUtilizationPercentage: '60'
     targetCPUUtilizationPercentage: '60'
+  # Generous default so cpu_stress / memory_stress chaos faults have a finite
+  # limit to breach (aegis#563). The previous default (mem 2Gi/4Gi, NO cpu
+  # limit) gave cpu_stress nothing to throttle against. Thrift business
+  # services idle at 1-3m CPU / <40Mi mem, so a 500m / 1Gi cap never throttles
+  # normal traffic but an aggressive 4-worker stress fault overshoots it
+  # cleanly. nginx-thrift (idles ~505Mi) gets a 1.5Gi override below. Infra
+  # (mongodb/redis/memcached) inherits this non-throttling ceiling.
   resources:
-    limits:
-      memory: 4Gi
     requests:
-      memory: 2Gi
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
   replicas: 1
   imagePullPolicy: "IfNotPresent"
   restartPolicy: Always

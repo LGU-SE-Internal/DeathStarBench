@@ -6,6 +6,18 @@ global:
   imagePullPolicy: "IfNotPresent"
   restartPolicy: Always
   serviceType: ClusterIP
+  # Generous default so cpu_stress / memory_stress chaos faults have a finite
+  # limit to breach (aegis#563). HS Go services idle at ~1m CPU / 10-16Mi mem,
+  # so a 500m / 1Gi cap never throttles normal traffic but an aggressive
+  # 4-worker stress fault overshoots it cleanly. Infra (mongodb/memcached/
+  # consul) inherits the same non-throttling ceiling — it is never tightened.
+  resources: |-
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
   # Registry that hosts the hotelreservation-built images (frontend, search,
   # profile, reservation, recommendation, user, loader, etc.). This chart has
   # no sensible public default — images are built from this repository and
