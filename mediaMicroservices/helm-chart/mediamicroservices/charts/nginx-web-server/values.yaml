@@ -8,6 +8,15 @@ container:
   image: media-nginx
   imageVersion: "64566e8"
   name: nginx-web-server
+  # nginx edge idles ~451-505Mi resident — give it a 1.5Gi ceiling so normal
+  # traffic never OOMs while memory_stress still has room to breach (aegis#563).
+  resources: |-
+    requests:
+      cpu: 50m
+      memory: 640Mi
+    limits:
+      cpu: 500m
+      memory: 1536Mi
   ports:
     - containerPort: 8080
   env:
