@@ -1,0 +1,314 @@
+apiVersion: v1
+entries:
+  hotel-reservation:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2026-06-13T08:41:17.670357751Z"
+    dependencies:
+    - name: attractions
+      repository: ""
+      version: 0.1.0
+    - name: consul
+      repository: ""
+      version: 0.1.0
+    - name: frontend
+      repository: ""
+      version: 0.1.0
+    - name: geo
+      repository: ""
+      version: 0.1.0
+    - name: memcached-profile
+      repository: ""
+      version: 0.1.0
+    - name: memcached-rate
+      repository: ""
+      version: 0.1.0
+    - name: memcached-reserve
+      repository: ""
+      version: 0.1.0
+    - name: mongodb-attractions
+      repository: ""
+      version: 0.1.0
+    - name: mongodb-geo
+      repository: ""
+      version: 0.1.0
+    - name: mongodb-profile
+      repository: ""
+      version: 0.1.0
+    - name: mongodb-rate
+      repository: ""
+      version: 0.1.0
+    - name: mongodb-recommendation
+      repository: ""
+      version: 0.1.0
+    - name: mongodb-reservation
+      repository: ""
+      version: 0.1.0
+    - name: mongodb-user
+      repository: ""
+      version: 0.1.0
+    - name: profile
+      repository: ""
+      version: 0.1.0
+    - name: rate
+      repository: ""
+      version: 0.1.0
+    - name: recommendation
+      repository: ""
+      version: 0.1.0
+    - name: reservation
+      repository: ""
+      version: 0.1.0
+    - name: search
+      repository: ""
+      version: 0.1.0
+    - name: user
+      repository: ""
+      version: 0.1.0
+    description: Helm chart for HotelReservation service in DeathStarBench
+    digest: f4b7ecc573ae99ff0bbba7639a822263dded80a605fcd8ff5622c3757ecc19a9
+    name: hotel-reservation
+    type: application
+    urls:
+    - https://lgu-se-internal.github.io/DeathStarBench/hotel-reservation-0.2.5.tgz
+    version: 0.2.5
+  media-microservices:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2026-06-13T08:41:17.675935878Z"
+    dependencies:
+    - name: aegis-points
+      repository: ""
+      version: 0.1.0
+    - name: data-init-job
+      repository: ""
+      version: 0.1.0
+    - name: nginx-web-server
+      repository: ""
+      version: 0.1.0
+    - name: unique-id-service
+      repository: ""
+      version: 0.1.0
+    - name: movie-id-service
+      repository: ""
+      version: 0.1.0
+    - name: movie-id-mongodb
+      repository: ""
+      version: 0.1.0
+    - name: movie-id-memcached
+      repository: ""
+      version: 0.1.0
+    - name: text-service
+      repository: ""
+      version: 0.1.0
+    - name: rating-service
+      repository: ""
+      version: 0.1.0
+    - name: rating-redis
+      repository: ""
+      version: 0.1.0
+    - name: user-service
+      repository: ""
+      version: 0.1.0
+    - name: user-mongodb
+      repository: ""
+      version: 0.1.0
+    - name: user-memcached
+      repository: ""
+      version: 0.1.0
+    - name: compose-review-service
+      repository: ""
+      version: 0.1.0
+    - name: compose-review-memcached
+      repository: ""
+      version: 0.1.0
+    - name: review-storage-service
+      repository: ""
+      version: 0.1.0
+    - name: review-storage-memcached
+      repository: ""
+      version: 0.1.0
+    - name: review-storage-mongodb
+      repository: ""
+      version: 0.1.0
+    - name: user-review-service
+      repository: ""
+      version: 0.1.0
+    - name: user-review-mongodb
+      repository: ""
+      version: 0.1.0
+    - name: user-review-redis
+      repository: ""
+      version: 0.1.0
+    - name: movie-review-service
+      repository: ""
+      version: 0.1.0
+    - name: movie-review-mongodb
+      repository: ""
+      version: 0.1.0
+    - name: movie-review-redis
+      repository: ""
+      version: 0.1.0
+    - name: cast-info-service
+      repository: ""
+      version: 0.1.0
+    - name: cast-info-mongodb
+      repository: ""
+      version: 0.1.0
+    - name: cast-info-memcached
+      repository: ""
+      version: 0.1.0
+    - name: page-service
+      repository: ""
+      version: 0.1.0
+    - name: plot-service
+      repository: ""
+      version: 0.1.0
+    - name: plot-mongodb
+      repository: ""
+      version: 0.1.0
+    - name: plot-memcached
+      repository: ""
+      version: 0.1.0
+    - name: movie-info-service
+      repository: ""
+      version: 0.1.0
+    - name: movie-info-mongodb
+      repository: ""
+      version: 0.1.0
+    - name: movie-info-memcached
+      repository: ""
+      version: 0.1.0
+    description: A Helm chart for MediaMicroservices in DeathStarBench
+    digest: 362f05f53d1f966da8ac611b379b51d0f1c1e0c153770546acf75d097a0d0455
+    name: media-microservices
+    type: application
+    urls:
+    - https://lgu-se-internal.github.io/DeathStarBench/media-microservices-0.2.5.tgz
+    version: 0.2.5
+  social-network:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2026-06-13T08:41:17.693356081Z"
+    dependencies:
+    - name: aegis-points
+      repository: ""
+      version: 0.1.0
+    - name: data-init-job
+      repository: ""
+      version: 0.1.0
+    - name: compose-post-service
+      repository: ""
+      version: 0.1.0
+    - condition: global.redis.standalone.enabled
+      name: home-timeline-redis
+      repository: ""
+      version: 0.1.0
+    - name: home-timeline-service
+      repository: ""
+      version: 0.1.0
+    - name: media-service
+      repository: ""
+      version: 0.1.0
+    - condition: global.mongodb.standalone.enabled
+      name: media-mongodb
+      repository: ""
+      version: 0.1.0
+    - condition: global.memcached.standalone.enabled
+      name: media-memcached
+      repository: ""
+      version: 0.1.0
+    - name: media-frontend
+      repository: ""
+      version: 0.1.0
+    - name: nginx-thrift
+      repository: ""
+      version: 0.1.0
+    - condition: global.memcached.standalone.enabled
+      name: post-storage-memcached
+      repository: ""
+      version: 0.1.0
+    - condition: global.mongodb.standalone.enabled
+      name: post-storage-mongodb
+      repository: ""
+      version: 0.1.0
+    - name: post-storage-service
+      repository: ""
+      version: 0.1.0
+    - condition: global.mongodb.standalone.enabled
+      name: social-graph-mongodb
+      repository: ""
+      version: 0.1.0
+    - condition: global.redis.standalone.enabled
+      name: social-graph-redis
+      repository: ""
+      version: 0.1.0
+    - name: social-graph-service
+      repository: ""
+      version: 0.1.0
+    - name: text-service
+      repository: ""
+      version: 0.1.0
+    - name: unique-id-service
+      repository: ""
+      version: 0.1.0
+    - condition: global.memcached.standalone.enabled
+      name: url-shorten-memcached
+      repository: ""
+      version: 0.1.0
+    - condition: global.mongodb.standalone.enabled
+      name: url-shorten-mongodb
+      repository: ""
+      version: 0.1.0
+    - name: url-shorten-service
+      repository: ""
+      version: 0.1.0
+    - condition: global.memcached.standalone.enabled
+      name: user-memcached
+      repository: ""
+      version: 0.1.0
+    - name: user-mention-service
+      repository: ""
+      version: 0.1.0
+    - condition: global.mongodb.standalone.enabled
+      name: user-mongodb
+      repository: ""
+      version: 0.1.0
+    - name: user-service
+      repository: ""
+      version: 0.1.0
+    - condition: global.mongodb.standalone.enabled
+      name: user-timeline-mongodb
+      repository: ""
+      version: 0.1.0
+    - condition: global.redis.standalone.enabled
+      name: user-timeline-redis
+      repository: ""
+      version: 0.1.0
+    - name: user-timeline-service
+      repository: ""
+      version: 0.1.0
+    - condition: global.mongodb.sharding.enabled
+      name: mongodb-sharded
+      repository: https://charts.bitnami.com/bitnami
+      version: 6.0.1
+    - condition: global.memcached.cluster.enabled
+      name: mcrouter
+      repository: https://evryfs.github.io/helm-charts/
+      version: 0.3.0
+    - condition: global.redis.cluster.enabled
+      name: redis-cluster
+      repository: https://charts.bitnami.com/bitnami
+      version: 8.1.4
+    - condition: global.redis.replication.enabled
+      name: redis
+      repository: https://charts.bitnami.com/bitnami
+      version: 17.3.7
+    description: Helm chart for SocialNetwork service in DeathStarBench
+    digest: 745eebd18d3f1e8758df271064a1030be38e93b5049ef73e394f35b0e96a7200
+    name: social-network
+    type: application
+    urls:
+    - https://lgu-se-internal.github.io/DeathStarBench/social-network-0.2.5.tgz
+    version: 0.2.5
+generated: "2026-06-13T08:41:17.667478797Z"
